@@ -15,6 +15,7 @@ class CreateSubDepartamentosTable extends Migration
     {
         Schema::create('sub_departamentos', function (Blueprint $table) {
             $table->bigIncrements('id');
+            $table->string('cod_sirh')->nullable();
             $table->string('nombre');
             $table->timestamps();
         });

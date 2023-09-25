@@ -35,6 +35,9 @@ class CreateSolicitudsTable extends Migration
             $table->integer('valor_total')->nullable()->default(0);
             $table->unsignedSmallInteger('last_status')->default(1);
 
+            $table->foreign('user_id')->references('id')->on('users');
+            $table->unsignedBigInteger('user_id')->nullable();
+
             $table->foreign('grupo_id')->references('id')->on('grupos');
             $table->unsignedBigInteger('grupo_id')->nullable();
 
