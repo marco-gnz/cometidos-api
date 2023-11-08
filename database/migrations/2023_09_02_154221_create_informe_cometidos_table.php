@@ -25,8 +25,6 @@ class CreateInformeCometidosTable extends Migration
             $table->integer('total_horas_cometido')->nullable();
             $table->integer('total_dias_cometido')->nullable();
             $table->text('detalle_lugar_cometido')->nullable();
-            $table->boolean('derecho_pasajes')->nullable();
-            $table->text('detalle_pasajes')->nullable();
             $table->unsignedSmallInteger('medio_transporte')->nullable();
             $table->boolean('derecho_pago')->default(0);
             $table->text('actividades_realizadas')->nullable();

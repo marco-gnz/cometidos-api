@@ -20,6 +20,8 @@ class CreateDocumentosTable extends Migration
             $table->string('nombre');
             $table->integer('size');
             $table->string('format');
+            $table->string('extension')->nullable();
+            $table->boolean('is_valid')->nullable();
 
             $table->foreign('solicitud_id')->references('id')->on('solicituds');
             $table->unsignedBigInteger('solicitud_id')->nullable();

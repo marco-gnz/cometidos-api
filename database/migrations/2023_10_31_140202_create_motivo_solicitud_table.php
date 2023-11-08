@@ -4,7 +4,7 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
-class CreateActividadGastosTable extends Migration
+class CreateMotivoSolicitudTable extends Migration
 {
     /**
      * Run the migrations.
@@ -13,12 +13,10 @@ class CreateActividadGastosTable extends Migration
      */
     public function up()
     {
-        Schema::create('actividad_gastos', function (Blueprint $table) {
+        Schema::create('motivo_solicitud', function (Blueprint $table) {
             $table->bigIncrements('id');
-            $table->string('nombre');
-            $table->text('descripcion')->nullable();
-            $table->boolean('status')->default(1);
-            $table->timestamps();
+            $table->unsignedInteger('motivo_id');
+            $table->unsignedInteger('solicitud_id');
         });
     }
 
@@ -29,6 +27,6 @@ class CreateActividadGastosTable extends Migration
      */
     public function down()
     {
-        Schema::dropIfExists('actividad_gastos');
+        Schema::dropIfExists('motivo_solicitud');
     }
 }

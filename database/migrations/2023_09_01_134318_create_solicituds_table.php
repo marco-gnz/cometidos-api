@@ -19,21 +19,26 @@ class CreateSolicitudsTable extends Migration
             $table->string('codigo')->unique()->nullable();
             $table->date('fecha_inicio')->nullable();
             $table->date('fecha_termino')->nullable();
-            $table->time('hora_inicio')->nullable();
-            $table->time('hora_termino')->nullable();
-            $table->integer('total_horas_cometido')->nullable();
-            $table->integer('total_dias_cometido')->nullable();
-            $table->text('detalle_lugar_cometido')->nullable();
-            $table->boolean('derecho_pasajes')->nullable();
-            $table->text('detalle_pasajes')->nullable();
-            $table->unsignedSmallInteger('medio_transporte')->nullable();
+            $table->time('hora_llegada')->nullable();
+            $table->time('hora_salida')->nullable();
             $table->boolean('derecho_pago')->default(0);
-            $table->text('actividades_realizadas')->nullable();
-            $table->integer('valor_cometido_diario')->nullable()->default(0);
-            $table->integer('valor_cometido_parcial')->nullable()->default(0);
-            $table->integer('valor_pasaje')->nullable()->default(0);
-            $table->integer('valor_total')->nullable()->default(0);
-            $table->unsignedSmallInteger('last_status')->default(1);
+            $table->text('actividad_realizada')->nullable();
+            $table->boolean('gastos_alimentacion')->default(0)->nullable();
+            $table->boolean('gastos_alojamiento')->default(0)->nullable();
+            $table->boolean('pernocta_lugar_residencia')->default(0)->nullable();
+            $table->integer('n_dias_40')->nullable();
+            $table->integer('n_dias_100')->nullable();
+            $table->text('observacion_gastos')->nullable();
+            $table->unsignedSmallInteger('last_status')->default(0);
+
+
+            $table->integer('total_dias_cometido')->nullable();
+            $table->integer('total_horas_cometido')->nullable();
+            $table->integer('valor_cometido_diario')->nullable();
+            $table->integer('valor_cometido_parcial')->nullable();
+            $table->integer('valor_pasaje')->nullable();
+            $table->integer('valor_total')->nullable();
+
 
             $table->foreign('user_id')->references('id')->on('users');
             $table->unsignedBigInteger('user_id')->nullable();
@@ -55,6 +60,14 @@ class CreateSolicitudsTable extends Migration
 
             $table->foreign('escala_id')->references('id')->on('escalas');
             $table->unsignedBigInteger('escala_id')->nullable();
+
+            $table->unsignedBigInteger('user_id_by')->nullable();
+            $table->foreign('user_id_by')->references('id')->on('users');
+            $table->dateTime('fecha_by_user', 0)->nullable();
+
+            $table->unsignedBigInteger('user_id_update')->nullable();
+            $table->foreign('user_id_update')->references('id')->on('users');
+            $table->dateTime('fecha_by_user_update', 0)->nullable();
 
             $table->timestamps();
         });
