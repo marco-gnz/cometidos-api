@@ -13,17 +13,20 @@ class Solicitud extends Model
     protected $table        = "solicituds";
     protected $primaryKey   = 'id';
 
-    public const STATUS_PENDIENTE = 0;
-    public const STATUS_APROBADO  = 1;
-    public const STATUS_RECHAZADO = 2;
+    public const STATUS_INGRESADA = 0;
+    public const STATUS_PENDIENTE = 1;
+    public const STATUS_APROBADO  = 2;
+    public const STATUS_RECHAZADO = 3;
 
     public const STATUS_NOM = [
+        self::STATUS_INGRESADA => 'INGRESADA',
         self::STATUS_PENDIENTE => 'PENDIENTE',
         self::STATUS_APROBADO  => 'APROBADO',
         self::STATUS_RECHAZADO => 'RECHAZADO',
     ];
 
     public const STATUS_DESC = [
+        self::STATUS_INGRESADA => 'Ingresada al sistema',
         self::STATUS_PENDIENTE => 'Pendiente por validar',
         self::STATUS_APROBADO  => 'Aprobado por administrador',
         self::STATUS_RECHAZADO => 'Rechazado por administrador',
@@ -44,6 +47,7 @@ class Solicitud extends Model
         'n_dias_40',
         'n_dias_100',
         'observacion_gastos',
+        'status',
         'last_status',
         'total_dias_cometido',
         'total_horas_cometido',
@@ -56,13 +60,22 @@ class Solicitud extends Model
         'departamento_id',
         'sub_departamento_id',
         'establecimiento_id',
-        'motivo_id',
         'escala_id',
         'user_id_by',
         'fecha_by_user',
         'user_id_update',
         'fecha_by_user_update',
     ];
+
+    public function grupoDepto($solicitud)
+    {
+        $grupo = Grupo::where('establecimiento_id', $solicitud->funcionario->establecimiento_id)
+            ->where('departamento_id', $solicitud->funcionario->departamento_id)
+            ->where('sub_departamento_id', $solicitud->funcionario->sub_departamento_id)
+            ->first();
+
+        return $grupo;
+    }
 
     protected static function booted()
     {
@@ -87,10 +100,17 @@ class Solicitud extends Model
             $solicitud->fecha_by_user           = now();
         });
 
+
+
         static::created(function ($solicitud) {
             // Generar el código de identificación usando el ID del registro
-            $codigoIdentificacion = $solicitud->id * 1000 + mt_rand(1, 999);
-            $solicitud->codigo = $codigoIdentificacion;
+            $grupo                          = self::grupoDepto($solicitud);
+            $codigoIdentificacion           = $solicitud->id * 1000 + mt_rand(1, 999);
+            $solicitud->codigo              = $codigoIdentificacion;
+            $solicitud->departamento_id     = $grupo ? $grupo->departamento_id : null;
+            $solicitud->sub_departamento_id = $grupo ? $grupo->sub_departamento_id : null;
+            $solicitud->establecimiento_id  = $grupo ? $grupo->establecimiento_id : null;
+            $solicitud->grupo_id            = $grupo ? $grupo->id : null;
             $solicitud->save();
         });
     }
@@ -105,6 +125,26 @@ class Solicitud extends Model
         return $this->belongsTo(User::class, 'user_id');
     }
 
+    public function establecimiento()
+    {
+        return $this->belongsTo(Establecimiento::class, 'establecimiento_id');
+    }
+
+    public function departamento()
+    {
+        return $this->belongsTo(Departamento::class, 'departamento_id');
+    }
+
+    public function subdepartamento()
+    {
+        return $this->belongsTo(SubDepartamento::class, 'sub_departamento_id');
+    }
+
+    public function grupo()
+    {
+        return $this->belongsTo(Grupo::class, 'grupo_id');
+    }
+
     public function lugares()
     {
         return $this->belongsToMany(Lugar::class);
@@ -117,12 +157,22 @@ class Solicitud extends Model
 
     public function actividades()
     {
-        return $this->belongsToMany(ActividadGasto::class)->withPivot('mount', 'status', 'status_admin');
+        return $this->belongsToMany(ActividadGasto::class)->withPivot('mount', 'status', 'status_admin', 'rinde_gastos_servicio');
     }
 
     public function documentos()
     {
         return $this->hasMany(Documento::class)->orderBy('id', 'DESC');
+    }
+
+    public function estados()
+    {
+        return $this->hasMany(EstadoSolicitud::class)->orderBy('id', 'DESC');
+    }
+
+    public function procesoRendicionGastos()
+    {
+        return $this->hasMany(ProcesoRendicionGasto::class)->orderBy('id', 'DESC');
     }
 
     public function addDocumentos(array $documentos)

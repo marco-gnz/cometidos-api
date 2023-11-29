@@ -24,6 +24,7 @@ class ValidateFileSolicitudRequest extends FormRequest
     public function rules()
     {
         return [
+            'uuid'  => 'nullable',
             'file' => 'nullable|mimes:pdf,jpg,jpeg,doc,docx|max:500000',
         ];
     }

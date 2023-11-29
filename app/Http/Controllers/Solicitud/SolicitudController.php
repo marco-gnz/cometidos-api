@@ -11,6 +11,7 @@ use App\Models\Solicitud;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Arr;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Validator;
 
@@ -76,17 +77,88 @@ class SolicitudController extends Controller
         'gastos_alojamiento'    => 'gastos de alojamiento',
         'actividades'           => 'actividades',
         'actividades.*.mount'   => 'monto',
+        'actividades.*.rinde_gastos_servicio' => 'rinde gasto servicio',
         'n_dias_40'             => 'n° de días de alojamiento',
         'n_dias_100'            => 'n° de días diarios',
         'observacion_pasajes'   => 'observación de pasajes'
         // Agrega más nombres de atributos personalizados según sea necesario
     ];
-    public function storeSolicitud(Request $request)
+    public function storeSolicitud(StoreSolicitudRequest $request)
+    {
+        try {
+            $form = [
+                'user_id',
+                'fecha_inicio',
+                'fecha_termino',
+                'hora_llegada',
+                'hora_salida',
+                'derecho_pago',
+                'actividad_realizada',
+                'gastos_alimentacion',
+                'gastos_alojamiento',
+                'pernocta_lugar_residencia',
+                'n_dias_40',
+                'n_dias_100',
+                'observacion_gastos'
+            ];
+
+            $solicitud = Solicitud::create($request->only($form));
+
+            if ($solicitud) {
+                if ($request->motivos_cometido) {
+                    $solicitud->motivos()->attach($request->motivos_cometido);
+                }
+
+                if ($request->lugares_cometido) {
+                    $solicitud->lugares()->attach($request->lugares_cometido);
+                }
+
+                if ($request->medio_transporte) {
+                    $solicitud->transportes()->attach($request->medio_transporte);
+                }
+
+                if ($request->archivos) {
+                    foreach ($request->archivos as $file) {
+
+                        $fecha_solicitud    = Carbon::parse($solicitud->fecha_inicio);
+                        $year               = $fecha_solicitud->format('Y');
+                        $month              = $fecha_solicitud->format('m');
+                        $fileName           = 'actividades/' . $solicitud->funcionario->rut . '/' . $year . '/' . $month . '/' . $file->getClientOriginalName();
+                        $path               = Storage::disk('public')->putFileAs('archivos', $file, $fileName);
+
+                        $store = Documento::create([
+                            'url'           => $path,
+                            'nombre'        => $file->getClientOriginalName(),
+                            'size'          => $file->getSize(),
+                            'format'        => $file->getMimeType(),
+                            'extension'     => $file->getClientOriginalExtension(),
+                            'is_valid'      => $file->isValid(),
+                            'solicitud_id'  => $solicitud->id,
+                            'user_id'       => $solicitud->user_id
+                        ]);
+                    }
+                }
+                $solicitud = $solicitud->fresh();
+
+                return response()->json(
+                    array(
+                        'status'        => 'success',
+                        'title'         => "Solicitud con código #{$solicitud->codigo} ingresada con éxito.",
+                        'message'       => null,
+                        'data'          => $solicitud
+                    )
+                );
+            }
+        } catch (\Exception $error) {
+            return response()->json($error->getMessage());
+        }
+    }
+
+    public function storeSolicitudDelete(Request $request)
     {
         try {
             // Obtener todos los datos de la solicitud
             $data = $request->all();
-
             // Decodificar el campo "medio_transporte" si es una cadena JSON
             array_walk_recursive($data, function (&$value) {
 
@@ -132,10 +204,25 @@ class SolicitudController extends Controller
                 'actividades.*.rinde_gasto' => ['required'],
                 'actividades.*.mount' => [
                     function ($attribute, $value, $fail) {
-                        $index = preg_replace('/[^0-9]/', '', $attribute);
-                        $rinde_gasto = "actividades.{$index}.rinde_gasto";
-                        if(request()->input($attribute) === null && request()->input($rinde_gasto) != 0){
+                        $index          = preg_replace('/[^0-9]/', '', $attribute);
+                        $rinde_gasto    = "actividades.{$index}.rinde_gasto";
+                        if (request()->input($attribute) === null && request()->input($rinde_gasto) != 0) {
                             $fail("El monto es obligatorio");
+                        }
+                    },
+                ],
+                'actividades.*.rinde_gastos_servicio' => [
+                    function ($attribute, $value, $fail) {
+                        $medio_transporte   = request()->input('medio_transporte');
+                        $index              = preg_replace('/[^0-9]/', '', $attribute);
+                        $rinde_gasto        = "actividades.{$index}.rinde_gasto";
+                        $id_actividad       = "actividades.{$index}.id";
+                        $rinde_gasto_value  = request()->input($rinde_gasto);
+                        $actividad_id_value = request()->input($id_actividad);
+                        $rinde_gastos_servicio_value = request()->input($attribute);
+
+                        if ((is_array($medio_transporte)) && (in_array(1, $medio_transporte) && $rinde_gasto_value != 1 && $actividad_id_value === 1 && $rinde_gastos_servicio_value === null)) {
+                            $fail("Respuesta es obligatoria");
                         }
                     },
                 ],
@@ -168,7 +255,6 @@ class SolicitudController extends Controller
                 'observacion_gastos'
             ];
 
-
             $solicitudData = Arr::only($data, $form); // Utilizar Arr::only() para filtrar las claves necesarias
             $solicitud = Solicitud::create($solicitudData);
 
@@ -186,14 +272,17 @@ class SolicitudController extends Controller
                 }
                 if (isset($data['actividades'])) {
                     foreach ($data['actividades'] as $actividad) {
-                        $id             = (int)$actividad['id'];
-                        $rinde_gasto    = (bool)$actividad['rinde_gasto'];
-                        $mount          = (int)$actividad['mount'];
+                        $id                         = (int)$actividad['id'];
+                        $rinde_gasto                = (bool)$actividad['rinde_gasto'];
+                        $mount                      = (int)$actividad['mount'];
+                        $rinde_gastos_servicio      = (bool)$actividad['rinde_gastos_servicio'];
                         $solicitud->actividades()->attach(
                             $id,
                             [
-                                'status'    => $rinde_gasto,
-                                'mount'     => $rinde_gasto ? $mount : null
+                                'status'                => $rinde_gasto,
+                                'mount'                 => $rinde_gasto ? $mount : null,
+                                'status_admin'          => $rinde_gasto ? true : false,
+                                'rinde_gastos_servicio' => $rinde_gastos_servicio
                             ]
                         );
                     }
@@ -342,15 +431,6 @@ class SolicitudController extends Controller
                 $existe = true;
             }
             return $existe;
-        } catch (\Exception $error) {
-            return response()->json($error->getMessage());
-        }
-    }
-
-    public function validateFileSolicitud(ValidateFileSolicitudRequest $request)
-    {
-        try {
-            return true;
         } catch (\Exception $error) {
             return response()->json($error->getMessage());
         }

@@ -4,10 +4,15 @@ namespace App\Http\Controllers\Admin\Mantenedores;
 
 use App\Http\Controllers\Controller;
 use App\Models\ActividadGasto;
+use App\Models\Departamento;
+use App\Models\Establecimiento;
 use App\Models\Lugar;
 use App\Models\Motivo;
+use App\Models\SubDepartamento;
 use App\Models\Transporte;
+use App\Models\User;
 use Illuminate\Http\Request;
+use Spatie\Permission\Models\Role;
 
 class MantenedorController extends Controller
 {
@@ -54,11 +59,81 @@ class MantenedorController extends Controller
         try {
             $actividades = ActividadGasto::orderBy('nombre', 'ASC')->get();
             foreach ($actividades as $actividad) {
-                $actividad->{'rinde_gasto'} = false;
-                $actividad->{'mount'}       = "";
+                $actividad->{'rinde_gasto'}             = 0;
+                $actividad->{'mount'}                   = "";
+                $actividad->{'rinde_gastos_servicio'}   = null;
             }
 
             return response()->json($actividades);
+        } catch (\Exception $error) {
+            return response()->json($error->getMessage());
+        }
+    }
+
+    public function getEstablecimientos()
+    {
+        try {
+            $establecimientos = Establecimiento::orderBy('nombre', 'ASC')->get();
+
+            return response()->json($establecimientos);
+        } catch (\Exception $error) {
+            return response()->json($error->getMessage());
+        }
+    }
+
+    public function getDepartamentos()
+    {
+        try {
+            $departamentos = Departamento::orderBy('nombre', 'ASC')->get();
+
+            return response()->json($departamentos);
+        } catch (\Exception $error) {
+            return response()->json($error->getMessage());
+        }
+    }
+
+    public function getSubdepartamentos()
+    {
+        try {
+            $subdepartamentos = SubDepartamento::orderBy('nombre', 'ASC')->get();
+
+            return response()->json($subdepartamentos);
+        } catch (\Exception $error) {
+            return response()->json($error->getMessage());
+        }
+    }
+
+    public function getFirmantes(Request $request)
+    {
+        try {
+            $firmantes = User::general($request->input)->orderBy('nombres', 'ASC')->get();
+
+            return response()->json($firmantes);
+        } catch (\Exception $error) {
+            return response()->json($error->getMessage());
+        }
+    }
+
+    public function getRoles()
+    {
+        try {
+            $roles = Role::orderBy('name', 'ASC')->get();
+
+            return response()->json($roles);
+        } catch (\Exception $error) {
+            return response()->json($error->getMessage());
+        }
+    }
+
+    public function getUser($id)
+    {
+        try {
+            $user = User::find($id);
+            if($user){
+                $user->{'role_id'}          = null;
+            }
+
+            return response()->json($user);
         } catch (\Exception $error) {
             return response()->json($error->getMessage());
         }

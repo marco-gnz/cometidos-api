@@ -18,6 +18,8 @@ class DatabaseSeeder extends Seeder
 
         $this->call(UserSeeder::class);
         $this->call(DatosMaestrosSeeder::class);
+        $this->call(RolesSeeder::class);
+        $this->call(TestEstadosSolicitud::class);
 
         DB::statement('SET FOREIGN_KEY_CHECKS=1;');
     }

@@ -29,6 +29,7 @@ class CreateSolicitudsTable extends Migration
             $table->integer('n_dias_40')->nullable();
             $table->integer('n_dias_100')->nullable();
             $table->text('observacion_gastos')->nullable();
+            $table->unsignedSmallInteger('status')->default(0);
             $table->unsignedSmallInteger('last_status')->default(0);
 
 
@@ -54,9 +55,6 @@ class CreateSolicitudsTable extends Migration
 
             $table->foreign('establecimiento_id')->references('id')->on('establecimientos');
             $table->unsignedBigInteger('establecimiento_id')->nullable();
-
-            $table->foreign('motivo_id')->references('id')->on('motivos');
-            $table->unsignedBigInteger('motivo_id')->nullable();
 
             $table->foreign('escala_id')->references('id')->on('escalas');
             $table->unsignedBigInteger('escala_id')->nullable();

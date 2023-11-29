@@ -19,6 +19,7 @@ class CreateActividadGastoSolicitudTable extends Migration
             $table->unsignedInteger('solicitud_id');
             $table->integer('mount')->nullable();
             $table->boolean('status')->default(0)->nullable();
+            $table->boolean('rinde_gastos_servicio')->default(0)->nullable();
             $table->boolean('status_admin')->default(1)->nullable();
         });
     }

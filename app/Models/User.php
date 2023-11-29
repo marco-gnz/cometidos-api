@@ -7,10 +7,12 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Laravel\Sanctum\HasApiTokens;
+use Spatie\Permission\Traits\HasRoles;
+use Spatie\Permission\Models\Permission;
 
 class User extends Authenticatable
 {
-    use HasApiTokens, HasFactory, Notifiable;
+    use HasApiTokens, HasFactory, Notifiable, HasRoles;
 
     /**
      * The attributes that are mass assignable.
@@ -101,5 +103,26 @@ class User extends Authenticatable
     public function solicitudes()
     {
         return $this->hasMany(Solicitud::class);
+    }
+
+    public function ausentismos()
+    {
+        return $this->hasMany(Ausentismo::class);
+    }
+
+    public function estados()
+    {
+        return $this->hasMany(EstadoSolicitud::class);
+    }
+
+    public function scopeGeneral($query, $input)
+    {
+        if ($input)
+            return $query->where('rut_completo', 'like', '%' . $input . '%')
+                ->orWhere('rut', 'like', '%' . $input . '%')
+                ->orWhere('nombres', 'like', '%' . $input . '%')
+                ->orWhere('apellidos', 'like', '%' . $input . '%')
+                ->orWhere('nombre_completo', 'like', '%' . $input . '%')
+                ->orWhere('email', 'like', '%' . $input . '%');
     }
 }
