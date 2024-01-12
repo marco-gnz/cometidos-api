@@ -18,6 +18,7 @@ class ListFirmantesResource extends JsonResource
         $total_ausentismos_hoy = Ausentismo::where('user_ausente_id', $this->funcionario->id)->first();
 
         return [
+            'rut'                   => $this->funcionario->rut ? $this->funcionario->rut : null,
             'nombres'               => $this->funcionario->nombre_completo ? $this->funcionario->nombre_completo : null,
             'email'                 => $this->funcionario->email ? $this->funcionario->email : null,
             'posicion_firma'        => $this->posicion_firma,
