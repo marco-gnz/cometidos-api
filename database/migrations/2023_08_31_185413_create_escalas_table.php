@@ -16,9 +16,10 @@ class CreateEscalasTable extends Migration
         Schema::create('escalas', function (Blueprint $table) {
             $table->bigIncrements('id');
             $table->uuid('uuid')->unique()->nullable();
-            $table->year('ano');
-            $table->integer('valor_dia')->default(0);
-            $table->integer('valor_noche')->default(0);
+            $table->date('fecha_inicio')->nullable();
+            $table->date('fecha_termino')->nullable();
+            $table->integer('valor_dia_40')->default(0);
+            $table->integer('valor_dia_100')->default(0);
 
             $table->foreign('ley_id')->references('id')->on('leys');
             $table->unsignedBigInteger('ley_id')->nullable();
