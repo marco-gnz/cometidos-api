@@ -26,11 +26,16 @@ class ValidateInformeSolicitudRequest extends FormRequest
         return [
             'fecha_inicio'              => ['required', 'date', 'before_or_equal:fecha_termino'],
             'fecha_termino'             => ['required', 'date', 'after_or_equal:fecha_inicio'],
-            'hora_llegada'              => ['required', 'after_or_equal:hora_salida'],
-            'hora_salida'               => ['required', 'before_or_equal:hora_llegada'],
+            'hora_llegada'              => ['required'],
+            'hora_salida'               => ['required'],
             'derecho_pago'              => ['required'],
             'motivos_cometido'          => ['required', 'array'],
-            'lugares_cometido'          => ['required', 'array'],
+            'tipo_comision_id'          => ['required'],
+            'jornada'                   => ['required'],
+            'dentro_pais'               => ['required'],
+            'lugares_cometido'          => ['required_if:dentro_pais,0', 'array'],
+            'paises_cometido'           => ['required_if:dentro_pais,1', 'array'],
+            'medio_transporte'          => ['required', 'array'],
             'actividad_realizada'       => ['required'],
         ];
     }
@@ -47,18 +52,26 @@ class ValidateInformeSolicitudRequest extends FormRequest
             'fecha_termino.after_or_equal'          => 'La :attribute debe ser superior a fecha de inicio',
 
             'hora_salida.required'                  => 'La :attribute es obligatoria',
-            'hora_salida.after_or_equal'            => 'La :attribute debe ser superior a :hora_llegada',
 
             'hora_llegada.required'                 => 'La :attribute es obligatoria',
-            'hora_salida.before_or_equal'           => 'La :attribute debe ser superior a :hora_salida',
 
             'derecho_pago.required'                 => 'El :attribute es obligatorio',
 
             'motivos_cometido.required'             => 'El :attribute es obligatorio',
 
-            'lugares_cometido.required'             => 'El :attribute es obligatorio',
+            'tipo_comision_id.required'             => 'El :attribute es obligatorio',
+
+            'jornada.required'                      => 'La :attribute es obligatoria',
+
+            'dentro_pais.required'                  => 'El :attribute es obligatorio',
+
+            'lugares_cometido.required_if'          => 'El :attribute es obligatorio',
+
+            'paises_cometido.required_if'           => 'El :attribute es obligatorio',
 
             'actividad_realizada.required'          => 'La :attribute es obligatoria',
+
+            'medio_transporte.required'             => 'El :attribute es obligatorio',
         ];
     }
 
@@ -71,8 +84,13 @@ class ValidateInformeSolicitudRequest extends FormRequest
             'hora_llegada'          => 'hora de llegada',
             'derecho_pago'          => 'derecho a pago',
             'motivos_cometido'      => 'motivo de cometido',
+            'tipo_comision_id'      => 'tipo de comisión',
+            'jornada'               => 'jornada de cometido',
+            'dentro_pais'           => 'destino',
             'lugares_cometido'      => 'lugar de cometido',
+            'paises_cometido'       => 'país de cometido',
             'actividad_realizada'   => 'actividad realizada',
+            'medio_transporte'      => 'medio de transporte'
         ];
     }
 }

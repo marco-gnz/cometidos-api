@@ -55,6 +55,10 @@ Route::group(
         Route::get('/admin/mantenedores/roles', [MantenedorController::class, 'getRoles']);
         Route::get('/admin/mantenedores/firmantes', [MantenedorController::class, 'getFirmantes']);
         Route::get('/admin/mantenedores/user/{id}', [MantenedorController::class, 'getUser']);
+        Route::get('/admin/mantenedores/estados-rechazo', [MantenedorController::class, 'getStatusRechazo']);
+        Route::get('/admin/mantenedores/tipo-comisiones', [MantenedorController::class, 'getTipoComisiones']);
+        Route::get('/admin/mantenedores/jornadas-cometido', [MantenedorController::class, 'getJornadasCometido']);
+        Route::get('/admin/mantenedores/paises', [MantenedorController::class, 'getPaises']);
 
         Route::post('/admin/grupos', [GrupoFirmaController::class, 'storeGrupo']);
         Route::get('/admin/grupos', [GrupoFirmaController::class, 'listGruposFirma']);
@@ -62,6 +66,11 @@ Route::group(
 
         Route::get('/admin/solicitudes', [SolicitudAdminController::class, 'listSolicitudes']);
         Route::get('/admin/solicitudes/{uuid}/{nav}', [SolicitudAdminController::class, 'findSolicitud']);
+        Route::put('/admin/solicitudes/reasignar-firma', [SolicitudAdminController::class, 'reasignarFirmaSolicitud']);
+        Route::post('/admin/solicitudes/show-calculo', [SolicitudAdminController::class, 'propuestaCalculo']);
+        Route::put('/admin/solicitudes/aplicar-calculo/{uuid}', [SolicitudAdminController::class, 'aplicarCalculo']);
+        Route::put('/admin/solicitudes/status', [SolicitudAdminController::class, 'actionStatusSolicitud']);
+        Route::post('/admin/solicitudes/status/check', [SolicitudAdminController::class, 'checkActionFirma']);
 
         Route::get('/admin/rendicion/list', [ProcesoRendicionController::class, 'getProcesoRendiciones']);
         Route::get('/admin/rendicion/{uuid}', [ProcesoRendicionController::class, 'getProcesoRendicion']);
@@ -77,6 +86,11 @@ Route::group(
     function () {
         Route::post('/solicitud/store', [SolicitudController::class, 'storeSolicitud']);
         Route::post('/solicitud/store/validate', [SolicitudController::class, 'validateSolicitud']);
+        Route::post('/solicitud/store/solicitud-dates', [SolicitudController::class, 'datesSolicitudInCalendar']);
+
+        Route::get('/solicitud/update/{uuid}', [SolicitudController::class, 'getSolicitud']);
+        Route::post('/solicitud/update/validate', [SolicitudController::class, 'validateUpdateSolicitud']);
+        Route::put('/solicitud/update', [SolicitudController::class, 'updateSolicitud']);
 
         Route::get('/rendicion/solicitudes', [RendicionController::class, 'solicitudesRendicionGastos']);
         Route::post('/rendicion', [RendicionController::class, 'storeRendicion']);

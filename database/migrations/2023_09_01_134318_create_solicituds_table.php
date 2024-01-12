@@ -31,15 +31,15 @@ class CreateSolicitudsTable extends Migration
             $table->text('observacion_gastos')->nullable();
             $table->unsignedSmallInteger('status')->default(0);
             $table->unsignedSmallInteger('last_status')->default(0);
-
-
+            $table->date('fecha_resolucion')->nullable();
+            $table->string('n_resolucion')->unique()->nullable();
+            $table->unsignedSmallInteger('tipo_resolucion')->default(0);
+            $table->unsignedSmallInteger('jornada')->default(0);
+            $table->boolean('dentro_pais')->default(0);
+            $table->integer('n_cargo_user')->default(0);
+            $table->boolean('calculo_aplicado')->default(0);
             $table->integer('total_dias_cometido')->nullable();
             $table->integer('total_horas_cometido')->nullable();
-            $table->integer('valor_cometido_diario')->nullable();
-            $table->integer('valor_cometido_parcial')->nullable();
-            $table->integer('valor_pasaje')->nullable();
-            $table->integer('valor_total')->nullable();
-
 
             $table->foreign('user_id')->references('id')->on('users');
             $table->unsignedBigInteger('user_id')->nullable();
@@ -53,11 +53,20 @@ class CreateSolicitudsTable extends Migration
             $table->foreign('sub_departamento_id')->references('id')->on('sub_departamentos');
             $table->unsignedBigInteger('sub_departamento_id')->nullable();
 
+            $table->foreign('ley_id')->references('id')->on('leys');
+            $table->unsignedBigInteger('ley_id')->nullable();
+
+            $table->foreign('grado_id')->references('id')->on('grados');
+            $table->unsignedBigInteger('grado_id')->nullable();
+
             $table->foreign('establecimiento_id')->references('id')->on('establecimientos');
             $table->unsignedBigInteger('establecimiento_id')->nullable();
 
             $table->foreign('escala_id')->references('id')->on('escalas');
             $table->unsignedBigInteger('escala_id')->nullable();
+
+            $table->foreign('tipo_comision_id')->references('id')->on('tipo_comisions');
+            $table->unsignedBigInteger('tipo_comision_id')->nullable();
 
             $table->unsignedBigInteger('user_id_by')->nullable();
             $table->foreign('user_id_by')->references('id')->on('users');

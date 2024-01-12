@@ -4,7 +4,7 @@ namespace App\Http\Requests\Solicitud;
 
 use Illuminate\Foundation\Http\FormRequest;
 
-class StoreSolicitudRequest extends FormRequest
+class UpdateSolicitudRequest extends FormRequest
 {
     /**
      * Determine if the user is authorized to make this request.
@@ -24,27 +24,26 @@ class StoreSolicitudRequest extends FormRequest
     public function rules()
     {
         return [
+            'solicitud_uuid'            => ['exists:solicituds,uuid'],
             'fecha_inicio'              => ['required', 'date', 'before_or_equal:fecha_termino'],
             'fecha_termino'             => ['required', 'date', 'after_or_equal:fecha_inicio'],
             'hora_llegada'              => ['required'],
             'hora_salida'               => ['required'],
-            'derecho_pago'              => ['required'],
+            'derecho_pago'              => ['required', 'boolean'],
             'motivos_cometido'          => ['required', 'array'],
             'tipo_comision_id'          => ['required'],
             'jornada'                   => ['required'],
             'dentro_pais'               => ['required'],
             'lugares_cometido'          => ['required_if:dentro_pais,0', 'array'],
             'paises_cometido'           => ['required_if:dentro_pais,1', 'array'],
-            'medio_transporte'          => ['required', 'array'],
             'actividad_realizada'       => ['required'],
-
+            'medio_transporte'          => ['required', 'array'],
             'gastos_alimentacion'       => ['required', 'boolean'],
             'gastos_alojamiento'        => ['required', 'boolean'],
             'pernocta_lugar_residencia' => ['required', 'boolean'],
             'n_dias_40'                 => ['required'],
             'n_dias_100'                => ['required'],
-            'observacion_gastos'        => ['nullable'],
-            'archivos'                  => ['nullable'],
+            'observacion_gastos'        => ['nullable']
         ];
     }
 
@@ -79,16 +78,22 @@ class StoreSolicitudRequest extends FormRequest
 
             'actividad_realizada.required'          => 'La :attribute es obligatoria',
 
+
             'medio_transporte.required'             => 'El :attribute es obligatorio',
 
             'gastos_alimentacion.required'          => 'El :attribute es obligatorio',
 
             'gastos_alojamiento.required'           => 'El :attribute es obligatorio',
 
+            'actividades.required'                  => 'El :attribute es obligatorio',
+
+            'actividades.*.mount.required'          => 'El :attribute es obligatorio',
+
             'n_dias_40.required'                    => 'El :attribute es obligatorio',
 
             'n_dias_100.required'                   => 'El :attribute es obligatorio',
 
+            'observacion_pasajes.required'          => 'El :attribute es obligatorio',
         ];
     }
 
@@ -111,9 +116,11 @@ class StoreSolicitudRequest extends FormRequest
             'gastos_alimentacion'   => 'gastos de alimentación',
             'gastos_alojamiento'    => 'gastos de alojamiento',
             'actividades'           => 'actividades',
+            'actividades.*.mount'   => 'monto',
+            'actividades.*.rinde_gastos_servicio' => 'rinde gasto servicio',
             'n_dias_40'             => 'n° de días de alojamiento',
             'n_dias_100'            => 'n° de días diarios',
-            'observacion_gastos'    => 'observación de pasajes'
+            'observacion_pasajes'   => 'observación de pasajes'
         ];
     }
 }

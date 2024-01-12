@@ -4,7 +4,7 @@ namespace App\Http\Requests\Solicitud;
 
 use Illuminate\Foundation\Http\FormRequest;
 
-class StoreSolicitudRequest extends FormRequest
+class ValidateInformeUpdateSolicitudRequest extends FormRequest
 {
     /**
      * Determine if the user is authorized to make this request.
@@ -37,14 +37,6 @@ class StoreSolicitudRequest extends FormRequest
             'paises_cometido'           => ['required_if:dentro_pais,1', 'array'],
             'medio_transporte'          => ['required', 'array'],
             'actividad_realizada'       => ['required'],
-
-            'gastos_alimentacion'       => ['required', 'boolean'],
-            'gastos_alojamiento'        => ['required', 'boolean'],
-            'pernocta_lugar_residencia' => ['required', 'boolean'],
-            'n_dias_40'                 => ['required'],
-            'n_dias_100'                => ['required'],
-            'observacion_gastos'        => ['nullable'],
-            'archivos'                  => ['nullable'],
         ];
     }
 
@@ -80,15 +72,6 @@ class StoreSolicitudRequest extends FormRequest
             'actividad_realizada.required'          => 'La :attribute es obligatoria',
 
             'medio_transporte.required'             => 'El :attribute es obligatorio',
-
-            'gastos_alimentacion.required'          => 'El :attribute es obligatorio',
-
-            'gastos_alojamiento.required'           => 'El :attribute es obligatorio',
-
-            'n_dias_40.required'                    => 'El :attribute es obligatorio',
-
-            'n_dias_100.required'                   => 'El :attribute es obligatorio',
-
         ];
     }
 
@@ -107,13 +90,7 @@ class StoreSolicitudRequest extends FormRequest
             'lugares_cometido'      => 'lugar de cometido',
             'paises_cometido'       => 'país de cometido',
             'actividad_realizada'   => 'actividad realizada',
-            'medio_transporte'      => 'medio de transporte',
-            'gastos_alimentacion'   => 'gastos de alimentación',
-            'gastos_alojamiento'    => 'gastos de alojamiento',
-            'actividades'           => 'actividades',
-            'n_dias_40'             => 'n° de días de alojamiento',
-            'n_dias_100'            => 'n° de días diarios',
-            'observacion_gastos'    => 'observación de pasajes'
+            'medio_transporte'      => 'medio de transporte'
         ];
     }
 }

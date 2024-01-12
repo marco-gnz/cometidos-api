@@ -29,7 +29,9 @@ class ListSolicitudAdminResource extends JsonResource
             'establecimiento'           => $this->establecimiento ? $this->establecimiento->sigla : null,
             'derecho_pago_value'        => $this->derecho_pago ? true : false,
             'derecho_pago'              => $this->derecho_pago ? "Si" : "No",
-            'estado_nom'                => Solicitud::STATUS_NOM[$this->last_status]
+            'estado_nom'                => Solicitud::STATUS_NOM[$this->last_status],
+            'tipo_comision'             => $this->tipoComision ? $this->tipoComision->nombre : null,
+            'dentro_pais'               => $this->dentro_pais ? true : false,
         ];
     }
 }
