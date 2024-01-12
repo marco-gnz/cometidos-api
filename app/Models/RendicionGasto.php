@@ -47,6 +47,7 @@ class RendicionGasto extends Model
     protected static function booted()
     {
         static::creating(function ($rendicion) {
+            $rendicion->mount_real              = $rendicion->mount;
             $rendicion->uuid                    = Str::uuid();
             $rendicion->user_id_by              = Auth::user()->id;
             $rendicion->fecha_by_user           = now();

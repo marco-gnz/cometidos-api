@@ -16,7 +16,7 @@ class CreateProcesoRendicionGastosTable extends Migration
         Schema::create('proceso_rendicion_gastos', function (Blueprint $table) {
             $table->bigIncrements('id');
             $table->uuid('uuid')->unique()->nullable();
-
+            $table->integer('n_rendicion')->default(0);
             $table->foreign('solicitud_id')->references('id')->on('solicituds')->onDelete('cascade');
             $table->unsignedBigInteger('solicitud_id')->nullable();
 

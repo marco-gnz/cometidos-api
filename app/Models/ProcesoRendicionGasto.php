@@ -15,6 +15,7 @@ class ProcesoRendicionGasto extends Model
 
     protected $fillable = [
         'uuid',
+        'n_rendicion',
         'solicitud_id',
         'user_id_by',
         'fecha_by_user',
@@ -25,6 +26,7 @@ class ProcesoRendicionGasto extends Model
     protected static function booted()
     {
         static::creating(function ($proceso) {
+            $proceso->n_rendicion             = self::where('solicitud_id', $proceso->solicitud->id)->count()+1;
             $proceso->uuid                    = Str::uuid();
             $proceso->user_id_by              = Auth::user()->id;
             $proceso->fecha_by_user           = now();
@@ -38,7 +40,7 @@ class ProcesoRendicionGasto extends Model
 
     public function rendiciones()
     {
-        return $this->hasMany(RendicionGasto::class);
+        return $this->hasMany(RendicionGasto::class)->orderBy('rinde_gasto', 'DESC');
     }
 
     public function addRendiciones(array $data)
