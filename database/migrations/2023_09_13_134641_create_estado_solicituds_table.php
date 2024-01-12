@@ -16,8 +16,10 @@ class CreateEstadoSolicitudsTable extends Migration
         Schema::create('estado_solicituds', function (Blueprint $table) {
             $table->bigIncrements('id');
             $table->unsignedSmallInteger('status');
+            $table->unsignedSmallInteger('motivo_rechazo')->nullable();
             $table->text('observacion')->nullable();
             $table->integer('posicion_firma')->nullable();
+            $table->integer('posicion_next_firma')->nullable();
             $table->text('history_solicitud')->nullable();
             $table->boolean('reasignacion')->default(0); //el admin al reasignar, se debe crear un nuevo registro en estado_solicituds, con reasignacion en true
             $table->boolean('reasignado')->default(0); // registro anterior creado, con valor reasignado en true
@@ -36,6 +38,8 @@ class CreateEstadoSolicitudsTable extends Migration
 
             $table->foreign('role_firmante_id')->references('id')->on('roles');
             $table->unsignedBigInteger('role_firmante_id')->nullable();
+
+            $table->string('ip_address')->nullable();
 
             $table->timestamps();
         });
