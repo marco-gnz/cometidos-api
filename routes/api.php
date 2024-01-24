@@ -71,6 +71,7 @@ Route::group(
         Route::put('/admin/solicitudes/aplicar-calculo/{uuid}', [SolicitudAdminController::class, 'aplicarCalculo']);
         Route::put('/admin/solicitudes/status', [SolicitudAdminController::class, 'actionStatusSolicitud']);
         Route::post('/admin/solicitudes/status/check', [SolicitudAdminController::class, 'checkActionFirma']);
+        Route::post('/admin/solicitudes/update-convenio', [SolicitudAdminController::class, 'updateConvenio']);
 
         Route::get('/admin/rendicion/list', [ProcesoRendicionController::class, 'getProcesoRendiciones']);
         Route::get('/admin/rendicion/{uuid}', [ProcesoRendicionController::class, 'getProcesoRendicion']);
@@ -84,6 +85,8 @@ Route::group(
         'middleware'    => 'auth:sanctum'
     ],
     function () {
+        Route::post('/solicitud/get-count-convenios', [SolicitudController::class, 'getCountConvenios']);
+
         Route::post('/solicitud/store', [SolicitudController::class, 'storeSolicitud']);
         Route::post('/solicitud/store/validate', [SolicitudController::class, 'validateSolicitud']);
         Route::post('/solicitud/store/solicitud-dates', [SolicitudController::class, 'datesSolicitudInCalendar']);

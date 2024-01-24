@@ -10,6 +10,7 @@ use App\Http\Resources\ListSolicitudCalculoAdminResource;
 use App\Http\Resources\Rendicion\ProcesoRendicionGastoDetalleResource;
 use App\Http\Resources\Solicitud\ListActividadesResource;
 use App\Http\Resources\Solicitud\ListCalculoResoruce;
+use App\Http\Resources\Solicitud\ListConvenioResource;
 use App\Http\Resources\Solicitud\ListSolicitudAdminResource;
 use App\Http\Resources\Solicitud\ListSolicitudCalculoPropuestaAdminResource;
 use App\Http\Resources\Solicitud\ListSolicitudCompleteAdminResource;
@@ -17,6 +18,7 @@ use App\Http\Resources\Solicitud\ListSolicitudDocumentosResource;
 use App\Http\Resources\Solicitud\ListSolicitudStatusResource;
 use App\Http\Resources\Solicitud\PropuestaCalculoSolicitud;
 use App\Http\Resources\Solicitud\StatusSolicitudResource;
+use App\Models\Convenio;
 use App\Models\Escala;
 use App\Models\EstadoSolicitud;
 use App\Models\Solicitud;
@@ -102,6 +104,23 @@ class SolicitudAdminController extends Controller
 
                     break;
 
+                case 'convenio':
+                    $convenio = $solicitud->convenio;
+                    $convenios = $this->getConvenios($solicitud);
+
+                    return response()->json(
+                        array(
+                            'status'        => 'success',
+                            'title'         => null,
+                            'message'       => null,
+                            'data'          => $convenio ? ListConvenioResource::make($convenio) : null,
+                            'nav'           => StatusSolicitudResource::collection($navStatus),
+                            'convenios'     => $convenios ? ListConvenioResource::collection($convenios) : null
+                        )
+                    );
+
+                    break;
+
                 case 'rendiciones':
                     $rendiciones = $solicitud->procesoRendicionGastos()->get();
                     return response()->json(
@@ -143,6 +162,107 @@ class SolicitudAdminController extends Controller
             }
         } catch (\Exception $error) {
             return $error->getMessage();
+        }
+    }
+
+    public function updateConvenio(Request $request)
+    {
+        try {
+            $corresponde = (int)$request->corresponde;
+            $solicitud   = Solicitud::where('uuid', $request->solicitud_uuid)->firstOrFail();
+            switch ($corresponde) {
+                case 1:
+                    $convenio                   = Convenio::where('id', $request->convenio_id)->where('active', true)->firstOrFail();
+                    $count_solicitudes_convenio = $this->validateNConvenios($convenio, $solicitud);
+
+                    if ($count_solicitudes_convenio >= $convenio->n_viatico_mensual) {
+                        return $this->errorResponse("No es posible asociar convenio. Convenio admite {$convenio->n_viatico_mensual} cometidos al mes y este registra un total de {$count_solicitudes_convenio}.", 422);
+                    }
+                    $update     = $solicitud->update([
+                        'convenio_id'       => $convenio->id,
+                        'afecta_convenio'   => true
+                    ]);
+
+                    $message = "Solicitud de cometido afecta a convenio {$convenio->codigo}";
+                    break;
+                case 0:
+                    $update = $solicitud->update([
+                        'convenio_id'       => null,
+                        'afecta_convenio'   => false
+                    ]);
+
+                    $message = 'Solicitud de cometido no afecta a un convenio.';
+                    break;
+            }
+
+            if ($update) {
+                $navStatus = $this->navStatusSolicitud($solicitud);
+                $solicitud = $solicitud->fresh();
+
+                $convenio  = $solicitud->convenio;
+                $convenios = $this->getConvenios($solicitud);
+
+                return response()->json(
+                    array(
+                        'status'        => 'success',
+                        'title'         => "Solicitud modifcada con éxito.",
+                        'message'       => $message,
+                        'data'          => $convenio ? ListConvenioResource::make($convenio) : null,
+                        'nav'           => StatusSolicitudResource::collection($navStatus),
+                        'convenios'     => $convenios ? ListConvenioResource::collection($convenios) : null
+                    )
+                );
+            }
+        } catch (\Exception $error) {
+            return response()->json($error->getMessage());
+        }
+    }
+
+    private function validateNConvenios($convenio, $solicitud)
+    {
+        try {
+            $month = Carbon::parse($solicitud->fecha_inicio)->format('m');
+            $year  = Carbon::parse($solicitud->fecha_inicio)->format('Y');
+            $total_solicitudes = Solicitud::where('convenio_id', $convenio->id)
+                ->whereMonth('fecha_inicio', $month)
+                ->whereYear('fecha_inicio', $year)
+                ->where('last_status', '!=', 4)
+                ->count();
+
+            return $total_solicitudes;
+        } catch (\Exception $error) {
+            return response()->json($error->getMessage());
+        }
+    }
+
+    private function getConvenios($solicitud)
+    {
+        try {
+            $fecha_inicio       = $solicitud->fecha_inicio;
+            $fecha_termino      = $solicitud->fecha_termino;
+            $funcionario        = $solicitud->funcionario;
+            $convenios    = Convenio::where('user_id', $funcionario->id)
+                ->where('active', true)
+                ->where('estamento_id', $funcionario->estamento_id)
+                ->where('ley_id', $funcionario->ley_id)
+                ->where('establecimiento_id', $funcionario->establecimiento_id)
+                ->where(function ($query) use ($fecha_inicio, $fecha_termino) {
+                    $query->where(function ($query) use ($fecha_inicio, $fecha_termino) {
+                        $query->where('fecha_inicio', '<=', $fecha_inicio)
+                            ->where('fecha_termino', '>=', $fecha_inicio);
+                    })->orWhere(function ($query) use ($fecha_inicio, $fecha_termino) {
+                        $query->where('fecha_inicio', '<=', $fecha_termino)
+                            ->where('fecha_termino', '>=', $fecha_termino);
+                    })->orWhere(function ($query) use ($fecha_inicio, $fecha_termino) {
+                        $query->where('fecha_inicio', '>=', $fecha_inicio)
+                            ->where('fecha_termino', '<=', $fecha_termino);
+                    });
+                })
+                ->get();
+
+            return $convenios;
+        } catch (\Exception $error) {
+            return response()->json($error->getMessage());
         }
     }
 
@@ -375,11 +495,7 @@ class SolicitudAdminController extends Controller
         try {
             $solicitud = Solicitud::where('uuid', $request->solicitud_uuid)->firstOrFail();
             if (($solicitud) && ($solicitud->last_status === 4)) {
-                return response()->json([
-                    'errors' => [
-                        'solicitud'  => "No es posible ejecutar firma. Solicitud anulada."
-                    ]
-                ], 422);
+                return $this->errorResponse("No es posible ejecutar firma. Solicitud anulada.", 422);
             }
             $funcionario_firmante   = User::where('uuid', $request->user_uuid)->firstOrFail();
             $firmante               = $solicitud->firmantes()->where('user_id', $funcionario_firmante->id)->where('posicion_firma', $request->posicion_firma)->firstOrFail();
@@ -659,11 +775,7 @@ class SolicitudAdminController extends Controller
             //si status = 4 no se debe aplicar validación de existencia de firma
             $solicitud = Solicitud::where('uuid', $request->solicitud_uuid)->firstOrFail();
             if (($solicitud) && ($solicitud->last_status === 4)) {
-                return response()->json([
-                    'errors' => [
-                        'solicitud'  => "No es posible ejecutar firma. Solicitud anulada."
-                    ]
-                ], 422);
+                return $this->errorResponse("No es posible ejecutar firma. Solicitud anulada.", 422);
             }
             $last_estado_solicitud  = $solicitud->estados()->orderBy('id', 'DESC')->first();
             $status                 = (int)$request->status;
@@ -712,12 +824,16 @@ class SolicitudAdminController extends Controller
                             ->orderBy('posicion_firma', 'ASC')
                             ->first();
 
+
+
                         if (!$firma_disponible) {
-                            return response()->json([
-                                'errors' => [
-                                    'solicitud'  => "No existe firma disponible."
-                                ]
-                            ], 422);
+                            return $this->errorResponse("No existe firma disponible.", 422);
+                        }
+
+                        if ($firma_disponible) {
+                            if (is_null($solicitud->afecta_convenio) && ($firma_disponible->role_id === 1 || $firma_disponible->role_id === 5 || $firma_disponible->role_id === 7)) {
+                                return $this->errorResponse("No es posible ejecutar firma. EJECUTIVO RRHH debe verificar si solicitud de cometido está afecta o no a un convenio.", 422);
+                            }
                         }
 
                         $estados[] = [
@@ -765,11 +881,7 @@ class SolicitudAdminController extends Controller
                             )
                         );
                     } else {
-                        return response()->json([
-                            'errors' => [
-                                'solicitud'  => ["No existe firma disponible."]
-                            ]
-                        ], 422);
+                        return $this->errorResponse("No existe firma disponible.", 422);
                     }
                     break;
             }

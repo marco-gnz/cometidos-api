@@ -36,6 +36,7 @@ class UpdateSolicitudRequest extends FormRequest
             'dentro_pais'               => ['required'],
             'lugares_cometido'          => ['required_if:dentro_pais,0', 'array'],
             'paises_cometido'           => ['required_if:dentro_pais,1', 'array'],
+            'afecta_convenio'           => ['required'],
             'actividad_realizada'       => ['required'],
             'medio_transporte'          => ['required', 'array'],
             'gastos_alimentacion'       => ['required', 'boolean'],
@@ -76,6 +77,8 @@ class UpdateSolicitudRequest extends FormRequest
 
             'paises_cometido.required_if'           => 'El :attribute es obligatorio',
 
+            'afecta_convenio.required'              => 'El :attribute es obligatorio',
+
             'actividad_realizada.required'          => 'La :attribute es obligatoria',
 
 
@@ -111,6 +114,7 @@ class UpdateSolicitudRequest extends FormRequest
             'dentro_pais'           => 'destino',
             'lugares_cometido'      => 'lugar de cometido',
             'paises_cometido'       => 'país de cometido',
+            'afecta_convenio'       => 'afecta a convenio',
             'actividad_realizada'   => 'actividad realizada',
             'medio_transporte'      => 'medio de transporte',
             'gastos_alimentacion'   => 'gastos de alimentación',

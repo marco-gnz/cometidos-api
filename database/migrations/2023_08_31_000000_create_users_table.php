@@ -31,6 +31,9 @@ class CreateUsersTable extends Migration
             $table->unsignedBigInteger('ley_id')->nullable();
             $table->foreign('ley_id')->references('id')->on('leys');
 
+            $table->unsignedBigInteger('estamento_id')->nullable();
+            $table->foreign('estamento_id')->references('id')->on('estamentos');
+
             $table->unsignedBigInteger('cargo_id')->nullable();
             $table->foreign('cargo_id')->references('id')->on('cargos');
 

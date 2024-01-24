@@ -32,6 +32,7 @@ class ListSolicitudAdminResource extends JsonResource
             'estado_nom'                => Solicitud::STATUS_NOM[$this->last_status],
             'tipo_comision'             => $this->tipoComision ? $this->tipoComision->nombre : null,
             'dentro_pais'               => $this->dentro_pais ? true : false,
+            'afecta_convenio'           => $this->afecta_convenio !== null ? ($this->afecta_convenio === 1 ? 'AFECTA' : 'NO AFECTA') : null,
         ];
     }
 }

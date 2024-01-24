@@ -22,6 +22,7 @@ class CreateSolicitudsTable extends Migration
             $table->time('hora_llegada')->nullable();
             $table->time('hora_salida')->nullable();
             $table->boolean('derecho_pago')->default(0);
+            $table->boolean('afecta_convenio')->nullable();
             $table->text('actividad_realizada')->nullable();
             $table->boolean('gastos_alimentacion')->default(0)->nullable();
             $table->boolean('gastos_alojamiento')->default(0)->nullable();
@@ -55,6 +56,9 @@ class CreateSolicitudsTable extends Migration
 
             $table->foreign('ley_id')->references('id')->on('leys');
             $table->unsignedBigInteger('ley_id')->nullable();
+
+            $table->foreign('convenio_id')->references('id')->on('convenios');
+            $table->unsignedBigInteger('convenio_id')->nullable();
 
             $table->foreign('grado_id')->references('id')->on('grados');
             $table->unsignedBigInteger('grado_id')->nullable();

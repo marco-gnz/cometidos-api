@@ -26,6 +26,7 @@ class ListSolicitudCompleteAdminResource extends JsonResource
             'hora_salida'               => $this->hora_salida ? Carbon::parse($this->hora_salida)->format('H:i') : null,
             'funcionario_rut'           => $this->funcionario ? $this->funcionario->rut_completo : null,
             'funcionario_nombre'        => $this->funcionario ? $this->funcionario->nombre_completo : null,
+            'funcionario_email'         => $this->funcionario ? $this->funcionario->email : null,
             'departamento'              => $this->departamento ? $this->departamento->nombre : null,
             'subdepartamento'           => $this->subdepartamento ? $this->subdepartamento->nombre : null,
             'establecimiento'           => $this->establecimiento ? $this->establecimiento->nombre : null,
@@ -54,7 +55,9 @@ class ListSolicitudCompleteAdminResource extends JsonResource
             'n_cargo_user'              => $this->n_cargo_user,
             'tipo_comision'             => $this->tipoComision ? $this->tipoComision->nombre : null,
             'created_at'                => $this->fecha_by_user ? Carbon::parse($this->fecha_by_user)->format('d-m-Y H:i') : null,
-            'user_by'                   => $this->userBy ? $this->userBy->nombre_completo : nul
+            'user_by'                   => $this->userBy ? $this->userBy->nombre_completo : nul,
+            'afecta_convenio'           => $this->afecta_convenio !== null ? ($this->afecta_convenio === 1 ? 'AFECTA' : 'NO AFECTA') : null,
+            'url_convenio'              => $this->convenio ? route('convenio.show', ['uuid' => $this->convenio->uuid]) : null
         ];
     }
 }

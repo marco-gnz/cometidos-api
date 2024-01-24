@@ -36,6 +36,7 @@ class ValidateInformeSolicitudRequest extends FormRequest
             'lugares_cometido'          => ['required_if:dentro_pais,0', 'array'],
             'paises_cometido'           => ['required_if:dentro_pais,1', 'array'],
             'medio_transporte'          => ['required', 'array'],
+            'afecta_convenio'           => ['required'],
             'actividad_realizada'       => ['required'],
         ];
     }
@@ -69,6 +70,8 @@ class ValidateInformeSolicitudRequest extends FormRequest
 
             'paises_cometido.required_if'           => 'El :attribute es obligatorio',
 
+            'afecta_convenio.required'              => 'El :attribute es obligatorio',
+
             'actividad_realizada.required'          => 'La :attribute es obligatoria',
 
             'medio_transporte.required'             => 'El :attribute es obligatorio',
@@ -89,6 +92,7 @@ class ValidateInformeSolicitudRequest extends FormRequest
             'dentro_pais'           => 'destino',
             'lugares_cometido'      => 'lugar de cometido',
             'paises_cometido'       => 'país de cometido',
+            'afecta_convenio'       => 'afecta a convenio',
             'actividad_realizada'   => 'actividad realizada',
             'medio_transporte'      => 'medio de transporte'
         ];

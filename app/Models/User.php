@@ -32,6 +32,7 @@ class User extends Authenticatable
         'telefono',
         'password',
         'ley_id',
+        'estamento_id',
         'grado_id',
         'cargo_id',
         'departamento_id',
@@ -63,6 +64,11 @@ class User extends Authenticatable
     public function ley()
     {
         return $this->belongsTo(Ley::class, 'ley_id');
+    }
+
+    public function estamento()
+    {
+        return $this->belongsTo(Estamento::class, 'estamento_id');
     }
 
     public function grado()

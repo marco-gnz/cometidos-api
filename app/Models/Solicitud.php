@@ -101,6 +101,7 @@ class Solicitud extends Model
         'hora_llegada',
         'hora_salida',
         'derecho_pago',
+        'afecta_convenio',
         'actividad_realizada',
         'gastos_alimentacion',
         'gastos_alojamiento',
@@ -124,6 +125,7 @@ class Solicitud extends Model
         'valor_total',
         'user_id',
         'grupo_id',
+        'convenio_id',
         'departamento_id',
         'sub_departamento_id',
         'ley_id',
@@ -253,6 +255,11 @@ class Solicitud extends Model
     public function grupo()
     {
         return $this->belongsTo(Grupo::class, 'grupo_id');
+    }
+
+    public function convenio()
+    {
+        return $this->belongsTo(Convenio::class, 'convenio_id');
     }
 
     public function lugares()

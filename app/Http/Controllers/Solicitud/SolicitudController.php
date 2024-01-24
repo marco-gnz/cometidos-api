@@ -9,6 +9,7 @@ use App\Http\Requests\Solicitud\ValidateFileSolicitudRequest;
 use App\Http\Requests\Solicitud\ValidateInformeSolicitudRequest;
 use App\Http\Requests\Solicitud\ValidateInformeUpdateSolicitudRequest;
 use App\Http\Resources\Solicitud\UpdateSolicitudResource;
+use App\Models\Convenio;
 use App\Models\Documento;
 use App\Models\Grupo;
 use App\Models\Solicitud;
@@ -29,6 +30,44 @@ class SolicitudController extends Controller
         $this->middleware(['auth:sanctum']);
     }
 
+    public function getCountConvenios(Request $request)
+    {
+        try {
+            $fecha_inicio       = $request->fecha_inicio;
+            $fecha_termino      = $request->fecha_termino;
+            $funcionario        = User::where('id', $request->user_id)->firstOrFail();
+            $total_convenios    = Convenio::where('user_id', $funcionario->id)
+                ->where('active', true)
+                ->where('estamento_id', $funcionario->estamento_id)
+                ->where('ley_id', $funcionario->ley_id)
+                ->where('establecimiento_id', $funcionario->establecimiento_id)
+                ->where(function ($query) use ($fecha_inicio, $fecha_termino) {
+                    $query->where(function ($query) use ($fecha_inicio, $fecha_termino) {
+                        $query->where('fecha_inicio', '<=', $fecha_inicio)
+                            ->where('fecha_termino', '>=', $fecha_inicio);
+                    })->orWhere(function ($query) use ($fecha_inicio, $fecha_termino) {
+                        $query->where('fecha_inicio', '<=', $fecha_termino)
+                            ->where('fecha_termino', '>=', $fecha_termino);
+                    })->orWhere(function ($query) use ($fecha_inicio, $fecha_termino) {
+                        $query->where('fecha_inicio', '>=', $fecha_inicio)
+                            ->where('fecha_termino', '<=', $fecha_termino);
+                    });
+                })
+                ->count();
+
+            return response()->json(
+                array(
+                    'status'        => 'success',
+                    'title'         => null,
+                    'message'       => null,
+                    'data'          => $total_convenios
+                )
+            );
+        } catch (\Exception $error) {
+            return response()->json($error->getMessage());
+        }
+    }
+
     public function storeSolicitud(StoreSolicitudRequest $request)
     {
         try {
@@ -39,6 +78,7 @@ class SolicitudController extends Controller
                 'hora_llegada',
                 'hora_salida',
                 'derecho_pago',
+                'afecta_convenio',
                 'jornada',
                 'dentro_pais',
                 'tipo_comision_id',
@@ -48,7 +88,8 @@ class SolicitudController extends Controller
                 'pernocta_lugar_residencia',
                 'n_dias_40',
                 'n_dias_100',
-                'observacion_gastos'
+                'observacion_gastos',
+                'convenio_id'
             ];
 
             $solicitud = Solicitud::create($request->only($form));
@@ -100,7 +141,7 @@ class SolicitudController extends Controller
                     $solicitud->motivos()->attach($request->motivos_cometido);
                 }
 
-                $dentro_pais = (boolean)$request->dentro_pais;
+                $dentro_pais = (bool)$request->dentro_pais;
 
                 if (!$dentro_pais) {
                     if ($request->lugares_cometido) {
@@ -157,13 +198,13 @@ class SolicitudController extends Controller
     {
         try {
             $solicitud = Solicitud::where('uuid', $request->solicitud_uuid)->firstOrFail();
-
             $form = [
                 'fecha_inicio',
                 'fecha_termino',
                 'hora_llegada',
                 'hora_salida',
                 'derecho_pago',
+                'afecta_convenio',
                 'jornada',
                 'dentro_pais',
                 'tipo_comision_id',
@@ -173,7 +214,8 @@ class SolicitudController extends Controller
                 'pernocta_lugar_residencia',
                 'n_dias_40',
                 'n_dias_100',
-                'observacion_gastos'
+                'observacion_gastos',
+                'convenio_id'
             ];
             $update = $solicitud->update($request->only($form));
 
@@ -182,7 +224,7 @@ class SolicitudController extends Controller
                     $solicitud->motivos()->sync($request->motivos_cometido);
                 }
 
-                $dentro_pais = (boolean)$request->dentro_pais;
+                $dentro_pais = (bool)$request->dentro_pais;
                 if (!$dentro_pais) {
                     if ($request->lugares_cometido) {
                         $solicitud->lugares()->sync($request->lugares_cometido);
