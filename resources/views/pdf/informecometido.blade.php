@@ -3,7 +3,7 @@
 
 <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-    <title>{{config('app.name')}} | Convenio {{$convenio->codigo}}</title>
+    <title>{{config('app.name')}} | Informe {{$informe->codigo}}</title>
     <link rel="shortcut icon" href="{{ public_path('img/logo-sso.jpeg') }}">
 
     <style type="text/css">
@@ -118,6 +118,40 @@
             text-align: center;
             line-height: 1.5cm;
         }
+
+        .row {
+            margin-left: -5px;
+            margin-right: -5px;
+        }
+
+        .column {
+            float: left;
+            width: 50%;
+            padding: 5px;
+        }
+
+        .seccion {
+            margin-bottom: 0px;
+            display: flex;
+            flex-wrap: wrap;
+        }
+
+        .column-firma {
+            float: left;
+            width: 48%;
+            padding: 5px;
+        }
+        .firma-container {
+            margin-bottom: 10px;
+            position: relative;
+            /* Puedes ajustar este valor según sea necesario */
+        }
+
+        .firma-container h5 {
+            margin-bottom: 0;
+            position: absolute;
+            top: 25px;
+        }
     </style>
 
 <body>
@@ -127,10 +161,8 @@
                 <td align="left" style="width: 10%;">
                     <img class="center logo" src="{{ public_path('img/logo-sso.jpeg') }}">
                 </td>
-                <td align="left" style="width: 60%;">
-                    <h6 style="font-size: 11px;">DIRECCIÓN<br>
-                        <small style="font-size: 9px;" class="text-muted ml-4">SUBDIRECCIÓN DE RECURSOS
-                            HUMANOS</small><br>
+                <td align="left" style="width: 70%;">
+                        <small style="font-size: 9px;" class="text-muted ml-4">SUBD. GESTIÓN Y DESARROLLO DE PERSONAS</small><br>
                         <small style="font-size: 9px;" class="text-muted ml-4">DEPTO. GESTIÓN DE LAS PERSONAS</small>
                     </h6>
                 </td>
@@ -138,7 +170,7 @@
         </table>
     </div>
     <div class="titulo">
-        <h4 align="center">CONVENIO DE COMETIDO FUNCIONAL</h4>
+        <h4 align="center">INFORME DE COMETIDO FUNCIONAL</h4>
     </div>
     <div class="datos">
         <section class="section-borde">
@@ -148,11 +180,31 @@
                     <tbody>
                         <tr>
                             <th>RUT:</th>
-                            <td>{{ $convenio->funcionario->rut_completo }}</td>
+                            <td>{{ $informe->solicitud->funcionario->rut_completo }}</td>
                         </tr>
                         <tr>
                             <th>NOMBRES:</th>
-                            <td>{{ $convenio->funcionario->nombre_completo }}</td>
+                            <td>{{ $informe->solicitud->funcionario->nombre_completo }}</td>
+                        </tr>
+                        <tr>
+                            <th>CARGO:</th>
+                            <td>{{ $informe->solicitud->cargo->nombre }}</td>
+                        </tr>
+                        <tr>
+                            <th>GRADO:</th>
+                            <td>{{ $informe->solicitud->grado->nombre }}</td>
+                        </tr>
+                        <tr>
+                            <th>CALIDAD JURÍDICA:</th>
+                            <td>{{ $informe->solicitud->calidad->nombre }}</td>
+                        </tr>
+                        <tr>
+                            <th>ESTABLECIMIENTO:</th>
+                            <td>{{ $informe->solicitud->establecimiento->nombre }}</td>
+                        </tr>
+                        <tr>
+                            <th>DEPTO:</th>
+                            <td>{{ $informe->solicitud->departamento->nombre }}</td>
                         </tr>
                     </tbody>
                 </table>
@@ -160,57 +212,62 @@
         </section>
         <section class="section-borde">
             <div class="section-position">
-                <h3 class="title">Datos del convenio</h3>
+                <h3 class="title">Datos del informe</h3>
                 <table>
                     <tbody>
                         <tr>
-                            <th>CÓDIGO DE CONVENIO:</th>
-                            <td>{{ $convenio->codigo }}</td>
+                            <th>CÓDIGO INFORME:</th>
+                            <td>{{ $informe->codigo }}</td>
                         </tr>
                         <tr>
-                            <th>AÑO DE CONVENIO:</th>
-                            <td>{{ $convenio->anio }}</td>
+                            <th>CÓDIGO SOLICITUD COMETIDO:</th>
+                            <td>{{ $informe->solicitud->codigo }}</td>
                         </tr>
                         <tr>
-                            <th>ILUSTRE:</th>
-                            <td>{{ $convenio->ilustre->nombre }}</td>
+                            <th>PERIODO:</th>
+                            <td>{{ Carbon\Carbon::parse($informe->fecha_inicio)->format('d-m-Y') }} / {{ Carbon\Carbon::parse($informe->fecha_termino)->format('d-m-Y') }}</td>
                         </tr>
                         <tr>
-                            <th>RESOLUCIÓN:</th>
-                            <td>N° {{ $convenio->n_resolucion }} / {{ Carbon\Carbon::parse($convenio->fecha_resolucion)->format('d-m-Y') }} </td>
+                            <th>HORA:</th>
+                            <td>{{ Carbon\Carbon::parse($informe->hora_llegada)->format('H:i') }} / {{ Carbon\Carbon::parse($informe->hora_salida)->format('H:i') }} hrs.</td>
                         </tr>
                         <tr>
-                            <th>PERIODO VIGENCIA:</th>
-                            <td>{{ Carbon\Carbon::parse($convenio->fecha_inicio)->format('d-m-Y') }} / {{ Carbon\Carbon::parse($convenio->fecha_termino)->format('d-m-Y') }}</td>
+                            <th>UTILIZA TRANSPORTE:</th>
+                            <td>{{ $informe->utiliza_transporte ? 'Si' : 'No' }}</td>
                         </tr>
                         <tr>
-                            <th>TIPO DE CONVENIO:</th>
-                            <td>{{App\Models\Convenio::TYPE_NOM[$convenio->tipo_convenio]}}</td>
-                        </tr>
-                        <tr>
-                            <th>ESTAMENTO:</th>
-                            <td>{{ $convenio->estamento->nombre }}</td>
-                        </tr>
-                        <tr>
-                            <th>LEY:</th>
-                            <td>{{ $convenio->ley->nombre }}</td>
-                        </tr>
-                        <tr>
-                            <th>ESTABLECIMIENTO:</th>
-                            <td>{{ $convenio->establecimiento->nombre }}</td>
-                        </tr>
-                        <tr>
-                            <th>N° DE VIÁTICOS MENSUAL:</th>
-                            <td>{{ $convenio->n_viatico_mensual }}</td>
-                        </tr>
-                        <tr>
-                            <th>OBSERVACIÓN:</th>
-                            <td>{{ $convenio->observacion ? $convenio->observacion  : '' }}</td>
+                            <th>MOVILIZACIÓN UTILIZADA:</th>
+                            <td>{{ $informe->transportes ? $informe->transportes->pluck('nombre')->implode(', ') : ''}}</td>
                         </tr>
                     </tbody>
                 </table>
             </div>
         </section>
+        <section class="section-borde">
+            <div class="section-position">
+                <h3 class="title">Actividades realizadas</h3>
+                <p>{{$informe->actividad_realizada}}</p>
+            </div>
+        </section>
+        <div class="seccion">
+            <h3>VERIFICACIONES</h3>
+            <div class="row">
+                <div class="column-firma">
+                    <div class="firma-container">
+                        <p>SIN FIRMA</p>
+                        <hr>
+                        <h5>JEFATURA DIRECTA</h5>
+                    </div>
+                </div>
+                <div class="column-firma">
+                    <div class="firma-container">
+                        <p>{{$informe->solicitud->funcionario->nombre_completo }} {{Carbon\Carbon::parse($informe->fecha_by_user)->format('d-m-Y H:i:s')}}</p>
+                        <hr>
+                        <h5>FUNCIONARIA(O)</h5>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
 </body>
 </head>
