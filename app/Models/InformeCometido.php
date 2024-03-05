@@ -128,12 +128,27 @@ class InformeCometido extends Model
         return $this->estados()->createMany($estados);
     }
 
-    public function diffHoursInforme()
+    public function firmaJefatura()
     {
-        $fecha_termino_cometido = "{$this->solicitud->fecha_termino} {$this->solicitud->hora_termino}";
-        $fecha_termino_cometido = Carbon::parse($fecha_termino_cometido);
-        $fecha_ingreso          = Carbon::parse($this->fecha_by_user);
-        $diferencia_en_horas    = $fecha_termino_cometido->diffInHours($fecha_ingreso);
-        return $diferencia_en_horas;
+        $firma = $this->estados()->where('status', EstadoInformeCometido::STATUS_APROBADO)->first();
+        if($firma){
+            $nombres    = $firma->userBy->nombre_completo;
+            $fecha      = Carbon::parse($firma->fecha_by_user)->format('d-m-y H:i:s');
+            $new_firma  = "$nombres $fecha";
+            return $new_firma;
+        }
+        return null;
+    }
+
+    public function firmaFuncionario()
+    {
+        $firma = $this->estados()->where('status', EstadoInformeCometido::STATUS_INGRESADA)->first();
+        if($firma){
+            $nombres    = $firma->userBy->nombre_completo;
+            $fecha      = Carbon::parse($firma->fecha_by_user)->format('d-m-y H:i:s');
+            $new_firma  = "$nombres $fecha";
+            return $new_firma;
+        }
+        return null;
     }
 }

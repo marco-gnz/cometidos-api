@@ -53,15 +53,15 @@ class Solicitud extends Model
         ['id' => self::JORNADA_TODO_EL_DIA, 'nombre' => self::JORNADA_NOM[self::JORNADA_TODO_EL_DIA]],
     ];
 
-    public const STATUS_PENDIENTE   = 0;
-    public const STATUS_PROCESADO   = 1;
-    public const STATUS_ANULADO     = 2;
+    public const STATUS_EN_PROCESO      = 0;
+    public const STATUS_PROCESADO       = 1;
+    public const STATUS_ANULADO         = 2;
 
 
     public const STATUS_NOM = [
-        self::STATUS_PENDIENTE      => 'EN PROCESO',
-        self::STATUS_PROCESADO      => 'PROCESADO',
-        self::STATUS_ANULADO        => 'ANULADO',
+        self::STATUS_EN_PROCESO         => 'EN PROCESO',
+        self::STATUS_PROCESADO          => 'PROCESADO',
+        self::STATUS_ANULADO            => 'ANULADO',
     ];
 
     protected $fillable = [

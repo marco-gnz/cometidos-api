@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Resources\Rendicion\StatusRendicionResource;
 use App\Models\Convenio;
 use App\Models\Documento;
+use App\Models\EstadoInformeCometido;
 use App\Models\InformeCometido;
 use App\Models\ProcesoRendicionGasto;
 use App\Models\Solicitud;
@@ -45,10 +46,14 @@ class PdfController extends Controller
         try {
             $informe = InformeCometido::where('uuid', $uuid)->firstOrFail();
 
+            if(($informe) && ($informe->last_status !== EstadoInformeCometido::STATUS_APROBADO)){
+                abort(404);
+            }
+
             $pdf = \PDF::loadView(
                 'pdf.informecometido',
                 [
-                    'informe'                   => $informe
+                    'informe' => $informe
                 ]
             );
 

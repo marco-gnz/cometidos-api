@@ -254,14 +254,14 @@
             <div class="row">
                 <div class="column-firma">
                     <div class="firma-container">
-                        <p>SIN FIRMA</p>
+                        <p>{{$informe->firmaJefatura() ? $informe->firmaJefatura() : 'SIN FIRMA' }}</p>
                         <hr>
                         <h5>JEFATURA DIRECTA</h5>
                     </div>
                 </div>
                 <div class="column-firma">
                     <div class="firma-container">
-                        <p>{{$informe->solicitud->funcionario->nombre_completo }} {{Carbon\Carbon::parse($informe->fecha_by_user)->format('d-m-Y H:i:s')}}</p>
+                        <p>{{$informe->firmaFuncionario() ? $informe->firmaFuncionario() : 'SIN FIRMA' }}</p>
                         <hr>
                         <h5>FUNCIONARIA(O)</h5>
                     </div>
