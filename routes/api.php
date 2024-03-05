@@ -7,6 +7,7 @@ use App\Http\Controllers\Admin\Solicitudes\SolicitudAdminController;
 use App\Http\Controllers\File\FileController;
 use App\Http\Controllers\Rendicion\RendicionController;
 use App\Http\Controllers\Solicitud\SolicitudController;
+use App\Http\Controllers\User\Solicitudes\SolicitudesController;
 use App\Http\Resources\UserAuthResource;
 use App\Models\Solicitud;
 use App\Models\User;
@@ -72,6 +73,7 @@ Route::group(
         Route::put('/admin/solicitudes/status', [SolicitudAdminController::class, 'actionStatusSolicitud']);
         Route::post('/admin/solicitudes/status/check', [SolicitudAdminController::class, 'checkActionFirma']);
         Route::post('/admin/solicitudes/update-convenio', [SolicitudAdminController::class, 'updateConvenio']);
+        Route::put('/admin/solicitudes/status/firmante/{uuid}', [SolicitudAdminController::class, 'updateStatusFirmante']);
 
         Route::get('/admin/rendicion/list', [ProcesoRendicionController::class, 'getProcesoRendiciones']);
         Route::get('/admin/rendicion/{uuid}', [ProcesoRendicionController::class, 'getProcesoRendicion']);
@@ -87,18 +89,22 @@ Route::group(
     function () {
         Route::post('/solicitud/get-count-convenios', [SolicitudController::class, 'getCountConvenios']);
 
+        Route::get('/solicitud/list', [SolicitudesController::class, 'listSolicitudes']);
         Route::post('/solicitud/store', [SolicitudController::class, 'storeSolicitud']);
         Route::post('/solicitud/store/validate', [SolicitudController::class, 'validateSolicitud']);
         Route::post('/solicitud/store/solicitud-dates', [SolicitudController::class, 'datesSolicitudInCalendar']);
 
         Route::get('/solicitud/update/{uuid}', [SolicitudController::class, 'getSolicitud']);
         Route::post('/solicitud/update/validate', [SolicitudController::class, 'validateUpdateSolicitud']);
-        Route::put('/solicitud/update', [SolicitudController::class, 'updateSolicitud']);
+        Route::post('/solicitud/update', [SolicitudController::class, 'updateSolicitud']);
 
         Route::get('/rendicion/solicitudes', [RendicionController::class, 'solicitudesRendicionGastos']);
         Route::post('/rendicion', [RendicionController::class, 'storeRendicion']);
         Route::get('/rendicion/list', [RendicionController::class, 'getProcesoRendiciones']);
         Route::get('/rendicion/{uuid}', [RendicionController::class, 'getProcesoRendicion']);
+
+        Route::post('/informe/store', [SolicitudController::class, 'storeInformeCometido']);
+        Route::post('/informe/status', [SolicitudController::class, 'statusInformeCometido']);
     }
 );
 

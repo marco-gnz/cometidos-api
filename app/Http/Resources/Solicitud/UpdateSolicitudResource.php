@@ -24,7 +24,8 @@ class UpdateSolicitudResource extends JsonResource
             'hora_salida'                       => $this->hora_salida,
             'hora_solicitud'                    => [$this->hora_llegada, $this->hora_salida],
             'derecho_pago'                      => $this->derecho_pago ? 1 : 0,
-            'afecta_convenio'                   => $this->afecta_convenio ? 1 : 0,
+            'alimentacion_red'                  => $this->alimentacion_red ? 1 : 0,
+            'utiliza_transporte'                => $this->utiliza_transporte ? 1 : 0,
             'actividad_realizada'               => $this->actividad_realizada,
             'gastos_alimentacion'               => $this->gastos_alimentacion ? 1 : 0,
             'gastos_alojamiento'                => $this->gastos_alojamiento ? 1 : 0,
@@ -38,7 +39,10 @@ class UpdateSolicitudResource extends JsonResource
             'tipo_comision_id'                  => $this->tipo_comision_id ? $this->tipo_comision_id : null,
             'jornada'                           => $this->jornada,
             'paises_cometido'                   => $this->paises ? $this->paises->pluck('id') : [],
-            'dentro_pais'                       => $this->dentro_pais ? 1 : 0
+            'dentro_pais'                       => $this->dentro_pais ? 1 : 0,
+            'archivos'                          => [],
+            'is_update'                         => $this->isUpdate()
+
         ];
     }
 }

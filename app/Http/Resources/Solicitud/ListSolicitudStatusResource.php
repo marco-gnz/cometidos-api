@@ -2,9 +2,11 @@
 
 namespace App\Http\Resources\Solicitud;
 
+use App\Models\EstadoSolicitud;
 use App\Models\Solicitud;
 use Carbon\Carbon;
 use Illuminate\Http\Resources\Json\JsonResource;
+use Illuminate\Support\Facades\Crypt;
 
 class ListSolicitudStatusResource extends JsonResource
 {
@@ -27,6 +29,7 @@ class ListSolicitudStatusResource extends JsonResource
                 break;
 
             case 3:
+            case 4:
                 $type = 'danger';
                 break;
 
@@ -34,22 +37,36 @@ class ListSolicitudStatusResource extends JsonResource
                 $type = 'info';
                 break;
         }
+        $octetos = explode('.', $this->ip_address);
+
+        for ($i = count($octetos) - 2; $i < count($octetos); $i++) {
+            $octetos[$i] = '***';
+        }
+
+        $ip_semi_crypt = implode('.', $octetos);
+
+        $ejecucion_firma = null;
+        if($this->funcionario){
+            $ejecucion_firma = "Ejecutado por {$this->funcionario->nombre_completo} - {$this->perfil->name} ({$this->posicion_firma_s})";
+        }
+
+        $reasignado_firma = null;
+        if($this->funcionarioRs){
+            $reasignado_firma = "{$this->funcionarioRs->nombre_completo} - {$this->perfilRs->name} ({$this->posicion_firma_r_s})";
+        }
+
         return [
-            'status'            => $this->status,
-            'status_nom'        => Solicitud::STATUS_NOM[$this->status],
-            'observacion'       => $this->observacion ? $this->observacion : null,
-            'posicion_firma'    => $this->posicion_firma,
-            'history_solicitud' => $this->history_solicitud,
-            'reasignacion'      => $this->reasignacion ? true : false,
-            'reasignado'        => $this->reasignado ? true : false,
-            'created_at'        => $this->created_at ? Carbon::parse($this->created_at)->format('d-m-Y H:i') : null,
-            'type'              => $type,
-
-            'funcionario_ingreso'       => $this->funcionario ? $this->funcionario->nombre_completo : null,
-            'perfil_ingreso'            => $this->perfil ? $this->perfil->name : null,
-
-            'funcionario_reasignado'       => $this->firmante ? $this->firmante->nombre_completo : null,
-            'perfil_reasignado'             => $this->perfilFirmante ? $this->perfilFirmante->name : null,
+            'status'                    => $this->status,
+            'status_nom'                => EstadoSolicitud::STATUS_NOM[$this->status],
+            'motivo_rechazo_nom'        => $this->motivo_rechazo != null ? EstadoSolicitud::RECHAZO_NOM[$this->motivo_rechazo] : null,
+            'observacion'               => $this->observacion ? $this->observacion : null,
+            'history_solicitud'         => $this->history_solicitud,
+            'is_reasignado'             => $this->is_reasignado ? true : false,
+            'ejecucion'                 => $ejecucion_firma,
+            'reasignado_firma'          => $reasignado_firma,
+            'created_at'                => $this->created_at ? Carbon::parse($this->created_at)->format('d-m-Y H:i') : null,
+            'type'                      => $type,
+            'ip_address'                => $ip_semi_crypt
         ];
     }
 }

@@ -35,12 +35,19 @@ class RendicionController extends Controller
         'actividades.*.mount'   => 'monto'
     ];
 
-    public function solicitudesRendicionGastos()
+    public function solicitudesRendicionGastos(Request $request)
     {
         try {
             $auth           = Auth::user();
             if ($auth) {
-                $solicitudes = Solicitud::where('user_id', $auth->id)->whereIn('last_status', [0, 1, 2])->get();
+                $query = Solicitud::where('status', '!=', 2)
+                    ->whereYear('fecha_inicio', $request->year);
+
+                if ($request->month) {
+                    $query->whereMonth('fecha_inicio', $request->month);
+                }
+
+                $solicitudes = $query->orderBy('fecha_inicio', 'DESC')->get();
 
                 return response()->json(
                     array(
@@ -61,9 +68,9 @@ class RendicionController extends Controller
         try {
             $auth           = Auth::user();
             if ($auth) {
-                $solicitudes = ProcesoRendicionGasto::whereHas('solicitud', function ($q) use ($auth) {
+                $solicitudes = ProcesoRendicionGasto::/* whereHas('solicitud', function ($q) use ($auth) {
                     $q->where('user_id', $auth->id);
-                })->get();
+                })-> */orderBy('id', 'DESC')->get();
 
                 return response()->json(
                     array(
@@ -134,13 +141,13 @@ class RendicionController extends Controller
                     function ($attribute, $value, $fail) {
                         $index = preg_replace('/[^0-9]/', '', $attribute);
                         $rinde_gasto = "actividades.{$index}.rinde_gasto";
-                        if(request()->input($attribute) === null && request()->input($rinde_gasto) != 0){
+                        if (request()->input($attribute) === null && request()->input($rinde_gasto) != 0) {
                             $fail("El monto es obligatorio");
                         }
                     },
                 ],
                 'actividades.*.rinde_gastos_servicio' => [
-                    function ($attribute, $value, $fail) use($is_avion){
+                    function ($attribute, $value, $fail) use ($is_avion) {
                         $index              = preg_replace('/[^0-9]/', '', $attribute);
                         $rinde_gasto        = "actividades.{$index}.rinde_gasto";
                         $id_actividad       = "actividades.{$index}.id";

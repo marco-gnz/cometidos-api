@@ -20,6 +20,7 @@ class ProcesoRendicionGastoResource extends JsonResource
         return [
             'uuid'                              => $this->uuid,
             'n_rendicion'                       => $this->n_rendicion,
+            'n_folio'                           => $this->n_folio,
             'solicitud_codigo'                  => $this->solicitud ? $this->solicitud->codigo : null,
             'solicitud_fecha_inicio'            => $this->solicitud ? Carbon::parse($this->solicitud->fecha_inicio)->format('d-m-Y'): null,
             'solicitud_fecha_termino'           => $this->solicitud ? Carbon::parse($this->solicitud->fecha_termino)->format('d-m-Y') : null,

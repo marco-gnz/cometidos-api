@@ -7,6 +7,7 @@ use App\Models\ActividadGasto;
 use App\Models\Country;
 use App\Models\Departamento;
 use App\Models\Establecimiento;
+use App\Models\EstadoSolicitud;
 use App\Models\Lugar;
 use App\Models\Motivo;
 use App\Models\Solicitud;
@@ -27,7 +28,7 @@ class MantenedorController extends Controller
     public function getStatusRechazo()
     {
         try {
-            $estados = Solicitud::RECHAZO_STATUS;
+            $estados = EstadoSolicitud::RECHAZO_STATUS;
 
             return response()->json($estados);
         } catch (\Exception $error) {
@@ -60,7 +61,7 @@ class MantenedorController extends Controller
     public function getTransporte()
     {
         try {
-            $transportes = Transporte::orderBy('nombre', 'ASC')->get();
+            $transportes = Transporte::orderBy('id', 'ASC')->get();
 
             return response()->json($transportes);
         } catch (\Exception $error) {

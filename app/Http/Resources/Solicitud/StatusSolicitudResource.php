@@ -16,32 +16,23 @@ class StatusSolicitudResource extends JsonResource
      */
     public function toArray($request)
     {
-        $type = '#808080';
-        if ($this->last_estado) {
-            switch ($this->last_estado->status) {
-                case 1:
-                    $type = '#0e6db8';
-                    break;
-                case 0:
-                case 2:
-                    $type = '#67c23a';
-                    break;
-
-                case 3:
-                    $type = '#dc3545';
-                    break;
-            }
-        }
-        return [
-            'nombres'               => $this->funcionario->nombre_completo ? $this->funcionario->nombre_completo : null,
+        return parent::toArray($request);
+        /* return [
+            'posicion_firma_actual_solicitud'   => $this->posicion_firma_actual_solicitud,
+            'is_ciclo'                          => $this->is_ciclo,
+            'user_uuid'             => $this->user_uuid,
+            'nombres_firmante'      => $this->nombres_firmante,
             'posicion_firma'        => $this->posicion_firma,
-            'perfil'                => $this->perfil ? $this->perfil->name : null,
-            'is_firma'              => $this->last_estado ? true : false,
-            'status_nom'            => $this->last_estado ? Solicitud::STATUS_NOM[$this->last_estado->status] : null,
-            'status_value'          => $this->last_estado  ? $this->last_estado->status : null,
-            'status_date'           => $this->last_estado  ? Carbon::parse($this->last_estado->created_at)->format('d-m-Y H:i') : null,
-            'type'                  => $type,
-            'reasignacion'          => $this->reasignacion
-        ];
+            'perfil'                => $this->perfil,
+            'status_nom'            => $this->status_nom ? $this->status_nom : null,
+            'status_value'          => $this->status_value,
+            'status_date'           => $this->status_date ? $this->status_date : null,
+            'status_firmante'       => $this->status_firmante,
+            'is_reasignado'         => $this->is_reasignado,
+            'reasignar_firma_value' => $this->reasignar_firma_value,
+            'type'                  => $this->type,
+            'is_actual'             => $this->is_actual,
+            'is_firma'              => $this->is_firma
+        ]; */
     }
 }

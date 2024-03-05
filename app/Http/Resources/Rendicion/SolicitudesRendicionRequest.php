@@ -2,6 +2,7 @@
 
 namespace App\Http\Resources\Rendicion;
 
+use App\Models\EstadoSolicitud;
 use App\Models\Solicitud;
 use Carbon\Carbon;
 use Illuminate\Http\Resources\Json\JsonResource;
@@ -27,7 +28,9 @@ class SolicitudesRendicionRequest extends JsonResource
             'subdepartamento_complete'  => $this->subdepartamento ? $this->subdepartamento->nombre : null,
             'establecimiento'           => $this->establecimiento ? $this->establecimiento->sigla : null,
             'derecho_pago'              => $this->derecho_pago ? "Si" : "No",
-            'estado_nom'                => Solicitud::STATUS_NOM[$this->last_status],
+            'jornada'                   => Solicitud::JORNADA_NOM[$this->jornada],
+            'tipo_comision'             => $this->tipoComision ? $this->tipoComision->nombre : null,
+            'estado_nom'                => EstadoSolicitud::STATUS_NOM[$this->last_status],
             'is_avion'                  => $this->transportes ? $this->transportes()->where('solicitud_transporte.transporte_id', 1)->exists() : false
         ];
     }

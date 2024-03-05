@@ -29,6 +29,8 @@ class UpdateSolicitudRequest extends FormRequest
             'fecha_termino'             => ['required', 'date', 'after_or_equal:fecha_inicio'],
             'hora_llegada'              => ['required'],
             'hora_salida'               => ['required'],
+            'utiliza_transporte'        => ['required'],
+            'alimentacion_red'          => ['required'],
             'derecho_pago'              => ['required', 'boolean'],
             'motivos_cometido'          => ['required', 'array'],
             'tipo_comision_id'          => ['required'],
@@ -36,15 +38,15 @@ class UpdateSolicitudRequest extends FormRequest
             'dentro_pais'               => ['required'],
             'lugares_cometido'          => ['required_if:dentro_pais,0', 'array'],
             'paises_cometido'           => ['required_if:dentro_pais,1', 'array'],
-            'afecta_convenio'           => ['required'],
             'actividad_realizada'       => ['required'],
-            'medio_transporte'          => ['required', 'array'],
+            'medio_transporte'          => ['required_if:utiliza_transporte,1', 'array'],
             'gastos_alimentacion'       => ['required', 'boolean'],
             'gastos_alojamiento'        => ['required', 'boolean'],
             'pernocta_lugar_residencia' => ['required', 'boolean'],
             'n_dias_40'                 => ['required'],
             'n_dias_100'                => ['required'],
-            'observacion_gastos'        => ['nullable']
+            'observacion_gastos'        => ['nullable'],
+            'archivos'                  => ['nullable'],
         ];
     }
 
@@ -67,6 +69,8 @@ class UpdateSolicitudRequest extends FormRequest
 
             'motivos_cometido.required'             => 'El :attribute es obligatorio',
 
+            'alimentacion_red.required'             => 'La :attribute es obligatoria',
+
             'tipo_comision_id.required'             => 'El :attribute es obligatorio',
 
             'jornada.required'                      => 'La :attribute es obligatoria',
@@ -77,12 +81,9 @@ class UpdateSolicitudRequest extends FormRequest
 
             'paises_cometido.required_if'           => 'El :attribute es obligatorio',
 
-            'afecta_convenio.required'              => 'El :attribute es obligatorio',
-
             'actividad_realizada.required'          => 'La :attribute es obligatoria',
 
-
-            'medio_transporte.required'             => 'El :attribute es obligatorio',
+            'medio_transporte.required_if'          => 'El :attribute es obligatorio',
 
             'gastos_alimentacion.required'          => 'El :attribute es obligatorio',
 
@@ -112,9 +113,9 @@ class UpdateSolicitudRequest extends FormRequest
             'tipo_comision_id'      => 'tipo de comisión',
             'jornada'               => 'jornada de cometido',
             'dentro_pais'           => 'destino',
+            'alimentacion_red'      => 'alimentación en red',
             'lugares_cometido'      => 'lugar de cometido',
             'paises_cometido'       => 'país de cometido',
-            'afecta_convenio'       => 'afecta a convenio',
             'actividad_realizada'   => 'actividad realizada',
             'medio_transporte'      => 'medio de transporte',
             'gastos_alimentacion'   => 'gastos de alimentación',

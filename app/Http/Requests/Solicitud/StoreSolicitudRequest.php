@@ -29,14 +29,15 @@ class StoreSolicitudRequest extends FormRequest
             'hora_llegada'              => ['required'],
             'hora_salida'               => ['required'],
             'derecho_pago'              => ['required'],
+            'utiliza_transporte'        => ['required'],
+            'alimentacion_red'          => ['required'],
             'motivos_cometido'          => ['required', 'array'],
             'tipo_comision_id'          => ['required'],
             'jornada'                   => ['required'],
             'dentro_pais'               => ['required'],
             'lugares_cometido'          => ['required_if:dentro_pais,0', 'array'],
             'paises_cometido'           => ['required_if:dentro_pais,1', 'array'],
-            'medio_transporte'          => ['required', 'array'],
-            'afecta_convenio'           => ['required'],
+            'medio_transporte'          => ['required_if:utiliza_transporte,1', 'array'],
             'actividad_realizada'       => ['required'],
 
             'gastos_alimentacion'       => ['required', 'boolean'],
@@ -74,15 +75,15 @@ class StoreSolicitudRequest extends FormRequest
 
             'dentro_pais.required'                  => 'El :attribute es obligatorio',
 
+            'alimentacion_red.required'             => 'La :attribute es obligatoria',
+
             'lugares_cometido.required_if'          => 'El :attribute es obligatorio',
 
             'paises_cometido.required_if'           => 'El :attribute es obligatorio',
 
-            'afecta_convenio.required'              => 'El :attribute es obligatorio',
-
             'actividad_realizada.required'          => 'La :attribute es obligatoria',
 
-            'medio_transporte.required'             => 'El :attribute es obligatorio',
+            'medio_transporte.required_if'          => 'El :attribute es obligatorio',
 
             'gastos_alimentacion.required'          => 'El :attribute es obligatorio',
 
@@ -106,10 +107,10 @@ class StoreSolicitudRequest extends FormRequest
             'motivos_cometido'      => 'motivo de cometido',
             'tipo_comision_id'      => 'tipo de comisión',
             'jornada'               => 'jornada de cometido',
+            'alimentacion_red'      => 'alimentación en red',
             'dentro_pais'           => 'destino',
             'lugares_cometido'      => 'lugar de cometido',
             'paises_cometido'       => 'país de cometido',
-            'afecta_convenio'       => 'afecta a convenio',
             'actividad_realizada'   => 'actividad realizada',
             'medio_transporte'      => 'medio de transporte',
             'gastos_alimentacion'   => 'gastos de alimentación',

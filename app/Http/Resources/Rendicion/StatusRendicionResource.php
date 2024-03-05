@@ -19,7 +19,7 @@ class StatusRendicionResource extends JsonResource
         return [
             'estado_nom'                => RendicionGasto::STATUS_NOM[$this->status],
             'created_at'                => $this->created_at ? Carbon::parse($this->created_at)->format('d-m-Y H:i') : null,
-            'user_by'                   => $this->userBy ? $this->userBy->nombre_completo : null,
+            'user_by'                   => optional($this->userBy)->nombre_completo,
             'observacion'               => $this->observacion ? $this->observacion : null
         ];
     }

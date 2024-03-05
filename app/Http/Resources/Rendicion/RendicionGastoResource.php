@@ -33,6 +33,7 @@ class RendicionGastoResource extends JsonResource
         return [
             'uuid'                              => $this->uuid,
             'nombre'                            => $this->actividad ? $this->actividad->nombre : null,
+            'is_particular'                     => $this->actividad ? ($this->actividad->is_particular ? true : false) : null,
             'rinde_gasto_value'                 => $this->rinde_gasto ? true : false,
             'rinde_gasto'                       => $this->rinde_gasto ? 'Si' : 'No',
             'mount'                             => $this->mount ? $this->mount : null,
@@ -43,7 +44,8 @@ class RendicionGastoResource extends JsonResource
             'status_value'                      => $this->last_status,
             'status_type'                       => $type,
             'status_nom'                        => RendicionGasto::STATUS_NOM[$this->last_status],
-            'last_status'                       => $last_status ? StatusRendicionResource::make($last_status) : null
+            'last_status'                       => $last_status ? StatusRendicionResource::make($last_status) : null,
+            'item_presupuestario'               => $this->itemPresupuestario ? $this->itemPresupuestario->nombre : null
         ];
     }
 }

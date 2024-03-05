@@ -18,12 +18,16 @@ class ListFirmantesResource extends JsonResource
         $total_ausentismos_hoy = Ausentismo::where('user_ausente_id', $this->funcionario->id)->first();
 
         return [
+            'uuid'                  => $this->uuid,
             'rut'                   => $this->funcionario->rut ? $this->funcionario->rut : null,
             'nombres'               => $this->funcionario->nombre_completo ? $this->funcionario->nombre_completo : null,
             'email'                 => $this->funcionario->email ? $this->funcionario->email : null,
             'posicion_firma'        => $this->posicion_firma,
             'perfil'                => $this->perfil ? $this->perfil->name : null,
-            'total_ausentismos_hoy' => $total_ausentismos_hoy ? 'Si' : 'No'
+            'status'                => $this->status ? true : false,
+            'total_ausentismos_hoy' => $total_ausentismos_hoy ? 'Si' : 'No',
+            'is_reasignado'         => $this->is_reasignado,
+            'is_firma'              => $this->solicitud ? ($this->posicion_firma === $this->solicitud->posicion_firma_actual ? true : false) : false
         ];
     }
 }

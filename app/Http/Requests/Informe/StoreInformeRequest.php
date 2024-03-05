@@ -1,10 +1,10 @@
 <?php
 
-namespace App\Http\Requests\Solicitud;
+namespace App\Http\Requests\Informe;
 
 use Illuminate\Foundation\Http\FormRequest;
 
-class ValidateInformeSolicitudRequest extends FormRequest
+class StoreInformeRequest extends FormRequest
 {
     /**
      * Determine if the user is authorized to make this request.
@@ -24,21 +24,14 @@ class ValidateInformeSolicitudRequest extends FormRequest
     public function rules()
     {
         return [
+            'uuid_solicitud'            => ['required', 'exists:solicituds,uuid'],
             'fecha_inicio'              => ['required', 'date', 'before_or_equal:fecha_termino'],
             'fecha_termino'             => ['required', 'date', 'after_or_equal:fecha_inicio'],
             'hora_llegada'              => ['required'],
             'hora_salida'               => ['required'],
-            'derecho_pago'              => ['required'],
             'utiliza_transporte'        => ['required'],
-            'alimentacion_red'          => ['required'],
-            'motivos_cometido'          => ['required', 'array'],
-            'tipo_comision_id'          => ['required'],
-            'jornada'                   => ['required'],
-            'dentro_pais'               => ['required'],
-            'lugares_cometido'          => ['required_if:dentro_pais,0', 'array'],
-            'paises_cometido'           => ['required_if:dentro_pais,1', 'array'],
             'medio_transporte'          => ['required_if:utiliza_transporte,1', 'array'],
-            'actividad_realizada'       => ['required'],
+            'actividad_realizada'       => ['required']
         ];
     }
 
@@ -57,22 +50,6 @@ class ValidateInformeSolicitudRequest extends FormRequest
 
             'hora_llegada.required'                 => 'La :attribute es obligatoria',
 
-            'derecho_pago.required'                 => 'El :attribute es obligatorio',
-
-            'alimentacion_red.required'             => 'La :attribute es obligatoria',
-
-            'motivos_cometido.required'             => 'El :attribute es obligatorio',
-
-            'tipo_comision_id.required'             => 'El :attribute es obligatorio',
-
-            'jornada.required'                      => 'La :attribute es obligatoria',
-
-            'dentro_pais.required'                  => 'El :attribute es obligatorio',
-
-            'lugares_cometido.required_if'          => 'El :attribute es obligatorio',
-
-            'paises_cometido.required_if'           => 'El :attribute es obligatorio',
-
             'actividad_realizada.required'          => 'La :attribute es obligatoria',
 
             'medio_transporte.required_if'          => 'El :attribute es obligatorio',
@@ -86,14 +63,7 @@ class ValidateInformeSolicitudRequest extends FormRequest
             'fecha_termino'         => 'fecha de término',
             'hora_salida'           => 'hora de salida',
             'hora_llegada'          => 'hora de llegada',
-            'derecho_pago'          => 'derecho a pago',
-            'alimentacion_red'      => 'alimentación en red',
-            'motivos_cometido'      => 'motivo de cometido',
-            'tipo_comision_id'      => 'tipo de comisión',
-            'jornada'               => 'jornada de cometido',
             'dentro_pais'           => 'destino',
-            'lugares_cometido'      => 'lugar de cometido',
-            'paises_cometido'       => 'país de cometido',
             'actividad_realizada'   => 'actividad realizada',
             'medio_transporte'      => 'medio de transporte'
         ];

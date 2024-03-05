@@ -29,13 +29,14 @@ class ValidateInformeUpdateSolicitudRequest extends FormRequest
             'hora_llegada'              => ['required'],
             'hora_salida'               => ['required'],
             'derecho_pago'              => ['required'],
+            'utiliza_transporte'        => ['required'],
             'motivos_cometido'          => ['required', 'array'],
             'tipo_comision_id'          => ['required'],
             'jornada'                   => ['required'],
             'dentro_pais'               => ['required'],
             'lugares_cometido'          => ['required_if:dentro_pais,0', 'array'],
             'paises_cometido'           => ['required_if:dentro_pais,1', 'array'],
-            'medio_transporte'          => ['required', 'array'],
+            'medio_transporte'          => ['required_if:utiliza_transporte,1', 'array'],
             'actividad_realizada'       => ['required'],
         ];
     }
@@ -71,7 +72,7 @@ class ValidateInformeUpdateSolicitudRequest extends FormRequest
 
             'actividad_realizada.required'          => 'La :attribute es obligatoria',
 
-            'medio_transporte.required'             => 'El :attribute es obligatorio',
+            'medio_transporte.required_if'          => 'El :attribute es obligatorio',
         ];
     }
 
