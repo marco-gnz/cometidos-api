@@ -22,11 +22,13 @@ class CreateUsersTable extends Migration
             $table->string('nombres');
             $table->string('apellidos');
             $table->string('nombre_completo');
+            $table->integer('n_cargo')->default(0);
             $table->boolean('estado')->default(1);
             $table->string('email')->unique()->nullable();
             $table->timestamp('email_verified_at')->nullable();
             $table->string('password');
             $table->string('telefono', 12)->nullable();
+            $table->string('anexo', 12)->nullable();
 
             $table->unsignedBigInteger('ley_id')->nullable();
             $table->foreign('ley_id')->references('id')->on('leys');

@@ -17,6 +17,7 @@ class CreateSolicitudFirmantesTable extends Migration
             $table->bigIncrements('id');
             $table->uuid('uuid')->unique()->nullable();
             $table->integer('posicion_firma')->default(1);
+            $table->boolean('is_reasignado')->default(0);
             $table->boolean('status')->default(1);
 
             $table->foreign('solicitud_id')->references('id')->on('solicituds')->onDelete('cascade');

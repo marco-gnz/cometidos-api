@@ -20,6 +20,7 @@ class CreateEstadoRendicionGastosTable extends Migration
             $table->text('observacion')->nullable();
             $table->text('rendicion_old')->nullable();
             $table->text('rendicion_new')->nullable();
+            $table->string('ip_address')->nullable();
 
             $table->foreign('rendicion_gasto_id')->references('id')->on('rendicion_gastos')->onDelete('cascade');
             $table->unsignedBigInteger('rendicion_gasto_id')->nullable();

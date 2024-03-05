@@ -4,7 +4,7 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
-class CreateProcesoRendicionGastosTable extends Migration
+class CreateEstadoProcesoRendicionGastosTable extends Migration
 {
     /**
      * Run the migrations.
@@ -13,12 +13,15 @@ class CreateProcesoRendicionGastosTable extends Migration
      */
     public function up()
     {
-        Schema::create('proceso_rendicion_gastos', function (Blueprint $table) {
+        Schema::create('estado_proceso_rendicion_gastos', function (Blueprint $table) {
             $table->bigIncrements('id');
             $table->uuid('uuid')->unique()->nullable();
-            $table->integer('n_rendicion')->default(0);
-            $table->foreign('solicitud_id')->references('id')->on('solicituds')->onDelete('cascade');
-            $table->unsignedBigInteger('solicitud_id')->nullable();
+            $table->unsignedSmallInteger('status')->default(0);
+            $table->text('observacion')->nullable();
+            $table->string('ip_address')->nullable();
+
+            $table->foreign('p_rendicion_gasto_id')->references('id')->on('proceso_rendicion_gastos')->onDelete('cascade');
+            $table->unsignedBigInteger('p_rendicion_gasto_id')->nullable();
 
             $table->unsignedBigInteger('user_id_by')->nullable();
             $table->foreign('user_id_by')->references('id')->on('users');
@@ -27,8 +30,6 @@ class CreateProcesoRendicionGastosTable extends Migration
             $table->unsignedBigInteger('user_id_update')->nullable();
             $table->foreign('user_id_update')->references('id')->on('users');
             $table->dateTime('fecha_by_user_update', 0)->nullable();
-
-            $table->timestamps();
         });
     }
 
@@ -39,6 +40,6 @@ class CreateProcesoRendicionGastosTable extends Migration
      */
     public function down()
     {
-        Schema::dropIfExists('proceso_rendicion_gastos');
+        Schema::dropIfExists('estado_proceso_rendicion_gastos');
     }
 }

@@ -4,11 +4,19 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Str;
+use Carbon\Carbon;
 
 class Convenio extends Model
 {
     protected $table        = "convenios";
     protected $primaryKey   = 'id';
+
+    public const TYPE_COMETIDOS = 0;
+
+    public const TYPE_NOM = [
+        self::TYPE_COMETIDOS => 'COMETIDOS'
+    ];
 
     protected $fillable = [
         'uuid',
@@ -18,6 +26,8 @@ class Convenio extends Model
         'fecha_resolucion',
         'n_resolucion',
         'n_viatico_mensual',
+        'tipo_convenio',
+        'anio',
         'observacion',
         'user_id',
         'estamento_id',
@@ -29,6 +39,30 @@ class Convenio extends Model
         'user_id_update',
         'fecha_by_user_update',
     ];
+
+    protected static function booted()
+    {
+        static::creating(function ($convenio) {
+            $convenio->uuid                    = Str::uuid();
+            $convenio->user_id_by              = Auth::user() ? Auth::user()->id : null;
+            $convenio->fecha_by_user           = now();
+        });
+
+        static::created(function ($convenio) {
+            $convenio->codigo               = self::generarCodigo($convenio);
+            $convenio->tipo_convenio        = self::TYPE_COMETIDOS;
+            $convenio->save();
+        });
+    }
+
+    private static function generarCodigo($convenio)
+    {
+        $letra                  = "C";
+        $correlativo            = str_pad(self::whereYear('created_at', $convenio->created_at->year)->count() + 1, 5, '0', STR_PAD_LEFT);
+        $anio                   = $convenio->anio;
+        $codigo                 = "{$anio}-{$correlativo}-{$letra}";
+        return $codigo;
+    }
 
     public function funcionario()
     {

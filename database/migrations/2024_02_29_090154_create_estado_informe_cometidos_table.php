@@ -4,7 +4,7 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
-class CreateInformeCometidosTable extends Migration
+class CreateEstadoInformeCometidosTable extends Migration
 {
     /**
      * Run the migrations.
@@ -13,21 +13,15 @@ class CreateInformeCometidosTable extends Migration
      */
     public function up()
     {
-        Schema::create('informe_cometidos', function (Blueprint $table) {
+        Schema::create('estado_informe_cometidos', function (Blueprint $table) {
             $table->bigIncrements('id');
             $table->uuid('uuid')->unique()->nullable();
-            $table->string('codigo')->unique()->nullable();
-            $table->date('fecha_inicio')->nullable();
-            $table->date('fecha_termino')->nullable();
-            $table->time('hora_llegada')->nullable();
-            $table->time('hora_salida')->nullable();
-            $table->text('actividad_realizada')->nullable();
-            $table->boolean('utiliza_transporte')->default(1);
-            $table->unsignedSmallInteger('last_status')->default(0);
-            $table->integer('dias_permitidos')->nullable();
+            $table->unsignedSmallInteger('status')->default(0);
+            $table->text('observacion')->nullable();
+            $table->string('ip_address')->nullable();
 
-            $table->foreign('solicitud_id')->references('id')->on('solicituds');
-            $table->unsignedBigInteger('solicitud_id')->nullable();
+            $table->foreign('informe_cometido_id')->references('id')->on('informe_cometidos')->onDelete('cascade');
+            $table->unsignedBigInteger('informe_cometido_id')->nullable();
 
             $table->unsignedBigInteger('user_id_by')->nullable();
             $table->foreign('user_id_by')->references('id')->on('users');
@@ -36,8 +30,6 @@ class CreateInformeCometidosTable extends Migration
             $table->unsignedBigInteger('user_id_update')->nullable();
             $table->foreign('user_id_update')->references('id')->on('users');
             $table->dateTime('fecha_by_user_update', 0)->nullable();
-
-            $table->timestamps();
         });
     }
 
@@ -48,6 +40,6 @@ class CreateInformeCometidosTable extends Migration
      */
     public function down()
     {
-        Schema::dropIfExists('informe_cometidos');
+        Schema::dropIfExists('estado_informe_cometidos');
     }
 }

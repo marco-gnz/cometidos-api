@@ -4,19 +4,21 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\Auth;
 use Spatie\Permission\Models\Role;
 use Illuminate\Support\Facades\Request;
+use Illuminate\Support\Str;
 
 class EstadoSolicitud extends Model
 {
     protected $table        = "estado_solicituds";
     protected $primaryKey   = 'id';
 
-    public const STATUS_INGRESADA = 0;
-    public const STATUS_PENDIENTE = 1;
-    public const STATUS_APROBADO  = 2;
-    public const STATUS_RECHAZADO = 3;
-    public const STATUS_ANULADO   = 4;
+    public const STATUS_INGRESADA  = 0;
+    public const STATUS_PENDIENTE  = 1;
+    public const STATUS_APROBADO   = 2;
+    public const STATUS_RECHAZADO  = 3;
+    public const STATUS_ANULADO    = 4;
     public const STATUS_MODIFICADA = 5;
 
     public const STATUS_NOM = [
@@ -37,31 +39,94 @@ class EstadoSolicitud extends Model
         self::STATUS_MODIFICADA => 'Modificada por usuario'
     ];
 
+    public const RECHAZO_1 = 1;
+    public const RECHAZO_2 = 2;
+    public const RECHAZO_3 = 3;
+
+    public const RECHAZO_NOM = [
+        self::RECHAZO_1 => 'FALTA DE ANTECEDENTES',
+        self::RECHAZO_2 => 'ANTECEDENTES DE PROPUESTA DE SOLICITUD INCORRECTOS',
+        self::RECHAZO_3 => 'FALTAN DOCUMENTOS ADJUNTOS',
+    ];
+
+    public const RECHAZO_DESC = [
+        self::RECHAZO_1 => 'FALTA DE ANTECEDENTES',
+        self::RECHAZO_2 => 'ANTECEDENTES DE PROPUESTA DE SOLICITUD INCORRECTOS',
+        self::RECHAZO_3 => 'FALTAN DOCUMENTOS ADJUNTOS',
+    ];
+
+    public const RECHAZO_STATUS = [
+        ['id' => self::RECHAZO_1, 'nombre' => self::RECHAZO_NOM[self::RECHAZO_1], 'desc' => self::RECHAZO_DESC[self::RECHAZO_1]],
+        ['id' => self::RECHAZO_2, 'nombre' => self::RECHAZO_NOM[self::RECHAZO_2], 'desc' => self::RECHAZO_DESC[self::RECHAZO_2]],
+        ['id' => self::RECHAZO_3, 'nombre' => self::RECHAZO_NOM[self::RECHAZO_3], 'desc' => self::RECHAZO_DESC[self::RECHAZO_3]],
+    ];
+
     protected $fillable = [
         'status',
         'motivo_rechazo',
         'observacion',
         'posicion_firma',
-        'posicion_next_firma',
+        'posicion_firma_s',
+        'posicion_firma_r_s',
         'history_solicitud',
-        'reasignacion',
-        'reasignado',
+        'is_reasignado',
         'solicitud_id',
+        'firmante_id',
         'user_id',
-        'role_id',
-        'user_firmante_id',
-        'role_firmante_id',
+        's_role_id',
+        's_firmante_id',
+        'r_s_role_id',
+        'r_s_user_id',
+        'r_s_firmante_id',
         'ip_address'
     ];
 
     protected static function booted()
     {
         static::creating(function ($estado) {
-            $ip_address             = Request::ip();
-            $estado->ip_address     = $ip_address;
+            $ip_address                 = Request::ip();
+            $estado->ip_address         = $ip_address;
+
+            $posicion_firma_s           = $estado->posicion_firma_s;
+            $estado->posicion_firma_s   = $posicion_firma_s;
+            $estado->posicion_firma     = $posicion_firma_s;
+            $estado->s_role_id          = $estado->firmaS->perfil->id;
+            $estado->user_id            = $estado->firmaS->funcionario->id;
+            $estado->firmante_id        = $estado->firmaS->id;
+
+            if ($estado->is_reasignado) {
+                $posicion_firma_r_s         = $estado->posicion_firma_r_s;
+                $estado->posicion_firma_r_s = $posicion_firma_r_s;
+                $estado->posicion_firma     = $posicion_firma_r_s;
+                $estado->r_s_role_id        = $estado->firmaRs->perfil->id;
+                $estado->r_s_user_id        = $estado->firmaRs->funcionario->id;
+                $estado->firmante_id        = $estado->firmaRs->id;
+                $estado->firmaRs->update([
+                    'is_reasignado' => true
+                ]);
+            } else {
+                $firmantes = $estado->solicitud->firmantes()->get();
+                if ($firmantes->count() > 0) {
+                    $firmantes->toQuery()->update([
+                        'is_reasignado' => false
+                    ]);
+                }
+            }
+        });
+
+        static::created(function ($estado) {
+            $total_aprobado = $estado->solicitud->estados()->where('posicion_firma', '<=', $estado->posicion_firma)->where('status',self::STATUS_APROBADO)->count();
             $estado->solicitud->update([
-                'last_status'   => $estado->status
+                'last_status'               => $estado->status,
+                'posicion_firma_actual'     => $estado->posicion_firma,
+                'total_ok'                  => $total_aprobado
             ]);
+
+            if ($estado->status === self::STATUS_ANULADO) {
+                $estado->solicitud->update([
+                    'status'    => Solicitud::STATUS_ANULADO
+                ]);
+            }
         });
     }
 
@@ -75,18 +140,33 @@ class EstadoSolicitud extends Model
         return $this->belongsTo(User::class, 'user_id');
     }
 
+    public function funcionarioRs()
+    {
+        return $this->belongsTo(User::class, 'r_s_user_id');
+    }
+
     public function perfil()
     {
-        return $this->belongsTo(Role::class, 'role_id');
+        return $this->belongsTo(Role::class, 's_role_id');
     }
 
-    public function firmante()
+    public function perfilRs()
     {
-        return $this->belongsTo(User::class, 'user_firmante_id');
+        return $this->belongsTo(Role::class, 'r_s_role_id');
     }
 
-    public function perfilFirmante()
+    public function firmaActual()
     {
-        return $this->belongsTo(Role::class, 'role_firmante_id');
+        return $this->belongsTo(SolicitudFirmante::class, 'firmante_id');
+    }
+
+    public function firmaS()
+    {
+        return $this->belongsTo(SolicitudFirmante::class, 's_firmante_id');
+    }
+
+    public function firmaRs()
+    {
+        return $this->belongsTo(SolicitudFirmante::class, 'r_s_firmante_id');
     }
 }

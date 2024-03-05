@@ -21,6 +21,8 @@ class CreateSolicitudsTable extends Migration
             $table->date('fecha_termino')->nullable();
             $table->time('hora_llegada')->nullable();
             $table->time('hora_salida')->nullable();
+            $table->boolean('utiliza_transporte')->default(1);
+            $table->boolean('alimentacion_red')->default(0);
             $table->boolean('derecho_pago')->default(0);
             $table->boolean('afecta_convenio')->nullable();
             $table->text('actividad_realizada')->nullable();
@@ -41,6 +43,10 @@ class CreateSolicitudsTable extends Migration
             $table->boolean('calculo_aplicado')->default(0);
             $table->integer('total_dias_cometido')->nullable();
             $table->integer('total_horas_cometido')->nullable();
+            $table->integer('posicion_firma_actual')->default(0);
+            $table->integer('total_firmas')->default(0)->nullable();
+            $table->integer('total_ok')->default(0)->nullable();
+            $table->integer('dias_permitidos')->nullable();
 
             $table->foreign('user_id')->references('id')->on('users');
             $table->unsignedBigInteger('user_id')->nullable();
@@ -57,6 +63,9 @@ class CreateSolicitudsTable extends Migration
             $table->foreign('ley_id')->references('id')->on('leys');
             $table->unsignedBigInteger('ley_id')->nullable();
 
+            $table->unsignedBigInteger('estamento_id')->nullable();
+            $table->foreign('estamento_id')->references('id')->on('estamentos');
+
             $table->foreign('convenio_id')->references('id')->on('convenios');
             $table->unsignedBigInteger('convenio_id')->nullable();
 
@@ -66,8 +75,17 @@ class CreateSolicitudsTable extends Migration
             $table->foreign('establecimiento_id')->references('id')->on('establecimientos');
             $table->unsignedBigInteger('establecimiento_id')->nullable();
 
+            $table->foreign('cargo_id')->references('id')->on('cargos');
+            $table->unsignedBigInteger('cargo_id')->nullable();
+
+            $table->unsignedBigInteger('hora_id')->nullable();
+            $table->foreign('hora_id')->references('id')->on('horas');
+
             $table->foreign('escala_id')->references('id')->on('escalas');
             $table->unsignedBigInteger('escala_id')->nullable();
+
+            $table->unsignedBigInteger('calidad_id')->nullable();
+            $table->foreign('calidad_id')->references('id')->on('calidads');
 
             $table->foreign('tipo_comision_id')->references('id')->on('tipo_comisions');
             $table->unsignedBigInteger('tipo_comision_id')->nullable();

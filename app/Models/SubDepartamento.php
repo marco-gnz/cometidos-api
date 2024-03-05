@@ -7,5 +7,11 @@ use Illuminate\Database\Eloquent\Model;
 
 class SubDepartamento extends Model
 {
-    use HasFactory;
+    protected $table        = "sub_departamentos";
+    protected $primaryKey   = 'id';
+
+    protected $fillable = [
+        'cod_sirh',
+        'nombre'
+    ];
 }

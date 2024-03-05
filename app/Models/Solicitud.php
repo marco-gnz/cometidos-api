@@ -39,6 +39,13 @@ class Solicitud extends Model
         self::JORNADA_TODO_EL_DIA   => 'Todo el día'
     ];
 
+    public const JORNADA_ABRE = [
+        self::JORNADA_MANANA        => 'AM',
+        self::JORNADA_TARDE         => 'PM',
+        self::JORNADA_NOCHE         => 'NO',
+        self::JORNADA_TODO_EL_DIA   => 'TD'
+    ];
+
     public const JORNADA_COMETIDOS = [
         ['id' => self::JORNADA_MANANA, 'nombre' => self::JORNADA_NOM[self::JORNADA_MANANA]],
         ['id' => self::JORNADA_TARDE, 'nombre' => self::JORNADA_NOM[self::JORNADA_TARDE]],
@@ -46,51 +53,15 @@ class Solicitud extends Model
         ['id' => self::JORNADA_TODO_EL_DIA, 'nombre' => self::JORNADA_NOM[self::JORNADA_TODO_EL_DIA]],
     ];
 
-    public const STATUS_INGRESADA = 0;
-    public const STATUS_PENDIENTE = 1;
-    public const STATUS_APROBADO  = 2;
-    public const STATUS_RECHAZADO = 3;
-    public const STATUS_ANULADO   = 4;
-    public const STATUS_MODIFICADA = 5;
+    public const STATUS_PENDIENTE   = 0;
+    public const STATUS_PROCESADO   = 1;
+    public const STATUS_ANULADO     = 2;
+
 
     public const STATUS_NOM = [
-        self::STATUS_INGRESADA  => 'INGRESADA',
-        self::STATUS_PENDIENTE  => 'PENDIENTE',
-        self::STATUS_APROBADO   => 'APROBADO',
-        self::STATUS_RECHAZADO  => 'RECHAZADO',
-        self::STATUS_ANULADO    => 'ANULADO',
-        self::STATUS_MODIFICADA => 'MODIFICADA'
-    ];
-
-    public const STATUS_DESC = [
-        self::STATUS_INGRESADA  => 'Ingresada al sistema',
-        self::STATUS_PENDIENTE  => 'Pendiente por validar',
-        self::STATUS_APROBADO   => 'Aprobado por administrador',
-        self::STATUS_RECHAZADO  => 'Rechazado por administrador',
-        self::STATUS_ANULADO    => 'Anulado por administrador',
-        self::STATUS_MODIFICADA => 'Modificada por usuario'
-    ];
-
-    public const RECHAZO_1 = 1;
-    public const RECHAZO_2 = 2;
-    public const RECHAZO_3 = 3;
-
-    public const RECHAZO_NOM = [
-        self::RECHAZO_1 => 'FALTA DE ANTECEDENTES',
-        self::RECHAZO_2 => 'ANTECEDENTES DE PROPUESTA DE SOLICITUD INCORRECTOS',
-        self::RECHAZO_3 => 'FALTAN DOCUMENTOS ADJUNTOS',
-    ];
-
-    public const RECHAZO_DESC = [
-        self::RECHAZO_1 => 'FALTA DE ANTECEDENTES',
-        self::RECHAZO_2 => 'ANTECEDENTES DE PROPUESTA DE SOLICITUD INCORRECTOS',
-        self::RECHAZO_3 => 'FALTAN DOCUMENTOS ADJUNTOS',
-    ];
-
-    public const RECHAZO_STATUS = [
-        ['id' => self::RECHAZO_1, 'nombre' => self::RECHAZO_NOM[self::RECHAZO_1], 'desc' => self::RECHAZO_DESC[self::RECHAZO_1]],
-        ['id' => self::RECHAZO_2, 'nombre' => self::RECHAZO_NOM[self::RECHAZO_2], 'desc' => self::RECHAZO_DESC[self::RECHAZO_2]],
-        ['id' => self::RECHAZO_3, 'nombre' => self::RECHAZO_NOM[self::RECHAZO_3], 'desc' => self::RECHAZO_DESC[self::RECHAZO_3]],
+        self::STATUS_PENDIENTE      => 'EN PROCESO',
+        self::STATUS_PROCESADO      => 'PROCESADO',
+        self::STATUS_ANULADO        => 'ANULADO',
     ];
 
     protected $fillable = [
@@ -101,8 +72,10 @@ class Solicitud extends Model
         'hora_llegada',
         'hora_salida',
         'derecho_pago',
+        'utiliza_transporte',
         'afecta_convenio',
         'actividad_realizada',
+        'alimentacion_red',
         'gastos_alimentacion',
         'gastos_alojamiento',
         'pernocta_lugar_residencia',
@@ -115,6 +88,7 @@ class Solicitud extends Model
         'n_resolucion',
         'tipo_resolucion',
         'jornada',
+        'posicion_firma_actual',
         'dentro_pais',
         'n_cargo_user',
         'total_dias_cometido',
@@ -123,16 +97,23 @@ class Solicitud extends Model
         'valor_cometido_parcial',
         'valor_pasaje',
         'valor_total',
+        'total_firmas',
+        'total_ok',
         'user_id',
         'grupo_id',
         'convenio_id',
         'departamento_id',
         'sub_departamento_id',
+        'dias_permitidos',
         'ley_id',
+        'calidad_id',
         'grado_id',
+        'estamento_id',
         'establecimiento_id',
         'calculo_aplicado',
         'tipo_comision_id',
+        'cargo_id',
+        'hora_id',
         'user_id_by',
         'fecha_by_user',
         'user_id_update',
@@ -172,9 +153,8 @@ class Solicitud extends Model
             $solicitud->fecha_by_user           = now();
         });
 
-
-
         static::created(function ($solicitud) {
+            $dias_permitidos                = (int)Configuration::obtenerValor('informecometido.dias');
             $grupo                          = self::grupoDepto($solicitud);
             $solicitud->codigo              = self::generarCodigo($solicitud);
             $solicitud->departamento_id     = $grupo ? $grupo->departamento_id : null;
@@ -183,19 +163,27 @@ class Solicitud extends Model
             $solicitud->grupo_id            = $grupo ? $grupo->id : null;
             $solicitud->ley_id              = $solicitud->funcionario ? $solicitud->funcionario->ley_id : null;
             $solicitud->grado_id            = $solicitud->funcionario ? $solicitud->funcionario->grado_id : null;
+            $solicitud->cargo_id            = $solicitud->funcionario ? $solicitud->funcionario->cargo_id : null;
+            $solicitud->estamento_id        = $solicitud->funcionario ? $solicitud->funcionario->estamento_id : null;
+            $solicitud->hora_id             = $solicitud->funcionario ? $solicitud->funcionario->hora_id : null;
+            $solicitud->calidad_id          = $solicitud->funcionario ? $solicitud->funcionario->calidad_id : null;
             $solicitud->tipo_resolucion     = self::RESOLUCION_EXENTA;
+            $solicitud->total_firmas        = $solicitud->firmantes()->where('status', true)->count();
+            $solicitud->dias_permitidos     = $dias_permitidos;
             $solicitud->save();
         });
 
         static::updating(function ($solicitud) {
-            $solicitud->codigo = self::generarCodigoUpdate($solicitud);
+            $solicitud->codigo              = self::generarCodigoUpdate($solicitud);
+            $solicitud->total_firmas        = $solicitud->firmantes()->where('status', true)->count();
         });
     }
+
 
     private static function generarCodigo($solicitud)
     {
         $letra                  = $solicitud->derecho_pago ? 'C' : 'S';
-        $correlativo            = str_pad(self::whereYear('created_at', $solicitud->created_at->year)->count() + 1, 4, '0', STR_PAD_LEFT);
+        $correlativo            = str_pad(self::whereYear('created_at', $solicitud->created_at->year)->count() + 1, 5, '0', STR_PAD_LEFT);
         $anio                   = $solicitud->created_at->year;
         $codigoEstablecimiento  = $solicitud->funcionario->establecimiento->cod_sirh;
         $codigo                 = "{$codigoEstablecimiento}-{$anio}-{$correlativo}-{$letra}";
@@ -242,6 +230,11 @@ class Solicitud extends Model
         return $this->belongsTo(Grado::class, 'grado_id');
     }
 
+    public function cargo()
+    {
+        return $this->belongsTo(Cargo::class, 'cargo_id');
+    }
+
     public function tipoComision()
     {
         return $this->belongsTo(TipoComision::class, 'tipo_comision_id');
@@ -262,9 +255,19 @@ class Solicitud extends Model
         return $this->belongsTo(Convenio::class, 'convenio_id');
     }
 
+    public function estamento()
+    {
+        return $this->belongsTo(Estamento::class, 'estamento_id');
+    }
+
     public function lugares()
     {
         return $this->belongsToMany(Lugar::class);
+    }
+
+    public function calidad()
+    {
+        return $this->belongsTo(Calidad::class, 'calidad_id');
     }
 
     public function paises()
@@ -307,6 +310,16 @@ class Solicitud extends Model
         return $this->hasMany(SolicitudFirmante::class);
     }
 
+    public function informes()
+    {
+        return $this->hasMany(InformeCometido::class);
+    }
+
+    public function hora()
+    {
+        return $this->belongsTo(Hora::class, 'hora_id');
+    }
+
     public function userBy()
     {
         return $this->belongsTo(User::class, 'user_id_by');
@@ -325,5 +338,178 @@ class Solicitud extends Model
     public function addEstados(array $estados)
     {
         return $this->estados()->createMany($estados);
+    }
+
+    public function addInformes(array $informes)
+    {
+        return $this->informes()->createMany($informes);
+    }
+
+    public function getLastCalculo()
+    {
+        return $this->hasOne(SoliucitudCalculo::class)->latest()->first();
+    }
+
+    public function informeCometido()
+    {
+        return $this->informes()->whereIn('last_status', [EstadoInformeCometido::STATUS_INGRESADA, EstadoInformeCometido::STATUS_APROBADO])->orderBy('fecha_by_user', 'DESC')->first();
+    }
+
+    public function isInformeAtrasado()
+    {
+
+        $informe = self::informeCometido();
+        if (!$informe) {
+            $dias_permitidos                = $this->dias_permitidos;
+            $fecha_termino_informe          = "{$this->fecha_termino} {$this->hora_termino}";
+            $fecha_termino_informe          = Carbon::parse($fecha_termino_informe);
+            $fecha_ingreso                  = Carbon::parse($this->fecha_by_user);
+            $plazo                          = $fecha_termino_informe->addDays($dias_permitidos);
+            if ($fecha_ingreso->lte($plazo)) {
+                return false;
+            } else {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    public function isUpdate()
+    {
+        $last_status = $this->estados()->orderBy('id', 'DESC')->first();
+
+        if (($last_status) && ($last_status->status === EstadoSolicitud::STATUS_INGRESADA || $last_status->status === EstadoSolicitud::STATUS_PENDIENTE)) {
+            return true;
+        }
+        return false;
+    }
+
+    private function totalFirmasAprobadas()
+    {
+        $last_status    = $this->estados()->orderBy('id', 'DESC')->first();
+        $total_aprobado = $this->estados()->where('posicion_firma', '<=', $last_status->posicion_firma)->where('status', EstadoSolicitud::STATUS_APROBADO)->count();
+        return $total_aprobado;
+    }
+
+    private function totalFirmas()
+    {
+        $count_firmantes = $this->firmantes()->where('role_id', '!=', 1)->where('status', true)->count();
+        return $count_firmantes;
+    }
+
+    public function pageFirma()
+    {
+        $count_firmantes = self::totalFirmas();
+        $firmas_aprobadas = self::totalFirmasAprobadas();
+
+        return "{$firmas_aprobadas} de {$count_firmantes} firmas realizadas";
+    }
+
+    public function pageFirmaPorcentaje()
+    {
+        $count_firmantes = self::totalFirmas();
+        $firmas_aprobadas = self::totalFirmasAprobadas();
+        $porcentaje = ($firmas_aprobadas / $count_firmantes) * 100;
+
+        return $porcentaje;
+    }
+
+    public function pageFirmaIsOk()
+    {
+        $count_firmantes = self::totalFirmas();
+        $firmas_aprobadas = self::totalFirmasAprobadas();
+
+        if ($firmas_aprobadas === $count_firmantes) {
+            return true;
+        }
+        return false;
+    }
+
+    public function typeStatus()
+    {
+        switch ($this->status) {
+            case 0:
+                $type = 'info';
+                break;
+
+            case 1:
+                $type = 'success';
+                break;
+
+            case 2:
+                $type = 'danger';
+                break;
+        }
+        return $type;
+    }
+    public function typeLastStatus()
+    {
+        switch ($this->status) {
+            case 1:
+                $type = 'primary';
+                break;
+
+            case 2:
+                $type = 'success';
+                break;
+
+            case 3:
+            case 4:
+                $type = 'danger';
+                break;
+
+            default:
+                $type = 'info';
+                break;
+        }
+        return $type;
+    }
+
+    public function exportarDocumentos()
+    {
+        $informe = self::informeCometido();
+        $documentos = [
+            [
+                'name'          => 'Informe C.',
+                'url'           => $informe ? route('informecometido.show', ['uuid' => $informe->uuid]) : null,
+                'exist'         => $informe ? true : false,
+                'stauts_nom'    => $informe ? EstadoInformeCometido::STATUS_NOM[$informe->last_status] : '',
+                'type'          => $informe ? EstadoInformeCometido::STATUS_TYPE[$informe->last_status] : '',
+            ],
+            [
+                'name'  => 'Resolución C.',
+                'url'   => route('resolucioncometidofuncional.show', ['uuid' => $this->uuid]),
+                'exist' => true,
+                'type'  => 'success'
+            ],
+            [
+                'name'  => 'Convenio C.',
+                'url'   => $this->convenio ? route('convenio.show', ['uuid' => $this->convenio->uuid]) : null,
+                'exist' => $this->convenio ? true : false,
+                'type'  => 'success'
+            ]
+        ];
+
+        return $documentos;
+    }
+
+    public function valorTotal()
+    {
+        $r_total    = 0;
+        $r_procesos = $this->procesoRendicionGastos()->where('last_status', 1)->get();
+        if (count($r_procesos) > 0) {
+            foreach ($r_procesos as $proceso) {
+                $r_total += $proceso->rendiciones()->where('last_status', 1)->sum('mount_real');
+            }
+        }
+
+        $total_calculo = 0;
+        $calculo = self::getLastCalculo();
+        if($calculo){
+            $total_calculo = $calculo->monto_total;
+        }
+        $total = $r_total + $total_calculo;
+        $total = "$".number_format($total, 0, ",", ".");
+        return $total;
     }
 }

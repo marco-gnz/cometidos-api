@@ -7,20 +7,29 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Str;
 use Carbon\Carbon;
-use Illuminate\Support\Facades\Request;
 
-class EstadoRendicionGasto extends Model
+class EstadoProcesoRendicionGasto extends Model
 {
-    protected $table        = "estado_rendicion_gastos";
+    use HasFactory;
+
+    protected $table        = "estado_proceso_rendicion_gastos";
     protected $primaryKey   = 'id';
+
+    public const STATUS_PENDIENTE   = 0;
+    public const STATUS_VERIFICADO  = 1;
+    public const STATUS_ANULADO     = 2;
+
+    public const STATUS_NOM = [
+        self::STATUS_PENDIENTE      => 'PENDIENTE',
+        self::STATUS_VERIFICADO     => 'VERIFICADO',
+        self::STATUS_ANULADO        => 'ANULADO',
+    ];
 
     protected $fillable = [
         'uuid',
         'status',
         'observacion',
-        'rendicion_gasto_id',
-        'rendicion_old',
-        'rendicion_new',
+        'p_rendicion_gasto_id',
         'user_id_by',
         'fecha_by_user',
         'user_id_update',
@@ -33,13 +42,12 @@ class EstadoRendicionGasto extends Model
             $estado->uuid                    = Str::uuid();
             $estado->user_id_by              = Auth::user()->id;
             $estado->fecha_by_user           = now();
-            $estado->ip_address              = Request::ip();
         });
     }
 
-    public function rendicionGasto()
+    public function procesoRendicionGasto()
     {
-        return $this->belongsTo(RendicionGasto::class, 'rendicion_gasto_id');
+        return $this->belongsTo(ProcesoRendicionGasto::class, 'p_rendicion_gasto_id');
     }
 
     public function userBy()

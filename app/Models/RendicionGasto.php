@@ -37,6 +37,7 @@ class RendicionGasto extends Model
         'rinde_gasto',
         'rinde_gastos_servicio',
         'proceso_rendicion_gasto_id',
+        'item_presupuestario_id',
         'actividad_gasto_id',
         'user_id_by',
         'fecha_by_user',
@@ -48,6 +49,7 @@ class RendicionGasto extends Model
     {
         static::creating(function ($rendicion) {
             $rendicion->mount_real              = $rendicion->mount;
+            $rendicion->item_presupuestario_id  = $rendicion->actividad->item_presupuestario_id;
             $rendicion->uuid                    = Str::uuid();
             $rendicion->user_id_by              = Auth::user()->id;
             $rendicion->fecha_by_user           = now();
@@ -61,6 +63,11 @@ class RendicionGasto extends Model
     public function actividad()
     {
         return $this->belongsTo(ActividadGasto::class, 'actividad_gasto_id');
+    }
+
+    public function itemPresupuestario()
+    {
+        return $this->belongsTo(ItemPresupuestario::class, 'item_presupuestario_id');
     }
 
     public function procesoRendicionGasto()

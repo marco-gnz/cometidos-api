@@ -7,5 +7,12 @@ use Illuminate\Database\Eloquent\Model;
 
 class Establecimiento extends Model
 {
-    use HasFactory;
+    protected $table        = "establecimientos";
+    protected $primaryKey   = 'id';
+
+    protected $fillable = [
+        'cod_sirh',
+        'sigla',
+        'nombre'
+    ];
 }

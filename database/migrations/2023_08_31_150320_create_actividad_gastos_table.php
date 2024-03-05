@@ -18,6 +18,7 @@ class CreateActividadGastosTable extends Migration
             $table->string('nombre');
             $table->text('descripcion')->nullable();
             $table->boolean('status')->default(1);
+            $table->boolean('is_particular')->default(0);
 
             $table->foreign('item_presupuestario_id')->references('id')->on('item_presupuestarios');
             $table->unsignedBigInteger('item_presupuestario_id')->nullable();

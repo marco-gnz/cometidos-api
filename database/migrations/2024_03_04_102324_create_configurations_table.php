@@ -4,7 +4,7 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
-class CreateHorasTable extends Migration
+class CreateConfigurationsTable extends Migration
 {
     /**
      * Run the migrations.
@@ -13,10 +13,11 @@ class CreateHorasTable extends Migration
      */
     public function up()
     {
-        Schema::create('horas', function (Blueprint $table) {
-            $table->bigIncrements('id');
-            $table->string('codigo_sirh')->nullable();
-            $table->string('nombre')->nullable();
+        Schema::create('configurations', function (Blueprint $table) {
+            $table->id();
+            $table->string('clave')->unique();
+            $table->text('valor');
+            $table->string('tipo')->nullable();
             $table->timestamps();
         });
     }
@@ -28,6 +29,6 @@ class CreateHorasTable extends Migration
      */
     public function down()
     {
-        Schema::dropIfExists('horas');
+        Schema::dropIfExists('configurations');
     }
 }

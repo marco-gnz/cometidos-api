@@ -7,5 +7,19 @@ use Illuminate\Database\Eloquent\Model;
 
 class ActividadGasto extends Model
 {
-    use HasFactory;
+    protected $table        = "actividad_gastos";
+    protected $primaryKey   = 'id';
+
+    protected $fillable = [
+        'nombre',
+        'descripcion',
+        'is_particular',
+        'status',
+        'item_presupuestario_id'
+    ];
+
+    public function itemPresupuestario()
+    {
+        return $this->belongsTo(ItemPresupuestario::class, 'item_presupuestario_id');
+    }
 }

@@ -16,6 +16,7 @@ class CreateEstamentosTable extends Migration
         Schema::create('estamentos', function (Blueprint $table) {
             $table->bigIncrements('id');
             $table->string('nombre');
+            $table->timestamps();
         });
     }
 

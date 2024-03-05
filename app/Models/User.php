@@ -9,6 +9,7 @@ use Illuminate\Notifications\Notifiable;
 use Laravel\Sanctum\HasApiTokens;
 use Spatie\Permission\Traits\HasRoles;
 use Spatie\Permission\Models\Permission;
+use Illuminate\Support\Str;
 
 class User extends Authenticatable
 {
@@ -60,6 +61,16 @@ class User extends Authenticatable
     protected $casts = [
         'email_verified_at' => 'datetime',
     ];
+
+    protected static function booted()
+    {
+        static::creating(function ($usuario) {
+            $usuario->uuid                  = Str::uuid();
+            $usuario->rut_completo          = $usuario->rut . '-' . $usuario->dv;
+            $usuario->nombre_completo       = $usuario->nombres . ' ' . $usuario->apellidos;
+            $usuario->password              = bcrypt($usuario->rut);
+        });
+    }
 
     public function ley()
     {

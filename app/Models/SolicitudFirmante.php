@@ -17,6 +17,7 @@ class SolicitudFirmante extends Model
     protected $fillable = [
         'uuid',
         'posicion_firma',
+        'is_reasignado',
         'status',
         'solicitud_id',
         'grupo_id',
@@ -31,7 +32,7 @@ class SolicitudFirmante extends Model
     protected static function booted()
     {
         static::creating(function ($firmante) {
-            $firmante->uuid                    = Str::uuid();
+            $firmante->uuid                   = Str::uuid();
             $firmante->user_id_by             = Auth::user()->id;
             $firmante->fecha_by_user          = now();
         });
@@ -40,6 +41,21 @@ class SolicitudFirmante extends Model
     public function solicitud()
     {
         return $this->belongsTo(Solicitud::class, 'solicitud_id');
+    }
+
+    public function estados()
+    {
+        return $this->hasMany(EstadoSolicitud::class, 'firmante_id');
+    }
+
+    public function estadosFirma()
+    {
+        return $this->hasMany(EstadoSolicitud::class, 's_firmante_id');
+    }
+
+    public function estadosreasignados()
+    {
+        return $this->hasMany(EstadoSolicitud::class, 'r_s_firmante_id');
     }
 
     public function grupo()
