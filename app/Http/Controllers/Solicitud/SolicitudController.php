@@ -230,12 +230,24 @@ class SolicitudController extends Controller
                 }
                 $solicitud = $solicitud->fresh();
 
+                $fecha = "$solicitud->fecha_termino $solicitud->hora_salida";
+                $fecha_termino_solicitud = Carbon::parse($fecha);
+                $now                     = Carbon::now();
+                $uuid                    = null;
+                if ($fecha_termino_solicitud->lte($now)) {
+                    $message = "Su Cometido ha finalizado. ¿Requiere ingresar su Informe de Cometido inmediatamente?";
+                    $uuid    = $solicitud->uuid;
+
+                } else {
+                    $message = "¿Requiere ingresar una nueva solicitud de cometido?";
+                }
+
                 return response()->json(
                     array(
                         'status'        => 'success',
                         'title'         => "Solicitud con código {$solicitud->codigo} ingresada con éxito.",
-                        'message'       => null,
-                        'data'          => $solicitud
+                        'message'       => $message,
+                        'data'          => $uuid
                     )
                 );
             }
@@ -268,6 +280,7 @@ class SolicitudController extends Controller
                 'actividad_realizada'
             ];
             $solicitud = Solicitud::where('uuid', $request->uuid_solicitud)->firstOrFail();
+            $this->authorize('create', [new InformeCometido, $solicitud]);
             $store_informes_pendientes = $this->solicitudInformeEstados($solicitud);
 
             if (!$store_informes_pendientes) {
@@ -420,7 +433,9 @@ class SolicitudController extends Controller
         try {
             $solicitud = Solicitud::where('uuid', $request->solicitud_uuid)->firstOrFail();
 
-            $is_update          = $solicitud->isUpdate();
+            $this->authorize('update', $solicitud);
+
+            $is_update          = $solicitud->authorizedToUpdate();
             $is_update_files    = $this->validateUpdateSolicitudFiles($solicitud, $request->archivos);
 
             if (!$is_update) {

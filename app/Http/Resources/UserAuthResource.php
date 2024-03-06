@@ -32,7 +32,8 @@ class UserAuthResource extends JsonResource
             'calidad'                   => $this->calidad ? $this->calidad->nombre : null,
             'telefono'                  => $this->telefono ? $this->telefono : null,
             'is_group'                  => Grupo::where('departamento_id', $this->departamento->id)->where('sub_departamento_id', $this->subDepartamento->id)->where('establecimiento_id', $this->establecimiento->id)->first() ? true : false,
-            'count_solicitudes'         => $this->solicitudes()->where('last_status', 1)->count()
+            'count_solicitudes'         => $this->solicitudes()->where('last_status', 1)->count(),
+            'create_solicitud'          => $this->authorizedToCreateSolicitud()
         ];
     }
 }

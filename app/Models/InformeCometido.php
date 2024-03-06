@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Str;
+use Illuminate\Support\Facades\Gate;
 
 class InformeCometido extends Model
 {
@@ -126,6 +127,11 @@ class InformeCometido extends Model
     public function addEstados(array $estados)
     {
         return $this->estados()->createMany($estados);
+    }
+
+    public function authorizedToView()
+    {
+        return Gate::allows('view', $this);
     }
 
     public function firmaJefatura()

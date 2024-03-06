@@ -28,7 +28,8 @@ class ListInformeCometidoResource extends JsonResource
             'status_nom'                => EstadoInformeCometido::STATUS_NOM[$this->last_status],
             'status_type'               => EstadoInformeCometido::STATUS_TYPE[$this->last_status],
             'url'                       => route('informecometido.show', ['uuid' => $this->uuid]),
-            'created_at'                => $this->fecha_by_user ? Carbon::parse($this->fecha_by_user)->format('d-m-Y H:i:s') : null
+            'created_at'                => $this->fecha_by_user ? Carbon::parse($this->fecha_by_user)->format('d-m-Y H:i:s') : null,
+            'is_view'                   => $this->authorizedToView()
         ];
     }
 }

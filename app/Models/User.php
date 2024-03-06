@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Policies\SolicitudPolicy;
 use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
@@ -141,5 +142,11 @@ class User extends Authenticatable
                 ->orWhere('apellidos', 'like', '%' . $input . '%')
                 ->orWhere('nombre_completo', 'like', '%' . $input . '%')
                 ->orWhere('email', 'like', '%' . $input . '%');
+    }
+
+    public function authorizedToCreateSolicitud()
+    {
+        $policy = resolve(SolicitudPolicy::class);
+        return $policy->create(auth()->user());
     }
 }

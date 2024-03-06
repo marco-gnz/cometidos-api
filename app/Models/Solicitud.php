@@ -7,6 +7,8 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Str;
 use Carbon\Carbon;
+use Illuminate\Support\Facades\Gate;
+use App\Policies\InformeCometidoPolicy;
 
 class Solicitud extends Model
 {
@@ -154,7 +156,7 @@ class Solicitud extends Model
         });
 
         static::created(function ($solicitud) {
-            $dias_permitidos                = (int)Configuration::obtenerValor('informecometido.dias');
+            $dias_permitidos                = (int)Configuration::obtenerValor('informecometido.dias_atraso');
             $grupo                          = self::grupoDepto($solicitud);
             $solicitud->codigo              = self::generarCodigo($solicitud);
             $solicitud->departamento_id     = $grupo ? $grupo->departamento_id : null;
@@ -374,14 +376,30 @@ class Solicitud extends Model
         return false;
     }
 
-    public function isUpdate()
+    public function authorizedToUpdate()
     {
-        $last_status = $this->estados()->orderBy('id', 'DESC')->first();
+        return Gate::allows('update', $this);
+    }
 
-        if (($last_status) && ($last_status->status === EstadoSolicitud::STATUS_INGRESADA || $last_status->status === EstadoSolicitud::STATUS_PENDIENTE)) {
-            return true;
+    public function authorizedToCreateInformeCometido()
+    {
+        $policy = resolve(InformeCometidoPolicy::class);
+        return $policy->create(auth()->user(), new InformeCometido, $this);
+    }
+
+    public function isStore()
+    {
+        $informe = self::informeCometido();
+        if (!$informe) {
+            $fecha_termino_solicitud = Carbon::parse($this->fecha_termino);
+            $now                     = Carbon::now();
+            if ($fecha_termino_solicitud->lte($now)) {
+                return true;
+            } else {
+                return false;
+            }
         }
-        return false;
+        return true;
     }
 
     private function totalFirmasAprobadas()
@@ -402,7 +420,21 @@ class Solicitud extends Model
         $count_firmantes = self::totalFirmas();
         $firmas_aprobadas = self::totalFirmasAprobadas();
 
-        return "{$firmas_aprobadas} de {$count_firmantes} firmas realizadas";
+        return "{$firmas_aprobadas} de {$count_firmantes}";
+    }
+
+    public function typePageFirma()
+    {
+        $count_firmantes    = self::totalFirmas();
+        $firmas_aprobadas   = self::totalFirmasAprobadas();
+        $type               = 'info';
+
+        if ($firmas_aprobadas > 0 && $firmas_aprobadas < $count_firmantes) {
+            $type = 'primary';
+        } else if ($firmas_aprobadas === $count_firmantes) {
+            $type = 'success';
+        }
+        return $type;
     }
 
     public function pageFirmaPorcentaje()
@@ -505,11 +537,11 @@ class Solicitud extends Model
 
         $total_calculo = 0;
         $calculo = self::getLastCalculo();
-        if($calculo){
+        if ($calculo) {
             $total_calculo = $calculo->monto_total;
         }
         $total = $r_total + $total_calculo;
-        $total = "$".number_format($total, 0, ",", ".");
+        $total = "$" . number_format($total, 0, ",", ".");
         return $total;
     }
 }

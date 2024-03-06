@@ -45,11 +45,7 @@ class PdfController extends Controller
     {
         try {
             $informe = InformeCometido::where('uuid', $uuid)->firstOrFail();
-
-            if(($informe) && ($informe->last_status !== EstadoInformeCometido::STATUS_APROBADO)){
-                abort(404);
-            }
-
+            $this->authorize('view', $informe);
             $pdf = \PDF::loadView(
                 'pdf.informecometido',
                 [
