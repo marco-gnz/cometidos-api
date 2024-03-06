@@ -42,7 +42,8 @@ class UpdateSolicitudResource extends JsonResource
             'dentro_pais'                       => $this->dentro_pais ? 1 : 0,
             'archivos'                          => [],
             'is_update'                         => $this->authorizedToUpdate(),
-            'is_store_informe_cometido'         => $this->authorizedToCreateInformeCometido()
+            'is_store_informe_cometido'         => $this->authorizedToCreateInformeCometido(),
+            'dias_permitidos'                   => $this->dias_permitidos
         ];
     }
 }
