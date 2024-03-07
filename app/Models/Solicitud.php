@@ -99,6 +99,7 @@ class Solicitud extends Model
         'valor_cometido_parcial',
         'valor_pasaje',
         'valor_total',
+        'vistos',
         'total_firmas',
         'total_ok',
         'user_id',
@@ -157,6 +158,7 @@ class Solicitud extends Model
 
         static::created(function ($solicitud) {
             $dias_permitidos                = (int)Configuration::obtenerValor('informecometido.dias_atraso');
+            $vistos                         = Configuration::obtenerValor('info.vistos');
             $grupo                          = self::grupoDepto($solicitud);
             $solicitud->codigo              = self::generarCodigo($solicitud);
             $solicitud->departamento_id     = $grupo ? $grupo->departamento_id : null;
@@ -172,6 +174,7 @@ class Solicitud extends Model
             $solicitud->tipo_resolucion     = self::RESOLUCION_EXENTA;
             $solicitud->total_firmas        = $solicitud->firmantes()->where('status', true)->count();
             $solicitud->dias_permitidos     = $dias_permitidos;
+            $solicitud->vistos              = $vistos;
             $solicitud->save();
         });
 
@@ -502,23 +505,23 @@ class Solicitud extends Model
         $informe = self::informeCometido();
         $documentos = [
             [
-                'name'          => 'Informe C.',
+                'name'          => 'Informe de cometido',
                 'url'           => $informe ? route('informecometido.show', ['uuid' => $informe->uuid]) : null,
                 'exist'         => $informe ? true : false,
                 'stauts_nom'    => $informe ? EstadoInformeCometido::STATUS_NOM[$informe->last_status] : '',
                 'type'          => $informe ? EstadoInformeCometido::STATUS_TYPE[$informe->last_status] : '',
             ],
             [
-                'name'  => 'Resolución C.',
+                'name'  => 'Resolución de cometido',
                 'url'   => route('resolucioncometidofuncional.show', ['uuid' => $this->uuid]),
                 'exist' => true,
-                'type'  => 'success'
+                'type'  => 'primary'
             ],
             [
-                'name'  => 'Convenio C.',
+                'name'  => 'Convenio de cometido',
                 'url'   => $this->convenio ? route('convenio.show', ['uuid' => $this->convenio->uuid]) : null,
                 'exist' => $this->convenio ? true : false,
-                'type'  => 'success'
+                'type'  => $this->convenio ? 'primary' : 'info'
             ]
         ];
 
@@ -543,5 +546,41 @@ class Solicitud extends Model
         $total = $r_total + $total_calculo;
         $total = "$" . number_format($total, 0, ",", ".");
         return $total;
+    }
+
+    public function firmaJefatura()
+    {
+        $firma = $this->estados()->where('s_role_id', 3)->where('status', EstadoSolicitud::STATUS_APROBADO)->orderBy('id', 'DESC')->first();
+        if ($firma) {
+            $nombres    = $firma->funcionario->abreNombres();
+            $fecha      = Carbon::parse($firma->created_at)->format('d-m-y H:i:s');
+            $new_firma  = "$nombres $fecha";
+            return $new_firma;
+        }
+        return null;
+    }
+
+    public function firmaJefePersonal()
+    {
+        $firma = $this->estados()->where('s_role_id', 4)->where('status', EstadoSolicitud::STATUS_APROBADO)->orderBy('id', 'DESC')->first();
+        if ($firma) {
+            $nombres    = $firma->funcionario->abreNombres();
+            $fecha      = Carbon::parse($firma->created_at)->format('d-m-y H:i:s');
+            $new_firma  = "$nombres $fecha";
+            return $new_firma;
+        }
+        return null;
+    }
+
+    public function firmaSubDirector()
+    {
+        $firma = $this->estados()->where('s_role_id', 5)->where('status', EstadoSolicitud::STATUS_APROBADO)->orderBy('id', 'DESC')->first();
+        if ($firma) {
+            $nombres    = $firma->funcionario->abreNombres();
+            $fecha      = Carbon::parse($firma->created_at)->format('d-m-y H:i:s');
+            $new_firma  = "$nombres $fecha";
+            return $new_firma;
+        }
+        return null;
     }
 }

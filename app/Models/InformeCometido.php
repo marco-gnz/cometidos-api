@@ -138,7 +138,7 @@ class InformeCometido extends Model
     {
         $firma = $this->estados()->where('status', EstadoInformeCometido::STATUS_APROBADO)->first();
         if($firma){
-            $nombres    = $firma->userBy->nombre_completo;
+            $nombres    = $firma->userBy->abreNombres();
             $fecha      = Carbon::parse($firma->fecha_by_user)->format('d-m-y H:i:s');
             $new_firma  = "$nombres $fecha";
             return $new_firma;
@@ -150,7 +150,7 @@ class InformeCometido extends Model
     {
         $firma = $this->estados()->where('status', EstadoInformeCometido::STATUS_INGRESADA)->first();
         if($firma){
-            $nombres    = $firma->userBy->nombre_completo;
+            $nombres    = $firma->userBy->abreNombres();
             $fecha      = Carbon::parse($firma->fecha_by_user)->format('d-m-y H:i:s');
             $new_firma  = "$nombres $fecha";
             return $new_firma;

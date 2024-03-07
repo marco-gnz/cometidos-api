@@ -418,7 +418,7 @@ class SolicitudAdminController extends Controller
             $type                   = '#808080';
 
             $is_ciclo   = $last_estado ? ($last_estado->posicion_firma <= $solicitud->posicion_firma_actual && !$firmante->is_reasignado ? true : false) : false;
-            $reasginar  = $last_estado ? ($last_estado->posicion_firma < $solicitud->posicion_firma_actual && !$firmante->is_reasignado ? true : false) : false;
+            $reasginar  = $last_estado ? (($firmante->role_id === 1 || $firmante->role_id === 2) && ($last_estado->posicion_firma < $solicitud->posicion_firma_actual && !$firmante->is_reasignado) ? true : false) : false;
             if ($is_ciclo) {
                 switch ($last_estado->status) {
                     case 1:

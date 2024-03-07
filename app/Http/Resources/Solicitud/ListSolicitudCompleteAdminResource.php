@@ -61,7 +61,9 @@ class ListSolicitudCompleteAdminResource extends JsonResource
             'afecta_convenio'           => $this->afecta_convenio !== null ? ($this->afecta_convenio === 1 ? 'AFECTA' : 'NO AFECTA') : null,
             'url_convenio'              => $this->convenio ? route('convenio.show', ['uuid' => $this->convenio->uuid]) : null,
             'url_resolucion'            => route('resolucioncometidofuncional.show', ['uuid' => $this->uuid]),
-            'page_firma'                => $this->pageFirma()
+            'page_firma'                => $this->pageFirma(),
+            'is_update'                 => $this->authorizedToUpdate(),
+            'documentos'                => $this->exportarDocumentos()
         ];
     }
 }

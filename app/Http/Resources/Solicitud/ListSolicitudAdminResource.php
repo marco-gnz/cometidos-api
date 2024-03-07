@@ -34,7 +34,8 @@ class ListSolicitudAdminResource extends JsonResource
             'tipo_comision'             => $this->tipoComision ? $this->tipoComision->nombre : null,
             'dentro_pais'               => $this->dentro_pais ? true : false,
             'afecta_convenio'           => $this->afecta_convenio !== null ? ($this->afecta_convenio === 1 ? 'AFECTA' : 'NO AFECTA') : null,
-            'page_firma'                => $this->pageFirma()
+            'page_firma'                => $this->pageFirma(),
+            'is_update'                 => $this->authorizedToUpdate(),
         ];
     }
 }

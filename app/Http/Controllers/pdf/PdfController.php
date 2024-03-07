@@ -19,6 +19,15 @@ use Illuminate\Support\Facades\View;
 
 class PdfController extends Controller
 {
+    private function paginatePdf($pdf)
+    {
+        $pdf->output();
+        $domPdf = $pdf->getDomPDF();
+
+        $canvas = $domPdf->get_canvas();
+        return $canvas->page_text(500, 800, "Página {PAGE_NUM} de {PAGE_COUNT}", null, 10, [0, 0, 0]);
+    }
+
     public function showConvenio($uuid)
     {
         try {
@@ -34,6 +43,8 @@ class PdfController extends Controller
             $pdf->setOptions([
                 'chroot'  => public_path('/img/')
             ]);
+
+            $this->paginatePdf($pdf);
 
             return $pdf->stream("CCF N° {$convenio->codigo}.pdf");
         } catch (\Exception $error) {
@@ -58,11 +69,7 @@ class PdfController extends Controller
             ]);
 
 
-            $pdf->output();
-            $domPdf = $pdf->getDomPDF();
-
-            $canvas = $domPdf->get_canvas();
-            $canvas->page_text(500, 800, "Página {PAGE_NUM} de {PAGE_COUNT}", null, 10, [0, 0, 0]);
+            $this->paginatePdf($pdf);
 
             return $pdf->stream("Informe N° {$informe->codigo}.pdf");
         } catch (\Exception $error) {
@@ -159,6 +166,8 @@ class PdfController extends Controller
                 'chroot'                => public_path('/img/')
             ]);
 
+            $this->paginatePdf($pdf);
+
             return $pdf->stream("GCF N° {$proceso_rendicion_gasto->n_folio}.pdf");
         } catch (\Exception $error) {
             return $error->getMessage();
@@ -195,6 +204,8 @@ class PdfController extends Controller
                 'isHtml5ParserEnabled'  => true,
                 'chroot'                => public_path('/img/')
             ]);
+
+            $this->paginatePdf($pdf);
 
             return $pdf->stream("Cometido funcional N° {$solicitud->codigo}.pdf");
         } catch (\Exception $error) {

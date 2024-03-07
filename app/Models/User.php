@@ -149,4 +149,11 @@ class User extends Authenticatable
         $policy = resolve(SolicitudPolicy::class);
         return $policy->create(auth()->user());
     }
+
+    public function abreNombres()
+    {
+        $nombres    = mb_substr($this->nombres, 0, 1);
+        $apellidos  = mb_substr($this->apellidos, 0, 14);
+        return "$nombres. $apellidos.";
+    }
 }

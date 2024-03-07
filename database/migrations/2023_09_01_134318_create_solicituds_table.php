@@ -32,6 +32,7 @@ class CreateSolicitudsTable extends Migration
             $table->integer('n_dias_40')->nullable();
             $table->integer('n_dias_100')->nullable();
             $table->text('observacion_gastos')->nullable();
+            $table->text('vistos')->nullable();
             $table->unsignedSmallInteger('status')->default(0);
             $table->unsignedSmallInteger('last_status')->default(0);
             $table->date('fecha_resolucion')->nullable();
