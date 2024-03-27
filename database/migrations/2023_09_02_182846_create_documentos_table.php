@@ -17,6 +17,7 @@ class CreateDocumentosTable extends Migration
             $table->bigIncrements('id');
             $table->uuid('uuid')->unique()->nullable();
             $table->string('url');
+            $table->unsignedSmallInteger('model')->nullable();
             $table->string('nombre');
             $table->integer('size');
             $table->string('format');

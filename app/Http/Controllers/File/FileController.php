@@ -60,7 +60,8 @@ class FileController extends Controller
                     'extension'     => $file->getClientOriginalExtension(),
                     'is_valid'      => $file->isValid(),
                     'solicitud_id'  => $solicitud->id,
-                    'user_id'       => $solicitud->user_id
+                    'user_id'       => $solicitud->user_id,
+                    'model'         => Documento::MODEL_SOLICITUD
                 ];
 
                 $documento = Documento::create($data);
