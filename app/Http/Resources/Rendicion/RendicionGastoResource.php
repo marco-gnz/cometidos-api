@@ -45,7 +45,8 @@ class RendicionGastoResource extends JsonResource
             'status_type'                       => $type,
             'status_nom'                        => RendicionGasto::STATUS_NOM[$this->last_status],
             'last_status'                       => $last_status ? StatusRendicionResource::make($last_status) : null,
-            'item_presupuestario'               => $this->itemPresupuestario ? $this->itemPresupuestario->nombre : null
+            'item_presupuestario'               => $this->itemPresupuestario ? $this->itemPresupuestario->nombre : null,
+            'authorized_to_update'              => $this->authorizedToUpdate()
         ];
     }
 }

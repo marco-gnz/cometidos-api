@@ -17,6 +17,7 @@ class EstadoRendicionGasto extends Model
     protected $fillable = [
         'uuid',
         'status',
+        'is_updated_mount',
         'observacion',
         'rendicion_gasto_id',
         'rendicion_old',
@@ -27,6 +28,22 @@ class EstadoRendicionGasto extends Model
         'fecha_by_user_update',
     ];
 
+    public const STATUS_PENDIENTE = 0;
+    public const STATUS_APROBADO  = 1;
+    public const STATUS_RECHAZADO = 2;
+
+    public const STATUS_NOM = [
+        self::STATUS_PENDIENTE => 'PENDIENTE',
+        self::STATUS_APROBADO  => 'APROBADO',
+        self::STATUS_RECHAZADO => 'RECHAZADO',
+    ];
+
+    public const STATUS_DESC = [
+        self::STATUS_PENDIENTE => 'Pendiente por validar',
+        self::STATUS_APROBADO  => 'Aprobado por administrador',
+        self::STATUS_RECHAZADO => 'Rechazado por administrador',
+    ];
+
     protected static function booted()
     {
         static::creating(function ($estado) {
@@ -35,6 +52,21 @@ class EstadoRendicionGasto extends Model
             $estado->fecha_by_user           = now();
             $estado->ip_address              = Request::ip();
         });
+
+        static::created(function ($estado) {
+            $isUpdatedMount             = self::isUpdateMount($estado);
+            $estado->is_updated_mount   = $isUpdatedMount;
+            $estado->save();
+        });
+    }
+
+    public function isUpdateMount($estado)
+    {
+        if ($estado->rendicionGasto->mount === $estado->rendicionGasto->mount_real) {
+            return false;
+        } else {
+            return true;
+        }
     }
 
     public function rendicionGasto()

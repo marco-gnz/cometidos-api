@@ -17,6 +17,7 @@ class CreateEstadoRendicionGastosTable extends Migration
             $table->bigIncrements('id');
             $table->uuid('uuid')->unique()->nullable();
             $table->unsignedSmallInteger('status')->default(0);
+            $table->boolean('is_updated_mount')->default(0);
             $table->text('observacion')->nullable();
             $table->text('rendicion_old')->nullable();
             $table->text('rendicion_new')->nullable();

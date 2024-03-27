@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Str;
 use Carbon\Carbon;
+use Illuminate\Support\Facades\Gate;
 
 class RendicionGasto extends Model
 {
@@ -83,5 +84,10 @@ class RendicionGasto extends Model
     public function addStatus(array $data)
     {
         $this->estados()->createMany($data);
+    }
+
+    public function authorizedToUpdate()
+    {
+        return Gate::allows('update', $this);
     }
 }

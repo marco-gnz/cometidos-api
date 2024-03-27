@@ -18,7 +18,9 @@ class CreateProcesoRendicionGastosTable extends Migration
             $table->uuid('uuid')->unique()->nullable();
             $table->string('n_folio')->unique()->nullable();
             $table->integer('n_rendicion')->default(0);
-            $table->unsignedSmallInteger('last_status')->default(0);
+            $table->date('fecha_pago')->nullable();
+            $table->unsignedSmallInteger('status')->default(0);
+            $table->text('observacion')->nullable();
             $table->foreign('solicitud_id')->references('id')->on('solicituds')->onDelete('cascade');
             $table->unsignedBigInteger('solicitud_id')->nullable();
 

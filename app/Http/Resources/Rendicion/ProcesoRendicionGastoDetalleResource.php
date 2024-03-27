@@ -3,6 +3,10 @@
 namespace App\Http\Resources\Rendicion;
 
 use App\Http\Resources\Solicitud\ListSolicitudDocumentosResource;
+use App\Models\EstadoProcesoRendicionGasto;
+use App\Models\EstadoSolicitud;
+use App\Models\ProcesoRendicionGasto;
+use App\Models\Solicitud;
 use Carbon\Carbon;
 use Illuminate\Http\Resources\Json\JsonResource;
 
@@ -28,24 +32,12 @@ class ProcesoRendicionGastoDetalleResource extends JsonResource
             return $this->rendiciones ? $this->rendiciones()->whereHas('actividad', $condition)->get() : null;
         };
 
-        $getSum = function ($condition, $mount) {
-            return $this->rendiciones()->whereHas('actividad', $condition)
-                ->where(function ($q) use ($mount) {
-                    if ($mount === 'mount_real') {
-                        return $q->where('last_status', 1);
-                    }
-                    return $q;
-                })
-                ->where('rinde_gasto', true)->sum($mount);
-        };
-
-        $mount      = 'mount';
-        $mountReal  = 'mount_real';
-
         return [
             'uuid'                                          => $this->uuid,
             'n_folio'                                       => $this->n_folio,
             'n_folio'                                       => $this->n_folio,
+            'fecha_pago_value'                              => $this->fecha_pago ? Carbon::parse($this->fecha_pago)->format('Y-m-d') : null,
+            'fecha_pago'                                    => $this->fecha_pago ? Carbon::parse($this->fecha_pago)->format('d-m-Y') : 'Sin fecha',
             'rut_funcionario'                               => optional($this->solicitud->funcionario)->rut_completo,
             'nombres_funcionario'                           => optional($this->solicitud->funcionario)->nombre_completo,
             'correo_funcionario'                            => optional($this->solicitud->funcionario)->email,
@@ -53,28 +45,40 @@ class ProcesoRendicionGastoDetalleResource extends JsonResource
             'departamento'                                  => optional($this->solicitud->departamento)->nombre,
             'subdepartamento'                               => optional($this->solicitud->subdepartamento)->nombre,
             'dentro_pais'                                   => $this->solicitud->dentro_pais ?? false,
+            'utiliza_transporte'                            => $this->solicitud->utiliza_transporte ?? false,
             'lugares'                                       => optional($this->solicitud->lugares)->pluck('nombre')->implode(', '),
             'paises'                                        => optional($this->solicitud->paises)->pluck('nombre')->implode(', '),
             'motivos'                                       => optional($this->solicitud->motivos)->pluck('nombre')->implode(', '),
             'n_rendicion'                                   => $this->n_rendicion,
+            'created_at'                                    => $this->fecha_by_user ? Carbon::parse($this->fecha_by_user)->format('d-m-Y H:i:s') : null,
+            'user_by'                                       => $this->userBy ? $this->userBy->abreNombres() : null,
             'solicitud_codigo'                              => optional($this->solicitud)->codigo,
             'solicitud_fecha_inicio'                        => optional($this->solicitud)->fecha_inicio ? Carbon::parse($this->solicitud->fecha_inicio)->format('d-m-Y') : null,
             'solicitud_fecha_termino'                       => optional($this->solicitud)->fecha_termino ? Carbon::parse($this->solicitud->fecha_termino)->format('d-m-Y') : null,
             'solicitud_transporte'                          => optional($this->solicitud->transportes)->pluck('nombre')->implode(', '),
-            'rendiciones_count'                             => $this->rendiciones->where('rinde_gasto', true)->where('last_status', 1)->count(),
-            'rendiciones_sum_particular'                    => $getSum($particularCondition, $mount),
-            'rendiciones_sum_particular_format'             => "$" . number_format($getSum($particularCondition, $mount), 0, ",", "."),
-            'rendiciones_sum_real_particular'               => $getSum($particularCondition, $mountReal),
-            'rendiciones_sum_real_particular_format'        => "$" . number_format($getSum($particularCondition, $mountReal), 0, ",", "."),
-            'rendiciones_sum_not_particular'                => $getSum($notParticularCondition, $mount),
-            'rendiciones_sum_not_particular_format'         => "$" . number_format($getSum($notParticularCondition, $mount), 0, ",", "."),
-            'rendiciones_sum_real_not_particular'           => $getSum($notParticularCondition, $mountReal),
-            'rendiciones_sum_real_not_particular_format'    => "$" . number_format($getSum($notParticularCondition, $mountReal), 0, ",", "."),
+            'rendiciones_sum_particular'                    => $this->sumRendiciones(true, true, [0, 1, 2], 'mount'),
+            'rendiciones_sum_real_particular'               => $this->sumRendiciones(true, true, [1], 'mount_real'),
+            'rendiciones_sum_not_particular'                => $this->sumRendiciones(false, true, [0, 1, 2], 'mount'),
+            'rendiciones_sum_real_not_particular'           => $this->sumRendiciones(false, true, [1], 'mount_real'),
+            'mount_rendiciones_solicitadas'                 => $this->sumRendicionesSolicitadas(),
+            'mount_rendiciones_aprobadas'                   => $this->sumRendicionesAprobadas(),
+            'count_rendiciones_solicitadas'                 => $this->totalRendicionesSolicitadas(),
+            'count_rendiciones_aprobadas'                   => $this->totalRendicionesAprobadas(),
             'rendiciones_particular'                        => $getRendiciones($particularCondition) ? RendicionGastoResource::collection($getRendiciones($particularCondition)) : null,
             'rendiciones_not_particular'                    => $getRendiciones($notParticularCondition) ? RendicionGastoResource::collection($getRendiciones($notParticularCondition)) : null,
             'documentos'                                    => $this->documentos && count($this->documentos) > 0 ? ListSolicitudDocumentosResource::collection($this->documentos) : null,
             'created_at'                                    => $this->created_at ? Carbon::parse($this->created_at)->format('d-m-Y H:i') : null,
-            'url_gastos_cometido_funcional'                 => $this->uuid ? route('gastoscometidofuncional.show', ['uuid' => $this->uuid]) : null
+            'url_gastos_cometido_funcional'                 => $this->uuid ? route('gastoscometidofuncional.show', ['uuid' => $this->uuid]) : null,
+            'solicitud_estado_nom'                          => EstadoSolicitud::STATUS_NOM[$this->solicitud->last_status],
+            'solicitud_estado_type'                         => $this->solicitud->typeStatus(),
+            'solicitud_page_firma'                          => $this->solicitud->pageFirma(),
+            'solicitud_type_page_firma'                     => $this->solicitud->typePageFirma(),
+            'estado_nom'                                    => EstadoProcesoRendicionGasto::STATUS_NOM[$this->status],
+            'estado_type'                                   => $this->typeStatus($this->status),
+            'authorized_to_anular'                          => $this->authorizedToAnular(),
+            'observacion'                                   => $this->observacion,
+            'estados'                                       => $this->estados ? StatusProcesoRendicionGastoResource::collection($this->estados) : null,
+            'documentos_r'                                  => $this->exportarDocumentos()
         ];
     }
 }

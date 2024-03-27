@@ -2,6 +2,9 @@
 
 namespace App\Http\Resources\Rendicion;
 
+use App\Models\EstadoProcesoRendicionGasto;
+use App\Models\EstadoSolicitud;
+use App\Models\ProcesoRendicionGasto;
 use Carbon\Carbon;
 use Illuminate\Http\Resources\Json\JsonResource;
 
@@ -15,23 +18,28 @@ class ProcesoRendicionGastoResource extends JsonResource
      */
     public function toArray($request)
     {
-        $rendiciones_sum_soli   = $this->rendiciones->where('rinde_gasto', true)->sum('mount');
-        $rendiciones_sum        = $this->rendiciones->where('rinde_gasto', true)->where('last_status', 1)->sum('mount_real');
         return [
             'uuid'                              => $this->uuid,
             'n_rendicion'                       => $this->n_rendicion,
             'n_folio'                           => $this->n_folio,
             'solicitud_codigo'                  => $this->solicitud ? $this->solicitud->codigo : null,
-            'solicitud_fecha_inicio'            => $this->solicitud ? Carbon::parse($this->solicitud->fecha_inicio)->format('d-m-Y'): null,
-            'solicitud_fecha_termino'           => $this->solicitud ? Carbon::parse($this->solicitud->fecha_termino)->format('d-m-Y') : null,
-            'funcionario'                       => $this->solicitud ? $this->solicitud->funcionario->nombre_completo : null,
+            'solicitud_fecha_inicio'            => $this->solicitud ? Carbon::parse($this->solicitud->fecha_inicio)->format('d-m-y') : null,
+            'solicitud_fecha_termino'           => $this->solicitud ? Carbon::parse($this->solicitud->fecha_termino)->format('d-m-y') : null,
+            'funcionario'                       => $this->solicitud ? $this->solicitud->funcionario->abreNombres() : null,
             'establecimiento'                   => $this->solicitud ? $this->solicitud->establecimiento->sigla : null,
-            'rendiciones_count'                 => $this->rendiciones->where('rinde_gasto', true)->where('last_status', 1)->count(),
-            'rendiciones_count_pendiente'       => $this->rendiciones->where('rinde_gasto', true)->where('last_status', 0)->count(),
-            'rendiciones_sum_soli'              => $rendiciones_sum_soli,
-            'rendiciones_sum_format_soli'       => "$".number_format($rendiciones_sum_soli, 0, ",", "."),
-            'rendiciones_sum'                   => $rendiciones_sum,
-            'rendiciones_sum_format'            => "$".number_format($rendiciones_sum, 0, ",", "."),
+            'mount_rendiciones_solicitadas'     => $this->sumRendicionesSolicitadas(),
+            'mount_rendiciones_aprobadas'       => $this->sumRendicionesAprobadas(),
+            'solicitud_estado_nom'              => EstadoSolicitud::STATUS_NOM[$this->solicitud->last_status],
+            'solicitud_estado_type'             => $this->solicitud->typeStatus(),
+            'solicitud_page_firma'              => $this->solicitud->pageFirma(),
+            'solicitud_type_page_firma'         => $this->solicitud->typePageFirma(),
+            'estado_nom'                        => EstadoProcesoRendicionGasto::STATUS_NOM[$this->status],
+            'estado_type'                       => $this->typeStatus($this->status),
+            'authorized_to_delete'              => $this->authorizedToDelete(),
+            'authorized_to_update'              => $this->authorizedToUpdate(),
+            'authorized_to_anular'              => $this->authorizedToAnular(),
+            'authorized_to_aprobar'             => $this->authorizedToAprobar(),
+            'is_rendiciones_modificadas'        => $this->isRendicionesModificadas()
         ];
     }
 }

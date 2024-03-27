@@ -29,7 +29,7 @@ Route::middleware(['auth:sanctum'])->get('/user', function (Request $request) {
     return response()->json(UserAuthResource::make($request->user()));
 });
 
-Route::get('/tokens', function(){
+Route::get('/tokens', function () {
     $users = User::get();
 
     foreach ($users as $user) {
@@ -67,6 +67,7 @@ Route::group(
 
         Route::get('/admin/solicitudes', [SolicitudAdminController::class, 'listSolicitudes']);
         Route::get('/admin/solicitudes/{uuid}/{nav}', [SolicitudAdminController::class, 'findSolicitud']);
+        Route::put('/admin/solicitudes/{uuid}/fijada', [SolicitudAdminController::class, 'solicitudFijada']);
         Route::put('/admin/solicitudes/reasignar-firma', [SolicitudAdminController::class, 'reasignarFirmaSolicitud']);
         Route::post('/admin/solicitudes/show-calculo', [SolicitudAdminController::class, 'propuestaCalculo']);
         Route::put('/admin/solicitudes/aplicar-calculo/{uuid}', [SolicitudAdminController::class, 'aplicarCalculo']);
@@ -78,6 +79,7 @@ Route::group(
         Route::get('/admin/rendicion/list', [ProcesoRendicionController::class, 'getProcesoRendiciones']);
         Route::get('/admin/rendicion/{uuid}', [ProcesoRendicionController::class, 'getProcesoRendicion']);
         Route::put('/admin/rendicion/{uuid}', [ProcesoRendicionController::class, 'statusRendicion']);
+        Route::post('/admin/rendicion/update-fecha-pago', [ProcesoRendicionController::class, 'updateFechaPago']);
     }
 );
 
@@ -100,8 +102,13 @@ Route::group(
 
         Route::get('/rendicion/solicitudes', [RendicionController::class, 'solicitudesRendicionGastos']);
         Route::post('/rendicion', [RendicionController::class, 'storeRendicion']);
+        Route::post('/rendicion/update', [RendicionController::class, 'updateRendicion']);
+        Route::post('/rendicion/anular', [RendicionController::class, 'anularRendicion']);
+        Route::post('/rendicion/aprobar', [RendicionController::class, 'aprobarRendicion']);
+        Route::delete('/rendicion/{uuid}', [RendicionController::class, 'deleteRendicion']);
         Route::get('/rendicion/list', [RendicionController::class, 'getProcesoRendiciones']);
         Route::get('/rendicion/{uuid}', [RendicionController::class, 'getProcesoRendicion']);
+        Route::get('/rendicion/update/{uuid}', [RendicionController::class, 'getProcesoRendicionUpdate']);
 
         Route::post('/informe/store', [SolicitudController::class, 'storeInformeCometido']);
         Route::post('/informe/status', [SolicitudController::class, 'statusInformeCometido']);
