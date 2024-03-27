@@ -26,7 +26,7 @@ class CreateInformeCometidosTable extends Migration
             $table->unsignedSmallInteger('last_status')->default(0);
             $table->integer('dias_permitidos')->nullable();
 
-            $table->foreign('solicitud_id')->references('id')->on('solicituds');
+            $table->foreign('solicitud_id')->references('id')->on('solicituds')->onDelete('cascade');
             $table->unsignedBigInteger('solicitud_id')->nullable();
 
             $table->unsignedBigInteger('user_id_by')->nullable();

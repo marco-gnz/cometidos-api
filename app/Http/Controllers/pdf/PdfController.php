@@ -32,7 +32,6 @@ class PdfController extends Controller
     {
         try {
             $convenio = Convenio::where('uuid', $uuid)->firstOrFail();
-
             $pdf = \PDF::loadView(
                 'pdf.convenio',
                 [
@@ -111,6 +110,10 @@ class PdfController extends Controller
                 return response()->view('errors.404');
             }
 
+            if (($proceso_rendicion_gasto) && ($proceso_rendicion_gasto->solicitud->status === Solicitud::STATUS_ANULADO)) {
+                return response()->view('errors.401');
+            }
+
             $rendiciones_particular = $proceso_rendicion_gasto->rendiciones()->where('rinde_gasto', true)->whereHas('actividad', function ($q) {
                 $q->where('is_particular', true);
             })->get();
@@ -135,7 +138,7 @@ class PdfController extends Controller
                                 'actividad'          => $estado->rendicionGasto->actividad->nombre,
                                 'observacion'        => $estado->observacion,
                                 'fecha_by_user'      => Carbon::parse($estado->fecha_by_user)->format('d-m-Y H:i:s'),
-                                'user_by'            => $estado->userBy ? $estado->userBy->apellidos : null
+                                'user_by'            => $estado->userBy ? $estado->userBy->abreNombres() : null
                             ];
                         }
                     }
@@ -183,12 +186,18 @@ class PdfController extends Controller
                 return response()->view('errors.404');
             }
 
-            $solicitud->load(['procesoRendicionGastos.rendicionesfinanzas' => function ($query) {
+            if (($solicitud) && ($solicitud->status === Solicitud::STATUS_ANULADO)) {
+                return response()->view('errors.401');
+            }
+
+            /* $solicitud->load(['procesoRendicionGastos.rendicionesfinanzas' => function ($query) {
                 $query->where('rinde_gasto', true)->where('last_status', 1);
-            }]);
+            }]); */
 
             $ultimoCalculo = $solicitud->getLastCalculo();
+
             $solicitud->{'ultimoCalculo'} = $ultimoCalculo;
+
 
 
             $pdf = \PDF::loadView(

@@ -33,7 +33,7 @@ class InformeCometidoPolicy
      */
     public function view(User $user, InformeCometido $informeCometido)
     {
-        if ($informeCometido->last_status !== EstadoInformeCometido::STATUS_APROBADO) {
+        if ($informeCometido->solicitud->status === Solicitud::STATUS_ANULADO || $informeCometido->last_status !== EstadoInformeCometido::STATUS_APROBADO) {
             return false;
         }
         return true;

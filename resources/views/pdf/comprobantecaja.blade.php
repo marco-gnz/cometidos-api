@@ -64,8 +64,8 @@
             flex-wrap: wrap;
         }
 
-        .seccion-title{
-            margin-top:-1px;
+        .seccion-title {
+            margin-top: -1px;
             flex-wrap: wrap;
         }
 
@@ -258,7 +258,7 @@
                 <div class="column">
                     <table class="table-datos-contractuales-2">
                         <thead>
-                            <th>Tipo de locomoción (Particular)</th>
+                            <th>Particular</th>
                             <th>Monto</th>
                         </thead>
                         <tbody>
@@ -333,10 +333,7 @@
         <div class="seccion">
             <h2 class="seccion-title">Sección 5</h2>
             <p><strong>V° B° JEFATURA DIRECTA</strong>:</p>
-            @if ($proceso_rendicion_gasto->status_jefe_directo)
-            <p>{{ $proceso_rendicion_gasto->status_jefe_directo->firma->funcionario->nombre_completo }}
-                {{ $proceso_rendicion_gasto->status_jefe_directo->created_at }}</p>
-            @endif
+            {{ $proceso_rendicion_gasto->solicitud->firmaJefatura() }}
         </div>
     </div>
     {{-- <footer class="footer-container">

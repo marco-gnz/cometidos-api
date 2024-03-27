@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{{ config('app.name') }} | RESOLUCIÓN {{ $solicitud->codigo }}</title>
+    <title>{{ config('app.name') }} | Resolución {{ $solicitud->n_resolucion }}</title>
 
     <style type="text/css">
         body {
@@ -78,8 +78,8 @@
             left: 0;
             bottom: 0;
             width: 100%;
-            background-color: rgb(237, 57, 67);
-            color: white;
+            background-color: rgb(255, 255, 255);
+            color: black;
             text-align: center;
         }
 
@@ -236,6 +236,10 @@
                     <th>HORA RECEPCIÓN:</th>
                     <td>{{ Carbon\Carbon::parse($solicitud->created_at)->format('H:i:s') }}</td>
                 </tr>
+                <tr style="font-size: 8px;">
+                    <th>CÓDIGO SOLICITUD:</th>
+                    <td>{{ $solicitud->codigo }}</td>
+                </tr>
             </table>
         </div>
     </header>
@@ -253,18 +257,7 @@
         </div>
         <div class="seccion">
             <p style="text-align: justify;">
-                VISTOS: Las necesidades de servicio; Art. 78 y Art 98-Letra E, ambos del DFL N°29/2004 del Ministerio de
-                Hacienda; DFL N°1/2005 del Ministerio
-                de Salud Fija el texto refundido, coordinado y sistematizado del DL 2763/1979 que crea los Servicios de
-                Salud; DS. 140/2004 Reglamento
-                Orgánico de los Servicios Salud; DFL N°262/1977 del Ministerio de Hacienda, Reglamento de Viáticos
-                dentro del Territorio Nacional; Circulares
-                N°03/2012 y N°02/2015 ambas del Servicio Salud Osorno; Resolución 1600/2008 y 06/2019, ambas de la
-                Contraloría General de la República;
-                Decreto Exento N°65/2022 del Ministerio de Salud; Resolución Exenta N°556/2021 del Servicio de Salud
-                Osorno; Resolución Exenta N°546/2021
-                del Servicio Salud Osorno; dicto la siguiente:
-
+                {{$solicitud->vistos}}
             </p>
         </div>
         <div class="seccion">
@@ -294,7 +287,7 @@
                 </tr>
                 <tr>
                     <td><strong>Calidad Jurídica</strong></td>
-                    <td>--</td>
+                    <td>{{$solicitud->calidad->nombre}}</td>
                 </tr>
                 <tr>
                     <td><strong>Cargo</strong></td>
@@ -311,7 +304,7 @@
 
                 <tr>
                     <td><strong>Grado / Horas</strong></td>
-                    <td>{{ $solicitud->grado->nombre }} / --</td>
+                    <td>{{ $solicitud->grado->nombre }} / {{ $solicitud->hora->nombre }}</td>
                 </tr>
                 <tr>
                     <td><strong>Correo electrónico</strong></td>
@@ -449,7 +442,7 @@
                                 <th>Monto</th>
                             </thead>
                             <tbody>
-                                @foreach ($proceso->rendicionesfinanzas as $rendicion)
+                                @foreach ($proceso->rendicionesfinanzas() as $rendicion)
                                     <tr>
                                         <td>{{ $rendicion->actividad->nombre }}</td>
                                         <td>${{ number_format($rendicion->mount_real, 0, ',', '.') }}</td>
@@ -458,7 +451,7 @@
                             </tbody>
                             <tfoot>
                                 <td colspan="1"><strong>TOTAL</strong></td>
-                                <td><strong>{{ "$" . number_format($proceso->sumRendicionesfinanzas(), 0, ',', '.') }}</strong>
+                                <td><strong>{{ $proceso->sumRendicionesAprobadas()}}</strong>
                                 </td>
                             </tfoot>
                         </table>
@@ -471,21 +464,21 @@
             <div class="row">
                 <div class="column-firma">
                     <div class="firma-container">
-                        <p>NOMBRE DE USUARIO {{ now()->format('d-m-Y H:i:s') }}</p>
+                        <p>{{$solicitud->firmaJefatura() ? $solicitud->firmaJefatura() : 'SIN FIRMA'}}</p>
                         <hr>
                         <h5>JEFATURA DIRECTA</h5>
                     </div>
                 </div>
                 <div class="column-firma">
                     <div class="firma-container">
-                        <p>NOMBRE DE USUARIO {{ now()->format('d-m-Y H:i:s') }}</p>
+                        <p>{{$solicitud->firmaSubDirector() ? $solicitud->firmaSubDirector() : 'SIN FIRMA'}}</p>
                         <hr>
                         <h5>SUBDIRECTOR/A DEL ÁREA</h5>
                     </div>
                 </div>
                 <div class="column-firma">
                     <div class="firma-container">
-                        <p>NOMBRE DE USUARIO {{ now()->format('d-m-Y H:i:s') }}</p>
+                        <p>{{$solicitud->firmaJefePersonal() ? $solicitud->firmaJefePersonal() : 'SIN FIRMA'}}</p>
                         <hr>
                         <h5>JEFATURA SECCIÓN PERSONAL Y REGISTRO</h5>
                     </div>
@@ -493,11 +486,13 @@
             </div>
         </div>
         <div class="seccion-footer">
+            <p>{{$solicitud->informeCometido() ? 'Con Informe de Cometido.' : 'Sin Informe de Cometido.'}}</p>
             <p>
                 <strong>NOTA</strong>:
                 El cumplimiento de este cometido, es de responsabilidad de la jefatura directa, solidariamente con la
                 persona que disponga del pago.
             </p>
+            <p>{{ Carbon\Carbon::now()->format('d-m-Y H:i:s e') }} </p>
         </div>
     </div>
 </body>

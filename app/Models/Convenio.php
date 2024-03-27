@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Str;
 use Carbon\Carbon;
+use Illuminate\Support\Facades\Auth;
 
 class Convenio extends Model
 {
@@ -44,8 +45,8 @@ class Convenio extends Model
     {
         static::creating(function ($convenio) {
             $convenio->uuid                    = Str::uuid();
-            $convenio->user_id_by              = Auth::user() ? Auth::user()->id : null;
-            $convenio->fecha_by_user           = now();
+            $convenio->user_id_by              = Auth::check() ? Auth::user()->id : null;
+            /* $convenio->fecha_by_user           = now(); */
         });
 
         static::created(function ($convenio) {

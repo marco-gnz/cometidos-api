@@ -16,7 +16,7 @@ class ListGrupoResource extends JsonResource
     {
         return [
             'uuid'              => $this->uuid,
-            'establecimiento'   => $this->establecimiento ? $this->establecimiento->nombre : null,
+            'establecimiento'   => $this->establecimiento ? $this->establecimiento->sigla : null,
             'departamento'      => $this->departamento ? $this->departamento->nombre : null,
             'subdepartamento'   => $this->subdepartamento ? $this->subdepartamento->nombre : null,
             'total_firmantes'   => count($this->firmantes),
