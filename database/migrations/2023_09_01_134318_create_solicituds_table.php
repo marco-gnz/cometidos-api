@@ -16,7 +16,9 @@ class CreateSolicitudsTable extends Migration
         Schema::create('solicituds', function (Blueprint $table) {
             $table->bigIncrements('id');
             $table->uuid('uuid')->unique()->nullable();
+            $table->string('correlativo')->nullable();
             $table->string('codigo')->unique()->nullable();
+            $table->boolean('fijada')->default(0);
             $table->date('fecha_inicio')->nullable();
             $table->date('fecha_termino')->nullable();
             $table->time('hora_llegada')->nullable();
@@ -29,6 +31,8 @@ class CreateSolicitudsTable extends Migration
             $table->boolean('gastos_alimentacion')->default(0)->nullable();
             $table->boolean('gastos_alojamiento')->default(0)->nullable();
             $table->boolean('pernocta_lugar_residencia')->default(0)->nullable();
+            $table->boolean('is_reasignada')->default(0)->nullable();
+
             $table->integer('n_dias_40')->nullable();
             $table->integer('n_dias_100')->nullable();
             $table->text('observacion_gastos')->nullable();

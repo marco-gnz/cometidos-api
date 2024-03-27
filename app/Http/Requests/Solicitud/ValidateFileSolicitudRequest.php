@@ -25,7 +25,7 @@ class ValidateFileSolicitudRequest extends FormRequest
     {
         return [
             'uuid'  => 'nullable',
-            'file' => 'nullable|mimes:pdf,jpg,png,jpeg,doc,docx|max:500000',
+            'file' => 'nullable|mimes:pdf,jpg,png,jpeg,doc,docx|max:5000',
         ];
     }
 
@@ -33,7 +33,7 @@ class ValidateFileSolicitudRequest extends FormRequest
     {
         return [
             'file.mimes' => 'El :attribute debe ser un archivo de tipo pdf, jpg, jpeg o doc',
-            'file.max'   => 'El :attribute debe ser menor a :max kb',
+            'file.max'   => 'El :attribute debe ser menor a :max kilobytes (5 megabytes)',
         ];
     }
 

@@ -162,7 +162,7 @@ class SolicitudController extends Controller
                 $estados[] = [
                     'status'                => EstadoSolicitud::STATUS_INGRESADA,
                     'posicion_firma_s'      => $firma ? $firma->posicion_firma : 0,
-                    'history_solicitud'     => $solicitud,
+                    'history_solicitud_new' => json_encode($solicitud->only($form)),
                     'solicitud_id'          => $solicitud->id,
                     'user_id'               => $firma ? $firma->user_id : null,
                     's_role_id'             => $firma ? $firma->role_id : null,
@@ -174,6 +174,13 @@ class SolicitudController extends Controller
                     $firmantes = $solicitud->grupo->firmantes()->where('status', true)->get();
                     if ($firmantes) {
                         foreach ($firmantes as $firmante) {
+                            $status = true;
+                            if ($firmante->role_id === 6 || $firmante->role_id === 7) {
+                                $status = true;
+                                if (!$solicitud->derecho_pago) {
+                                    $status = false;
+                                }
+                            }
                             $firmantes_solicitud[] = [
                                 'posicion_firma'    => $firmante->posicion_firma,
                                 'status'            => $firmante->status,
@@ -181,6 +188,7 @@ class SolicitudController extends Controller
                                 'grupo_id'          => $firmante->grupo_id,
                                 'user_id'           => $firmante->user_id,
                                 'role_id'           => $firmante->role_id,
+                                'status'            => $status
                             ];
                         }
                         $solicitud->addFirmantes($firmantes_solicitud);
@@ -224,7 +232,8 @@ class SolicitudController extends Controller
                             'extension'     => $file->getClientOriginalExtension(),
                             'is_valid'      => $file->isValid(),
                             'solicitud_id'  => $solicitud->id,
-                            'user_id'       => $solicitud->user_id
+                            'user_id'       => $solicitud->user_id,
+                            'model'         => Documento::MODEL_SOLICITUD
                         ]);
                     }
                 }
@@ -235,9 +244,8 @@ class SolicitudController extends Controller
                 $now                     = Carbon::now();
                 $uuid                    = null;
                 if ($fecha_termino_solicitud->lte($now)) {
-                    $message = "Su Cometido ha finalizado. ¿Requiere ingresar su Informe de Cometido inmediatamente?";
+                    $message = "Su Cometido fue realizado. ¿Requiere ingresar su Informe de Cometido inmediatamente?";
                     $uuid    = $solicitud->uuid;
-
                 } else {
                     $message = "¿Requiere ingresar una nueva solicitud de cometido?";
                 }
@@ -433,6 +441,7 @@ class SolicitudController extends Controller
         try {
             $solicitud = Solicitud::where('uuid', $request->solicitud_uuid)->firstOrFail();
 
+
             $this->authorize('update', $solicitud);
 
             $is_update          = $solicitud->authorizedToUpdate();
@@ -474,6 +483,8 @@ class SolicitudController extends Controller
                 'n_dias_100',
                 'observacion_gastos',
             ];
+
+            $history_solicitud_old = $solicitud->only($form);
 
             $validate_date              = $this->validateUpdateSolicitudDate($request);
             $validate_days_40_100       = $this->validateSolicitudDate40100($request);
@@ -524,6 +535,21 @@ class SolicitudController extends Controller
             $utiliza_transporte = (bool)$request->utiliza_transporte;
 
             if ($update) {
+                if (!$solicitud->derecho_pago) {
+                    $firmantes = $solicitud->firmantes()->whereIn('role_id', [6, 7])->where('status', true)->get();
+                    if (count($firmantes) > 0) {
+                        $firmantes->toQuery()->update([
+                            'status' => false
+                        ]);
+                    }
+                } else {
+                    $firmantes = $solicitud->firmantes()->whereIn('role_id', [6, 7])->where('status', false)->get();
+                    if (count($firmantes) > 0) {
+                        $firmantes->toQuery()->update([
+                            'status' => true
+                        ]);
+                    }
+                }
                 if ($request->archivos) {
                     foreach ($request->archivos as $file) {
                         $fecha_solicitud    = Carbon::parse($solicitud->fecha_inicio);
@@ -540,7 +566,8 @@ class SolicitudController extends Controller
                             'extension'     => $file->getClientOriginalExtension(),
                             'is_valid'      => $file->isValid(),
                             'solicitud_id'  => $solicitud->id,
-                            'user_id'       => $solicitud->user_id
+                            'user_id'       => $solicitud->user_id,
+                            'model'         => Documento::MODEL_SOLICITUD
                         ]);
                     }
                 }
@@ -578,16 +605,20 @@ class SolicitudController extends Controller
                 }
 
                 $solicitud = $solicitud->fresh();
-                /* $estados[] = [
-                    'status'                => EstadoSolicitud::STATUS_MODIFICADA,
-                    'posicion_firma_s'      => $firma ? $firma->posicion_firma : 0,
-                    'history_solicitud'     => $solicitud,
-                    'solicitud_id'          => $solicitud->id,
-                    'user_id'               => $firma ? $firma->user_id : null,
-                    's_role_id'             => $firma ? $firma->role_id : null,
-                    's_firmante_id'         => $firma ? $firma->id : null,
+
+                $firma = $solicitud->firmantes()->where('posicion_firma', 0)->first();
+                $estados[] = [
+                    'status'                    => EstadoSolicitud::STATUS_MODIFICADA,
+                    'posicion_firma_s'          => $firma ? $firma->posicion_firma : 0,
+                    'history_solicitud_old'     => json_encode($history_solicitud_old),
+                    'history_solicitud_new'     => json_encode($solicitud->only($form)),
+                    'solicitud_id'              => $solicitud->id,
+                    'user_id'                   => $firma ? $firma->user_id : null,
+                    's_role_id'                 => $firma ? $firma->role_id : null,
+                    's_firmante_id'             => $firma ? $firma->id : null,
                 ];
-                $create_status  = $solicitud->addEstados($estados); */
+
+                $create_status  = $solicitud->addEstados($estados);
 
                 return response()->json(
                     array(
@@ -671,7 +702,7 @@ class SolicitudController extends Controller
         try {
             $fecha_inicio    = Carbon::parse($request->fecha_inicio);
             $fecha_termino   = Carbon::parse($request->fecha_termino);
-            $diff_days       = $fecha_inicio->diffInDays($fecha_termino) + 1;
+            $diff_days       = $fecha_inicio->diffInDays($fecha_termino) + 2;
             $n_dias_40       = $request->n_dias_40 != null ? (int)$request->n_dias_40 : 0;
             $n_dias_100      = $request->n_dias_100 != null ? (int)$request->n_dias_100 : 0;
             $total_40_100    = $n_dias_40 + $n_dias_100;

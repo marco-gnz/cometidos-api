@@ -21,7 +21,8 @@ class CreateEstadoSolicitudsTable extends Migration
             $table->integer('posicion_firma')->nullable();
             $table->integer('posicion_firma_s')->nullable();
             $table->integer('posicion_firma_r_s')->nullable();
-            $table->text('history_solicitud')->nullable();
+            $table->text('history_solicitud_old')->nullable();
+            $table->text('history_solicitud_new')->nullable();
             $table->boolean('is_reasignado')->default(0); // registro anterior creado, con valor reasignado en true
 
             $table->foreign('solicitud_id')->references('id')->on('solicituds');

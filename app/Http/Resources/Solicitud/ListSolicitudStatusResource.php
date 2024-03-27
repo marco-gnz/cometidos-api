@@ -19,7 +19,7 @@ class ListSolicitudStatusResource extends JsonResource
     public function toArray($request)
     {
 
-        switch ($this->status) {
+        /* switch ($this->status) {
             case 1:
                 $type = 'primary';
                 break;
@@ -53,20 +53,29 @@ class ListSolicitudStatusResource extends JsonResource
         $reasignado_firma = null;
         if($this->funcionarioRs){
             $reasignado_firma = "{$this->funcionarioRs->nombre_completo} - {$this->perfilRs->name} ({$this->posicion_firma_r_s})";
+        } */
+
+        $ejecucion_firma = null;
+        if($this->funcionario){
+            $ejecucion_firma = "Ejecutado por {$this->funcionario->nombre_completo} - {$this->perfil->name} ({$this->posicion_firma_s})";
+        }
+
+        $reasignado_firma = null;
+        if($this->funcionarioRs){
+            $reasignado_firma = "{$this->funcionarioRs->nombre_completo} - {$this->perfilRs->name} ({$this->posicion_firma_r_s})";
         }
 
         return [
             'status'                    => $this->status,
             'status_nom'                => EstadoSolicitud::STATUS_NOM[$this->status],
+            'type'                      => $this->typeStatus(),
+            'is_reasignado'             => $this->is_reasignado ? true : false,
             'motivo_rechazo_nom'        => $this->motivo_rechazo != null ? EstadoSolicitud::RECHAZO_NOM[$this->motivo_rechazo] : null,
             'observacion'               => $this->observacion ? $this->observacion : null,
-            'history_solicitud'         => $this->history_solicitud,
-            'is_reasignado'             => $this->is_reasignado ? true : false,
+            'ip_address'                => null,
+            'created_at'                => $this->created_at ? Carbon::parse($this->created_at)->format('d-m-Y H:i') : null,
             'ejecucion'                 => $ejecucion_firma,
             'reasignado_firma'          => $reasignado_firma,
-            'created_at'                => $this->created_at ? Carbon::parse($this->created_at)->format('d-m-Y H:i') : null,
-            'type'                      => $type,
-            'ip_address'                => $ip_semi_crypt
         ];
     }
 }

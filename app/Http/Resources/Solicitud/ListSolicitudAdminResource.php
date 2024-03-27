@@ -3,6 +3,7 @@
 namespace App\Http\Resources\Solicitud;
 
 use App\Models\EstadoSolicitud;
+use App\Models\Solicitud;
 use Carbon\Carbon;
 use Illuminate\Support\Str;
 use Illuminate\Http\Resources\Json\JsonResource;
@@ -20,22 +21,19 @@ class ListSolicitudAdminResource extends JsonResource
         return [
             'uuid'                      => $this->uuid,
             'codigo'                    => $this->codigo,
-            'fecha_inicio'              => $this->fecha_inicio ? Carbon::parse($this->fecha_inicio)->format('d-m-Y') : null,
-            'fecha_termino'             => $this->fecha_termino ? Carbon::parse($this->fecha_termino)->format('d-m-Y') : null,
-            'funcionario'               => $this->funcionario ? Str::limit(strip_tags($this->funcionario->nombre_completo), 20) : null,
+            'fijada'                    => $this->isPinnedByUser(auth()->user()),
+            'fecha_inicio'              => $this->fecha_inicio ? Carbon::parse($this->fecha_inicio)->format('d-m-y') : null,
+            'fecha_termino'             => $this->fecha_termino ? Carbon::parse($this->fecha_termino)->format('d-m-y') : null,
+            'funcionario'               => $this->funcionario ? $this->funcionario->abreNombres() : null,
             'departamento'              => $this->departamento ? substr($this->departamento->nombre, 0, 15) : null,
-            'subdepartamento'           => $this->subdepartamento ? substr($this->subdepartamento->nombre, 0, 15) : null,
             'departamento_complete'     => $this->departamento ? $this->departamento->nombre : null,
-            'subdepartamento_complete'  => $this->subdepartamento ? $this->subdepartamento->nombre : null,
             'establecimiento'           => $this->establecimiento ? $this->establecimiento->sigla : null,
             'derecho_pago_value'        => $this->derecho_pago ? true : false,
             'derecho_pago'              => $this->derecho_pago ? "Si" : "No",
-            'estado_nom'                => EstadoSolicitud::STATUS_NOM[$this->last_status],
-            'tipo_comision'             => $this->tipoComision ? $this->tipoComision->nombre : null,
-            'dentro_pais'               => $this->dentro_pais ? true : false,
-            'afecta_convenio'           => $this->afecta_convenio !== null ? ($this->afecta_convenio === 1 ? 'AFECTA' : 'NO AFECTA') : null,
+            'estado_nom'                => Solicitud::STATUS_NOM[$this->status],
+            'estado_type'               => $this->typeStatus(),
             'page_firma'                => $this->pageFirma(),
-            'is_update'                 => $this->authorizedToUpdate(),
+            'type_page_firma'           => $this->typePageFirma(),
         ];
     }
 }

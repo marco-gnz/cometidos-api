@@ -68,7 +68,8 @@ class EstadoSolicitud extends Model
         'posicion_firma',
         'posicion_firma_s',
         'posicion_firma_r_s',
-        'history_solicitud',
+        'history_solicitud_old',
+        'history_solicitud_new',
         'is_reasignado',
         'solicitud_id',
         'firmante_id',
@@ -101,6 +102,12 @@ class EstadoSolicitud extends Model
                 $estado->r_s_role_id        = $estado->firmaRs->perfil->id;
                 $estado->r_s_user_id        = $estado->firmaRs->funcionario->id;
                 $estado->firmante_id        = $estado->firmaRs->id;
+                $firmantes = $estado->solicitud->firmantes()->get();
+                if ($firmantes->count() > 0) {
+                    $firmantes->toQuery()->update([
+                        'is_reasignado' => false
+                    ]);
+                }
                 $estado->firmaRs->update([
                     'is_reasignado' => true
                 ]);
@@ -115,17 +122,36 @@ class EstadoSolicitud extends Model
         });
 
         static::created(function ($estado) {
-            $total_aprobado = $estado->solicitud->estados()->where('posicion_firma', '<=', $estado->posicion_firma)->where('status',self::STATUS_APROBADO)->count();
+            if ($estado->status === self::STATUS_APROBADO) {
+                $total_ok       = $estado->solicitud->total_ok + 1;
+                $total_firmas   = $estado->solicitud->firmantes()->where('role_id', '!=', 1)->where('status', true)->count();
+                if ($total_ok === $total_firmas) {
+                    $status = Solicitud::STATUS_PROCESADO;
+                } else {
+                    $status = Solicitud::STATUS_EN_PROCESO;
+                }
+            } else {
+                $total_ok = 0;
+                $status = Solicitud::STATUS_EN_PROCESO;
+            }
             $estado->solicitud->update([
                 'last_status'               => $estado->status,
                 'posicion_firma_actual'     => $estado->posicion_firma,
-                'total_ok'                  => $total_aprobado
+                'total_ok'                  => $total_ok,
+                'is_reasignada'             => $estado->is_reasignado ? true : false,
+                'status'                    => $status
             ]);
 
             if ($estado->status === self::STATUS_ANULADO) {
                 $estado->solicitud->update([
                     'status'    => Solicitud::STATUS_ANULADO
                 ]);
+                $procesos_rendicion = $estado->solicitud->procesoRendicionGastos()->where('status', '!=', EstadoProcesoRendicionGasto::STATUS_ANULADO)->get();
+                if (count($procesos_rendicion) > 0) {
+                    $procesos_rendicion->toQuery()->update([
+                        'status' => EstadoProcesoRendicionGasto::STATUS_ANULADO
+                    ]);
+                }
             }
         });
     }
@@ -168,5 +194,28 @@ class EstadoSolicitud extends Model
     public function firmaRs()
     {
         return $this->belongsTo(SolicitudFirmante::class, 'r_s_firmante_id');
+    }
+
+    public function typeStatus()
+    {
+        switch ($this->status) {
+            case 1:
+                $type = 'primary';
+                break;
+
+            case 2:
+                $type = 'success';
+                break;
+
+            case 3:
+            case 4:
+                $type = 'danger';
+                break;
+
+            default:
+                $type = 'info';
+                break;
+        }
+        return $type;
     }
 }

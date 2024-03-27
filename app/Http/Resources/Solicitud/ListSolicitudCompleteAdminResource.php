@@ -41,7 +41,10 @@ class ListSolicitudCompleteAdminResource extends JsonResource
             'pernocta_lugar_residencia' => $this->pernocta_lugar_residencia ? "Si" : "No",
             'actividad_realizada'       => $this->actividad_realizada ? $this->actividad_realizada : null,
             'observacion_gastos'        => $this->observacion_gastos ? $this->observacion_gastos : null,
-            'estado_nom'                => EstadoSolicitud::STATUS_NOM[$this->last_status],
+            'last_status_nom'           => EstadoSolicitud::STATUS_NOM[$this->last_status],
+            'last_status_type'          => $this->typeLastStatus(),
+            'estado_nom'                => Solicitud::STATUS_NOM[$this->status],
+            'type_status'               => $this->typeStatus(),
             'total_actividades'         => $total ? "$".number_format($total, 0, ",", ".") : null,
             'motivos'                   => $this->motivos ? $this->motivos->pluck('nombre')->implode(', ') : null,
             'lugares'                   => $this->lugares ? $this->lugares->pluck('nombre')->implode(', ') : null,
@@ -58,12 +61,14 @@ class ListSolicitudCompleteAdminResource extends JsonResource
             'tipo_comision'             => $this->tipoComision ? $this->tipoComision->nombre : null,
             'created_at'                => $this->fecha_by_user ? Carbon::parse($this->fecha_by_user)->format('d-m-Y H:i') : null,
             'user_by'                   => $this->userBy ? $this->userBy->nombre_completo : nul,
-            'afecta_convenio'           => $this->afecta_convenio !== null ? ($this->afecta_convenio === 1 ? 'AFECTA' : 'NO AFECTA') : null,
+            'afecta_convenio'           => $this->afectaConvenio(),
             'url_convenio'              => $this->convenio ? route('convenio.show', ['uuid' => $this->convenio->uuid]) : null,
             'url_resolucion'            => route('resolucioncometidofuncional.show', ['uuid' => $this->uuid]),
             'page_firma'                => $this->pageFirma(),
+            'type_page_firma'           => $this->typePageFirma(),
             'is_update'                 => $this->authorizedToUpdate(),
-            'documentos'                => $this->exportarDocumentos()
+            'documentos'                => $this->exportarDocumentos(),
+            'not_actividad'             => $this->isNotActividad()
         ];
     }
 }

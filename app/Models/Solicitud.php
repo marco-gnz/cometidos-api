@@ -62,13 +62,15 @@ class Solicitud extends Model
 
     public const STATUS_NOM = [
         self::STATUS_EN_PROCESO         => 'EN PROCESO',
-        self::STATUS_PROCESADO          => 'PROCESADO',
-        self::STATUS_ANULADO            => 'ANULADO',
+        self::STATUS_PROCESADO          => 'PROCESADA',
+        self::STATUS_ANULADO            => 'ANULADA',
     ];
 
     protected $fillable = [
         'uuid',
         'codigo',
+        'correlativo',
+        'fijada',
         'fecha_inicio',
         'fecha_termino',
         'hora_llegada',
@@ -121,6 +123,7 @@ class Solicitud extends Model
         'fecha_by_user',
         'user_id_update',
         'fecha_by_user_update',
+        'is_reasignada'
     ];
 
     public function grupoDepto($solicitud)
@@ -149,6 +152,7 @@ class Solicitud extends Model
             $total_horas_cometido               = $ini_date_time->diffInHours($ter_date_time);
 
             $solicitud->uuid                    = Str::uuid();
+
             $solicitud->total_dias_cometido     = $total_dias;
             $solicitud->total_horas_cometido    = $total_horas_cometido;
             $solicitud->user_id                 = Auth::user()->id;
@@ -160,6 +164,7 @@ class Solicitud extends Model
             $dias_permitidos                = (int)Configuration::obtenerValor('informecometido.dias_atraso');
             $vistos                         = Configuration::obtenerValor('info.vistos');
             $grupo                          = self::grupoDepto($solicitud);
+            $solicitud->correlativo         = self::generarCorrelativo($solicitud);
             $solicitud->codigo              = self::generarCodigo($solicitud);
             $solicitud->departamento_id     = $grupo ? $grupo->departamento_id : null;
             $solicitud->sub_departamento_id = $grupo ? $grupo->sub_departamento_id : null;
@@ -187,23 +192,42 @@ class Solicitud extends Model
 
     private static function generarCodigo($solicitud)
     {
-        $letra                  = $solicitud->derecho_pago ? 'C' : 'S';
-        $correlativo            = str_pad(self::whereYear('created_at', $solicitud->created_at->year)->count() + 1, 5, '0', STR_PAD_LEFT);
-        $anio                   = $solicitud->created_at->year;
+        $derecho_pago           = $solicitud->derecho_pago ? 1 : 2;
         $codigoEstablecimiento  = $solicitud->funcionario->establecimiento->cod_sirh;
-        $codigo                 = "{$codigoEstablecimiento}-{$anio}-{$correlativo}-{$letra}";
+        $correlativo            = self::generarCorrelativo($solicitud);
+        $codigo                 = "{$codigoEstablecimiento}{$derecho_pago}{$correlativo}";
+        return $codigo;
+    }
+
+    private static function generarCorrelativo($solicitud)
+    {
+        $correlativo            = str_pad(self::whereYear('created_at', $solicitud->created_at->year)->count(), 5, '0', STR_PAD_LEFT);
+        $anio                   = $solicitud->created_at->year;
+        $codigo                 = "{$anio}{$correlativo}";
         return $codigo;
     }
 
     private static function generarCodigoUpdate($solicitud)
     {
-        $codigo_actual  = $solicitud->codigo;
-        $letra          = $solicitud->derecho_pago ? 'C' : 'S';
-        list($codigoEstablecimiento, $anio, $correlativo) = explode('-', $codigo_actual);
-        $codigo         = "{$codigoEstablecimiento}-{$anio}-{$correlativo}-{$letra}";
+        $derecho_pago           = $solicitud->derecho_pago ? 1 : 2;
+        $codigoEstablecimiento  = $solicitud->funcionario->establecimiento->cod_sirh;
+        $correlativo            = $solicitud->correlativo;
+        $codigo                 = "{$codigoEstablecimiento}{$derecho_pago}{$correlativo}";
         return $codigo;
     }
 
+    public function users()
+    {
+        return $this->belongsToMany(User::class)
+            ->withPivot('is_pinned')
+            ->withTimestamps();
+    }
+
+    // Verificar si la solicitud está fijada por un usuario específico
+    public function isPinnedByUser(User $user)
+    {
+        return $this->users()->where('user_id', $user->id)->wherePivot('is_pinned', true)->exists();
+    }
 
     public function motivos()
     {
@@ -407,10 +431,9 @@ class Solicitud extends Model
 
     private function totalFirmasAprobadas()
     {
-        $last_status    = $this->estados()->orderBy('id', 'DESC')->first();
-        $total_aprobado = $this->estados()->where('posicion_firma', '<=', $last_status->posicion_firma)->where('status', EstadoSolicitud::STATUS_APROBADO)->count();
-        return $total_aprobado;
+        return $this->total_ok;
     }
+
 
     private function totalFirmas()
     {
@@ -477,9 +500,10 @@ class Solicitud extends Model
         }
         return $type;
     }
+
     public function typeLastStatus()
     {
-        switch ($this->status) {
+        switch ($this->last_status) {
             case 1:
                 $type = 'primary';
                 break;
@@ -507,20 +531,20 @@ class Solicitud extends Model
             [
                 'name'          => 'Informe de cometido',
                 'url'           => $informe ? route('informecometido.show', ['uuid' => $informe->uuid]) : null,
-                'exist'         => $informe ? true : false,
+                'exist'         => self::isAnulada() ? false : ($informe ? true : false),
                 'stauts_nom'    => $informe ? EstadoInformeCometido::STATUS_NOM[$informe->last_status] : '',
                 'type'          => $informe ? EstadoInformeCometido::STATUS_TYPE[$informe->last_status] : '',
             ],
             [
                 'name'  => 'Resolución de cometido',
                 'url'   => route('resolucioncometidofuncional.show', ['uuid' => $this->uuid]),
-                'exist' => true,
+                'exist' => self::isAnulada() ? false : true,
                 'type'  => 'primary'
             ],
             [
                 'name'  => 'Convenio de cometido',
                 'url'   => $this->convenio ? route('convenio.show', ['uuid' => $this->convenio->uuid]) : null,
-                'exist' => $this->convenio ? true : false,
+                'exist' => self::isAnulada() ? false : ($this->convenio ? true : false),
                 'type'  => $this->convenio ? 'primary' : 'info'
             ]
         ];
@@ -528,16 +552,33 @@ class Solicitud extends Model
         return $documentos;
     }
 
+    public function isNotActividad()
+    {
+        $last_status = $this->estados()->orderBy('id', 'DESC')->first();
+
+        $data = (object)[
+            'is_not_actividad'  => false,
+            'time'              => null
+        ];
+
+        if (($last_status) && ($last_status->posicion_firma === 0 && $last_status->is_reasignado)) {
+            $dias_atraso_actividad  = (int)Configuration::obtenerValor('solicitud.dias_atraso_actividad');
+            $date_status            = Carbon::parse($last_status->created_at);
+            $date_plazo             = $date_status->addDays($dias_atraso_actividad);
+            $data = (object)[
+                'is_not_actividad'  => true,
+                'title'             => '¡Sin actividad!',
+                'message'           => "Se anulará el " . $date_plazo->format('d-m-Y') . " por no editar."
+            ];
+
+            return $data;
+        }
+        return $data;
+    }
+
     public function valorTotal()
     {
-        $r_total    = 0;
-        $r_procesos = $this->procesoRendicionGastos()->where('last_status', 1)->get();
-        if (count($r_procesos) > 0) {
-            foreach ($r_procesos as $proceso) {
-                $r_total += $proceso->rendiciones()->where('last_status', 1)->sum('mount_real');
-            }
-        }
-
+        $r_total        = 0;
         $total_calculo = 0;
         $calculo = self::getLastCalculo();
         if ($calculo) {
@@ -548,39 +589,76 @@ class Solicitud extends Model
         return $total;
     }
 
+    public function lastEstadoAprobado()
+    {
+        $firma = $this->estados()->where('status', EstadoSolicitud::STATUS_APROBADO)->orderBy('id', 'DESC')->first();
+
+        return $firma;
+    }
+
     public function firmaJefatura()
     {
-        $firma = $this->estados()->where('s_role_id', 3)->where('status', EstadoSolicitud::STATUS_APROBADO)->orderBy('id', 'DESC')->first();
-        if ($firma) {
-            $nombres    = $firma->funcionario->abreNombres();
-            $fecha      = Carbon::parse($firma->created_at)->format('d-m-y H:i:s');
-            $new_firma  = "$nombres $fecha";
-            return $new_firma;
+        $last_status_aprobado = self::lastEstadoAprobado();
+        if ($last_status_aprobado) {
+            $firma = $this->estados()->where('s_role_id', 3)->where('status', EstadoSolicitud::STATUS_APROBADO)->where('created_at', '>=', $last_status_aprobado->created_at)->orderBy('id', 'DESC')->first();
+            if ($firma) {
+                $nombres    = $firma->funcionario->abreNombres();
+                $fecha      = Carbon::parse($firma->created_at)->format('d-m-y H:i:s');
+                $new_firma  = "$nombres $fecha";
+                return $new_firma;
+            }
+            return null;
         }
+
         return null;
     }
 
     public function firmaJefePersonal()
     {
-        $firma = $this->estados()->where('s_role_id', 4)->where('status', EstadoSolicitud::STATUS_APROBADO)->orderBy('id', 'DESC')->first();
-        if ($firma) {
-            $nombres    = $firma->funcionario->abreNombres();
-            $fecha      = Carbon::parse($firma->created_at)->format('d-m-y H:i:s');
-            $new_firma  = "$nombres $fecha";
-            return $new_firma;
+        $last_status_aprobado = self::lastEstadoAprobado();
+        if ($last_status_aprobado) {
+            $firma = $this->estados()->where('s_role_id', 4)->where('status', EstadoSolicitud::STATUS_APROBADO)->where('created_at', '>=', $last_status_aprobado->created_at)->orderBy('id', 'DESC')->first();
+            if ($firma) {
+                $nombres    = $firma->funcionario->abreNombres();
+                $fecha      = Carbon::parse($firma->created_at)->format('d-m-y H:i:s');
+                $new_firma  = "$nombres $fecha";
+                return $new_firma;
+            }
+            return null;
         }
         return null;
     }
 
     public function firmaSubDirector()
     {
-        $firma = $this->estados()->where('s_role_id', 5)->where('status', EstadoSolicitud::STATUS_APROBADO)->orderBy('id', 'DESC')->first();
-        if ($firma) {
-            $nombres    = $firma->funcionario->abreNombres();
-            $fecha      = Carbon::parse($firma->created_at)->format('d-m-y H:i:s');
-            $new_firma  = "$nombres $fecha";
-            return $new_firma;
+        $last_status_aprobado = self::lastEstadoAprobado();
+        if ($last_status_aprobado) {
+            $firma = $this->estados()->where('s_role_id', 5)->where('status', EstadoSolicitud::STATUS_APROBADO)->where('created_at', '>=', $last_status_aprobado->created_at)->orderBy('id', 'DESC')->first();
+            if ($firma) {
+                $nombres    = $firma->funcionario->abreNombres();
+                $fecha      = Carbon::parse($firma->created_at)->format('d-m-y H:i:s');
+                $new_firma  = "$nombres $fecha";
+                return $new_firma;
+            }
+            return null;
         }
         return null;
+    }
+
+    public function afectaConvenio()
+    {
+        if ($this->afecta_convenio) {
+            return 'AFECTA A CONVENIO';
+        } else {
+            return 'NO AFECTA A CONVENIO';
+        }
+    }
+
+    public function isAnulada()
+    {
+        if ($this->status === self::STATUS_ANULADO) {
+            return true;
+        }
+        return false;
     }
 }

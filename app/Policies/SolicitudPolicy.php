@@ -67,9 +67,12 @@ class SolicitudPolicy
      */
     public function update(User $user, Solicitud $solicitud)
     {
-        $last_status = $solicitud->estados()->orderBy('id', 'DESC')->first();
+        if ($solicitud->status === Solicitud::STATUS_ANULADO) {
+            return false;
+        }
 
-        if (($last_status) && ($last_status->status === EstadoSolicitud::STATUS_INGRESADA || $last_status->status === EstadoSolicitud::STATUS_PENDIENTE)) {
+        $last_status = $solicitud->estados()->orderBy('id', 'DESC')->first();
+        if (($last_status) && ($last_status->status === EstadoSolicitud::STATUS_INGRESADA || $last_status->status === EstadoSolicitud::STATUS_MODIFICADA || $last_status->status === EstadoSolicitud::STATUS_RECHAZADO && $solicitud->posicion_firma_actual === 0) ) {
             return true;
         }
         return false;

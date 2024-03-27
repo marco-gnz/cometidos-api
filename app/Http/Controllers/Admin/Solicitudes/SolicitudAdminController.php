@@ -47,7 +47,15 @@ class SolicitudAdminController extends Controller
     public function listSolicitudes()
     {
         try {
-            $solicitudes = Solicitud::orderBy('fecha_inicio', 'DESC')->get();
+            $user = auth()->user();
+
+            // Obtener las solicitudes del usuario autenticado ordenadas por "fijado" primero
+            $solicitudes = Solicitud::/* leftJoin('solicitud_user', function ($join) use ($user) {
+                $join->on('solicituds.id', '=', 'solicitud_user.solicitud_id')
+                    ->where('solicitud_user.user_id', '=', $user->id);
+            })
+                ->orderByDesc('solicitud_user.is_pinned') */orderByDesc('fecha_inicio')
+                ->get();
 
             return response()->json(
                 array(
@@ -62,12 +70,41 @@ class SolicitudAdminController extends Controller
         }
     }
 
+    public function solicitudFijada($uuid)
+    {
+        try {
+            $solicitud = Solicitud::where('uuid', $uuid)->firstOrFail();
+            $user = auth()->user();
+            $pinned = $solicitud->users()->where('user_id', $user->id)->wherePivot('is_pinned', true)->exists();
+
+            if ($pinned) {
+                $msg = 'desfijada';
+                $solicitud->users()->detach($user->id);
+            } else {
+                $msg = 'fijada';
+                $solicitud->users()->attach($user->id, ['is_pinned' => true]);
+            }
+
+            $solicitud = $solicitud->fresh();
+            return response()->json(
+                array(
+                    'status'        => 'success',
+                    'title'         => "Solicitud {$solicitud->codigo} $msg con éxito.",
+                    'message'       => null,
+                    'data'          => ListSolicitudAdminResource::make($solicitud)
+                )
+            );
+        } catch (\Exception $error) {
+            return $error->getMessage();
+        }
+    }
+
+
     public function findSolicitud($uuid, $nav)
     {
         try {
             $solicitud                      = Solicitud::where('uuid', $uuid)->withCount('documentos')->firstOrFail();
             $navStatus                      = $this->navStatusSolicitud($solicitud);
-            $permisos_solicitud             = $this->permissionsSolicitud($solicitud);
 
             switch ($nav) {
                 case 'datos':
@@ -77,7 +114,8 @@ class SolicitudAdminController extends Controller
                             'title'         => null,
                             'message'       => null,
                             'data'          => ListSolicitudCompleteAdminResource::make($solicitud),
-                            'nav'           => $navStatus
+                            'nav'           => $navStatus->nav,
+                            'is_anulada'    => $navStatus->is_anulada
                         )
                     );
                     break;
@@ -90,7 +128,8 @@ class SolicitudAdminController extends Controller
                             'title'         => null,
                             'message'       => null,
                             'data'          => ListFirmantesResource::collection($firmantes),
-                            'nav'           => $navStatus
+                            'nav'           => $navStatus->nav,
+                            'is_anulada'    => $navStatus->is_anulada
                         )
                     );
                     break;
@@ -104,7 +143,8 @@ class SolicitudAdminController extends Controller
                             'title'         => null,
                             'message'       => null,
                             'data'          => $calculo ? ListCalculoResoruce::make($calculo) : null,
-                            'nav'           => $navStatus
+                            'nav'           => $navStatus->nav,
+                            'is_anulada'    => $navStatus->is_anulada
                         )
                     );
 
@@ -120,7 +160,8 @@ class SolicitudAdminController extends Controller
                             'title'         => null,
                             'message'       => null,
                             'data'          => $convenio ? ListConvenioResource::make($convenio) : null,
-                            'nav'           => $navStatus,
+                            'nav'           => $navStatus->nav,
+                            'is_anulada'    => $navStatus->is_anulada,
                             'convenios'     => $convenios ? ListConvenioResource::collection($convenios) : null
                         )
                     );
@@ -135,7 +176,8 @@ class SolicitudAdminController extends Controller
                             'title'         => null,
                             'message'       => null,
                             'data'          => ProcesoRendicionGastoDetalleResource::collection($rendiciones),
-                            'nav'           => $navStatus
+                            'nav'           => $navStatus->nav,
+                            'is_anulada'    => $navStatus->is_anulada
                         )
                     );
                     break;
@@ -148,7 +190,8 @@ class SolicitudAdminController extends Controller
                             'title'         => null,
                             'message'       => null,
                             'data'          => ListSolicitudDocumentosResource::collection($documentos),
-                            'nav'           => $navStatus
+                            'nav'           => $navStatus->nav,
+                            'is_anulada'    => $navStatus->is_anulada
                         )
                     );
                     break;
@@ -161,7 +204,8 @@ class SolicitudAdminController extends Controller
                             'title'         => null,
                             'message'       => null,
                             'data'          => ListInformeCometidoAdminResource::collection($informes),
-                            'nav'           => $navStatus
+                            'nav'           => $navStatus->nav,
+                            'is_anulada'    => $navStatus->is_anulada
                         )
                     );
                     break;
@@ -174,7 +218,8 @@ class SolicitudAdminController extends Controller
                             'title'         => null,
                             'message'       => null,
                             'data'          => ListSolicitudStatusResource::collection($estados),
-                            'nav'           => $navStatus
+                            'nav'           => $navStatus->nav,
+                            'is_anulada'    => $navStatus->is_anulada
                         )
                     );
                     break;
@@ -203,7 +248,8 @@ class SolicitudAdminController extends Controller
                         'title'         => "Firmante {$status} con éxito.",
                         'message'       => null,
                         'data'          => ListFirmantesResource::make($firmante),
-                        'nav'           => $navStatus
+                        'nav'           => $navStatus->nav,
+                        'is_anulada'    => $navStatus->is_anulada
                     )
                 );
             }
@@ -259,7 +305,8 @@ class SolicitudAdminController extends Controller
                         'title'         => "Solicitud modifcada con éxito.",
                         'message'       => $message,
                         'data'          => $convenio ? ListConvenioResource::make($convenio) : null,
-                        'nav'           => $navStatus,
+                        'nav'           => $navStatus->nav,
+                        'is_anulada'    => $navStatus->is_anulada,
                         'convenios'     => $convenios ? ListConvenioResource::collection($convenios) : null
                     )
                 );
@@ -436,11 +483,9 @@ class SolicitudAdminController extends Controller
                         break;
                 }
             }
-            $first_name = mb_substr($firmante->funcionario->nombres, 0, 1);
-            $apellidos  = mb_substr($firmante->funcionario->apellidos, 0, 12);
             $data       = (object) [
                 'user_uuid'                         => $firmante->funcionario->uuid,
-                'nombres_firmante'                  => "{$first_name}. {$apellidos}",
+                'nombres_firmante'                  => $firmante->funcionario->abreNombres(),
                 'posicion_firma'                    => $firmante->posicion_firma,
                 'perfil'                            => $firmante->perfil->name,
                 'status_nom'                        => $is_ciclo ? EstadoSolicitud::STATUS_NOM[$last_estado->status] : EstadoSolicitud::STATUS_NOM[1],
@@ -453,7 +498,11 @@ class SolicitudAdminController extends Controller
             ];
             array_push($data_nav, $data);
         }
-        return $data_nav;
+        $data = (object) [
+            'nav'           => $data_nav,
+            'is_anulada'    => $solicitud->status === Solicitud::STATUS_ANULADO
+        ];
+        return $data;
     }
 
     public function reasignarFirmaSolicitud(Request $request)
@@ -471,7 +520,6 @@ class SolicitudAdminController extends Controller
                 'posicion_firma'            => null,
                 'posicion_next_firma'       => $firmante->posicion_firma,
                 'reasignacion'              => true,
-                'history_solicitud'         => $solicitud,
                 'solicitud_id'              => $solicitud->id,
                 'user_id'                   => $auth_user ? $auth_user->id : null,
                 'role_id'                   => null,
@@ -490,7 +538,8 @@ class SolicitudAdminController extends Controller
                         'title'         => "Solicitud {$solicitud->codigo} reasignada.",
                         'message'       => "Firma reasgignada a {$funcionario_firmante->nombre_completo}",
                         'data'          => ListSolicitudStatusResource::make($solicitud),
-                        'nav'           => $navStatus
+                        'nav'           => $navStatus->nav,
+                        'is_anulada'    => $navStatus->is_anulada
                     )
                 );
             }
@@ -700,11 +749,11 @@ class SolicitudAdminController extends Controller
         try {
             $status                 = (int)$request->status;
             $solicitud              = Solicitud::where('uuid', $request->solicitud_uuid)->firstOrFail();
-            $firma_disponible       = $this->firmaDisponible($solicitud);
+            $firma_disponible       = $this->firmaDisponible($solicitud, $status);
             $firmantes_disponible   = [];
             if ($status === EstadoSolicitud::STATUS_RECHAZADO) {
                 if ($firma_disponible->is_firma) {
-                    $firmantes_disponible = $solicitud->firmantes()->whereIn('role_id', [1, 2])->where('status', true)->where('id', '!=', $firma_disponible->id_firma)->where('posicion_firma', '<', $firma_disponible->posicion_firma)->orderBy('posicion_firma', 'DESC')->get();
+                    $firmantes_disponible = $solicitud->firmantes()->whereIn('role_id', [1, 2])->where('status', true)->where('id', '!=', $firma_disponible->id_firma)->where('posicion_firma', '<', $firma_disponible->posicion_firma)->orderBy('posicion_firma', 'ASC')->get();
                 }
             }
             return response()->json(
@@ -724,9 +773,9 @@ class SolicitudAdminController extends Controller
         }
     }
 
-    private function firmaDisponible($solicitud)
+    private function firmaDisponible($solicitud, $status)
     {
-        return $firma_disponible = $this->obtenerFirmaDisponible($solicitud);
+        return $firma_disponible = $this->obtenerFirmaDisponible($solicitud, $status);
     }
 
     private function positionFirma($solicitud)
@@ -746,17 +795,37 @@ class SolicitudAdminController extends Controller
         return $position_firma;
     }
 
-    private function anularSolicitud($solicitud, $firma_disponible, $position_firma, $observacion)
+    private function anularSolicitud($solicitud, $firma_disponible, $observacion)
     {
         try {
+            $form = [
+                'user_id',
+                'fecha_inicio',
+                'fecha_termino',
+                'hora_llegada',
+                'hora_salida',
+                'derecho_pago',
+                'utiliza_transporte',
+                'alimentacion_red',
+                'jornada',
+                'dentro_pais',
+                'tipo_comision_id',
+                'actividad_realizada',
+                'gastos_alimentacion',
+                'gastos_alojamiento',
+                'pernocta_lugar_residencia',
+                'n_dias_40',
+                'n_dias_100',
+                'observacion_gastos'
+            ];
+
             $estados[] = [
                 'status'                    => EstadoSolicitud::STATUS_ANULADO,
-                'posicion_firma'            => $position_firma,
-                'history_solicitud'         => $solicitud,
+                'posicion_firma_s'          => $firma_disponible ? $firma_disponible->posicion_firma : null,
                 'solicitud_id'              => $solicitud->id,
-                'user_id'                   => $firma_disponible->funcionario->id,
-                's_firmante_id'             => $firma_disponible->id,
-                'observacion'               => $observacion,
+                'posicion_firma'            => $firma_disponible ? $firma_disponible->posicion_firma : null,
+                's_firmante_id'             => $firma_disponible ? $firma_disponible->id : null,
+                'observacion'               => $observacion
             ];
             return $estados;
         } catch (\Exception $error) {
@@ -764,9 +833,30 @@ class SolicitudAdminController extends Controller
         }
     }
 
-    private function verificarSolicitud($solicitud, $firma_disponible, $position_firma, $status)
+    private function verificarSolicitud($solicitud, $firma_disponible, $firma_reasignada, $status, $observacion, $motivo_id)
     {
         try {
+            $form = [
+                'user_id',
+                'fecha_inicio',
+                'fecha_termino',
+                'hora_llegada',
+                'hora_salida',
+                'derecho_pago',
+                'utiliza_transporte',
+                'alimentacion_red',
+                'jornada',
+                'dentro_pais',
+                'tipo_comision_id',
+                'actividad_realizada',
+                'gastos_alimentacion',
+                'gastos_alojamiento',
+                'pernocta_lugar_residencia',
+                'n_dias_40',
+                'n_dias_100',
+                'observacion_gastos'
+            ];
+
             switch ($status) {
                 case 2:
                     $status_value = EstadoSolicitud::STATUS_APROBADO;
@@ -778,11 +868,16 @@ class SolicitudAdminController extends Controller
             }
             $estados[] = [
                 'status'                    => $status_value,
-                'posicion_firma'            => $position_firma,
-                'history_solicitud'         => $solicitud,
+                'is_reasignado'             => $firma_reasignada ? true : false,
+                'r_s_firmante_id'           => $firma_reasignada ? $firma_reasignada->id : null,
+                'posicion_firma_r_s'        => $firma_reasignada ? $firma_reasignada->posicion_firma : null,
+                'motivo_rechazo'            => $status === 3 ? $motivo_id : null,
+                'posicion_firma_s'          => $firma_disponible->posicion_firma,
+                'history_solicitud_old'     => json_encode($solicitud->only($form)),
                 'solicitud_id'              => $solicitud->id,
-                'user_id'                   => $firma_disponible->funcionario->id,
+                'posicion_firma'            => $firma_disponible->posicion_firma,
                 's_firmante_id'             => $firma_disponible->id,
+                'observacion'               => $observacion
             ];
             return $estados;
         } catch (\Exception $error) {
@@ -795,161 +890,50 @@ class SolicitudAdminController extends Controller
         try {
             $solicitud = Solicitud::where('uuid', $request->solicitud_uuid)->firstOrFail();
 
-            if (($solicitud) && ($solicitud->last_status === 4)) {
+            if (($solicitud) && ($solicitud->status === Solicitud::STATUS_ANULADO)) {
                 return $this->errorResponse("No es posible ejecutar firma. Solicitud anulada.", 422);
             }
 
-            $firma_disponible = $this->firmaDisponible($solicitud);
-            if (($solicitud) && ($position_firma === null)) {
+            $status             = (int)$request->status;
+            $firma_disponible   = $this->firmaDisponible($solicitud, $status);
+            if (($solicitud) && (!$firma_disponible->is_firma)) {
                 return $this->errorResponse("No es posible ejecutar firma. Sin firma disponible.", 422);
             }
 
-            if ($firma_disponible) {
-                $position_firma = $this->positionFirma($solicitud);
+            $firma_query = SolicitudFirmante::where('id', $firma_disponible->id_firma)->first();
+            $firma_reasignada = null;
+            if ($status === EstadoSolicitud::STATUS_RECHAZADO) {
+                $firma_reasignada = SolicitudFirmante::where('uuid', $request->firmante_uuid)->first();
             }
-
-            $status = (int)$request->status;
-
             switch ($status) {
                 case 2:
                 case 3:
-                    $estados         = $this->verificarSolicitud($solicitud, $firma_disponible, $position_firma, $status);
+                    $estados         = $this->verificarSolicitud($solicitud, $firma_query, $firma_reasignada, $status, $request->observacion, $request->motivo_id);
                     $create_status   = $solicitud->addEstados($estados);
                     break;
 
                 case 4:
-                    $estados         = $this->anularSolicitud($solicitud, $firma_disponible, $position_firma, $request->observacion);
+                    $estados         = $this->anularSolicitud($solicitud, $firma_query, $request->observacion);
                     $create_status   = $solicitud->addEstados($estados);
                     break;
             }
+            $solicitud = $solicitud->fresh();
+            $navStatus = $this->navStatusSolicitud($solicitud);
+            $title = "Solicitud {$solicitud->codigo} verificada con éxito.";
+            $message = EstadoSolicitud::STATUS_NOM[$solicitud->last_status];
+
+            return response()->json(
+                array(
+                    'status'        => 'success',
+                    'title'         => $title,
+                    'message'       => $message,
+                    'data'          => ListSolicitudCompleteAdminResource::make($solicitud),
+                    'nav'           => $navStatus->nav,
+                    'is_anulada'    => $navStatus->is_anulada
+                )
+            );
         } catch (\Exception $error) {
             return $error->getMessage();
         }
     }
-
-    /* public function actionStatusSolicitud(StatusSolicitudRequest $request)
-    {
-        try {
-            //realizar un switch case dependiendo el status
-            //si status = 4 no se debe aplicar validación de existencia de firma
-            $solicitud = Solicitud::where('uuid', $request->solicitud_uuid)->firstOrFail();
-            if (($solicitud) && ($solicitud->last_status === 4)) {
-                return $this->errorResponse("No es posible ejecutar firma. Solicitud anulada.", 422);
-            }
-            $last_estado_solicitud  = $solicitud->estados()->orderBy('id', 'DESC')->first();
-            $status                 = (int)$request->status;
-            $posicion_a_firmar      = 0;
-            $auth_user              = Auth::user();
-            switch ($status) {
-                case 1:
-                    $funcionario_firmante   = User::where('uuid', $request->user_uuid)->firstOrFail();
-                    $firmante               = $solicitud->firmantes()->where('user_id', $funcionario_firmante->id)->where('posicion_firma', $request->posicion_firma)->firstOrFail();
-
-                    if (($firmante) && (!$firmante->status)) {
-                        return $this->errorResponse("Firmante deshabilitado del cométido funcional.", 422);
-                    }
-
-                    $estados[] = [
-                        'status'                    => 1,
-                        'posicion_firma'            => null,
-                        'posicion_next_firma'       => $firmante->posicion_firma,
-                        'reasignacion'              => true,
-                        'history_solicitud'         => $solicitud,
-                        'solicitud_id'              => $solicitud->id,
-                        'user_id'                   => $auth_user ? $auth_user->id : null,
-                        'role_id'                   => null,
-                        'user_firmante_id'          => $firmante->user_id,
-                        'role_firmante_id'          => $firmante->role_id,
-                        'observacion'               => $request->observacion,
-                    ];
-                    $create_status  = $solicitud->addEstados($estados);
-                    $solicitud      = $solicitud->fresh();
-                    $navStatus      = $this->navStatusSolicitud($solicitud);
-                    if ($create_status) {
-                        return response()->json(
-                            array(
-                                'status'        => 'success',
-                                'title'         => "Solicitud {$solicitud->codigo} reasignada.",
-                                'message'       => "Firma reasgignada a {$funcionario_firmante->nombre_completo}",
-                                'data'          => null,
-                                'nav'           => $navStatus
-                            )
-                        );
-                    }
-                    break;
-
-                default:
-                    if ($last_estado_solicitud) {
-                        $posicion_a_firmar = $last_estado_solicitud->posicion_next_firma;
-                        $firma_disponible  = $solicitud->firmantes()
-                            ->where('user_id', $auth_user->id)
-                            ->where('posicion_firma', $posicion_a_firmar)
-                            ->orderBy('posicion_firma', 'ASC')
-                            ->first();
-
-
-
-                        if (!$firma_disponible) {
-                            return $this->errorResponse("No existe firma disponible.", 422);
-                        }
-
-                        if ($firma_disponible) {
-                            if (is_null($solicitud->afecta_convenio) && ($firma_disponible->role_id === 1 || $firma_disponible->role_id === 5 || $firma_disponible->role_id === 7)) {
-                                return $this->errorResponse("No es posible ejecutar firma. EJECUTIVO RRHH debe verificar si solicitud de cometido está afecta o no a un convenio.", 422);
-                            }
-                        }
-
-                        $estados[] = [
-                            'status'                => $status,
-                            'motivo_rechazo'        => $status === 3 ? $request->motivo_id : NULL,
-                            'posicion_firma'        => $firma_disponible->posicion_firma,
-                            'posicion_next_firma'   => $status === 3 ? 0 : $firma_disponible->posicion_firma + 1,
-                            'history_solicitud'     => $solicitud,
-                            'solicitud_id'          => $solicitud->id,
-                            'user_id'               => $auth_user ? $auth_user->id : null,
-                            'role_id'               => $firma_disponible ?  $firma_disponible->role_id : null,
-                            'user_firmante_id'      => $auth_user ? $auth_user->id : null,
-                            'role_firmante_id'      => $firma_disponible ? $firma_disponible->role_id : null,
-                            'observacion'           => $request->observacion,
-                        ];
-
-                        if ($status === 3) {
-                            $solicitante = Role::where('name', 'SOLICITANTE')->first();
-                            $estados[] = [
-                                'status'                => 1,
-                                'motivo_rechazo'        => NULL,
-                                'posicion_firma'        => $firma_disponible->posicion_firma,
-                                'posicion_next_firma'   => 0,
-                                'history_solicitud'     => $solicitud,
-                                'solicitud_id'          => $solicitud->id,
-                                'user_id'               => $auth_user ? $auth_user->id : null,
-                                'role_id'               => $firma_disponible ?  $firma_disponible->role_id : null,
-                                'user_firmante_id'      => $solicitud ? $solicitud->user_id : NULL,
-                                'role_firmante_id'      => $solicitante ? $solicitante->id : NULL,
-                                'reasignacion'          => true,
-                            ];
-                        }
-
-                        $create_status  = $solicitud->addEstados($estados);
-                        $solicitud      = $solicitud->fresh();
-                        $navStatus      = $this->navStatusSolicitud($solicitud);
-
-                        return response()->json(
-                            array(
-                                'status'        => 'success',
-                                'title'         => "Solicitud {$solicitud->codigo} modificada.",
-                                'message'       => null,
-                                'data'          => null,
-                                'nav'           => $navStatus
-                            )
-                        );
-                    } else {
-                        return $this->errorResponse("No existe firma disponible.", 422);
-                    }
-                    break;
-            }
-        } catch (\Exception $error) {
-            return $error->getMessage();
-        }
-    } */
 }
