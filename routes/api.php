@@ -4,9 +4,13 @@ use App\Http\Controllers\Admin\Grupos\GrupoFirmaController;
 use App\Http\Controllers\Admin\Mantenedores\MantenedorController;
 use App\Http\Controllers\Admin\Rendicion\ProcesoRendicionController;
 use App\Http\Controllers\Admin\Solicitudes\SolicitudAdminController;
+use App\Http\Controllers\Auth\NewPasswordController;
 use App\Http\Controllers\File\FileController;
 use App\Http\Controllers\Rendicion\RendicionController;
 use App\Http\Controllers\Solicitud\SolicitudController;
+use App\Http\Controllers\User\Archivos\ArchivosController;
+use App\Http\Controllers\User\Cuenta\CuentaController;
+use App\Http\Controllers\User\Firmantes\FirmantesController;
 use App\Http\Controllers\User\Solicitudes\SolicitudesController;
 use App\Http\Resources\UserAuthResource;
 use App\Models\Solicitud;
@@ -91,6 +95,9 @@ Route::group(
     function () {
         Route::post('/solicitud/get-count-convenios', [SolicitudController::class, 'getCountConvenios']);
 
+        Route::get('/archivos/list', [ArchivosController::class, 'listArchivos']);
+        Route::get('/firmantes/list', [FirmantesController::class, 'listFirmantes']);
+
         Route::get('/solicitud/list', [SolicitudesController::class, 'listSolicitudes']);
         Route::post('/solicitud/store', [SolicitudController::class, 'storeSolicitud']);
         Route::post('/solicitud/store/validate', [SolicitudController::class, 'validateSolicitud']);
@@ -125,5 +132,15 @@ Route::group(
         Route::post('/documento/validate-file', [FileController::class, 'validateFileSolicitud']);
         Route::post('/documento/upload-file', [FileController::class, 'uploadFile']);
         Route::delete('/documento/delete-file/{uuid}', [FileController::class, 'deleteFile']);
+    }
+);
+
+Route::group(
+    [
+        'middleware'    => 'auth:sanctum'
+    ],
+    function () {
+        Route::post('/change-pass/{uuid}', [NewPasswordController::class, 'changePass']);
+        Route::post('/change-data', [CuentaController::class, 'changeData']);
     }
 );

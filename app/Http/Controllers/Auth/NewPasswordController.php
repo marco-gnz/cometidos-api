@@ -3,6 +3,9 @@
 namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Auth\ChangePasswordRequest;
+use App\Models\HistoryActionUser;
+use App\Models\User;
 use Illuminate\Auth\Events\PasswordReset;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
@@ -51,5 +54,45 @@ class NewPasswordController extends Controller
         }
 
         return response()->json(['status' => __($status)]);
+    }
+
+    public function changePass(ChangePasswordRequest $request, $uuid)
+    {
+        try {
+            if (Hash::check($request->password, $request->user()->password)) {
+
+                $usuario = User::where('uuid', $uuid)->firstOrFail();
+                $old_pass = $usuario->password;
+                $usuario->password = Hash::make($request->new_password);
+                $update = $usuario->save();
+
+                $usuario = $usuario->fresh();
+                $new_pass = $usuario->password;
+
+                if ($update) {
+                    //enviar email
+                    //almacenar en history user
+                    $historys[] = [
+                        'type'      => HistoryActionUser::TYPE_0,
+                        'user_id'   => $usuario->id,
+                        'data_old'  => $old_pass,
+                        'data_new'  => $new_pass
+                    ];
+
+                    $usuario->addHistorys($historys);
+                    return response()->json(
+                        array(
+                            'status'        => 'success',
+                            'title'         => "Contraseña modificada con éxito.",
+                            'message'       => null,
+                        )
+                    );
+                }
+            } else {
+                return response(["errors" => ["password" => ["La contraseña actual es inconrrecta"]]], 422);
+            }
+        } catch (\Exception $error) {
+            return response()->json($error->getMessage());
+        }
     }
 }

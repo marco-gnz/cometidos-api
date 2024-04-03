@@ -133,6 +133,21 @@ class User extends Authenticatable
         return $this->hasMany(EstadoSolicitud::class);
     }
 
+    public function historys()
+    {
+        return $this->hasMany(HistoryActionUser::class);
+    }
+
+    public function addHistorys(array $historys)
+    {
+        return $this->historys()->createMany($historys);
+    }
+
+    public function lastHistory(int $type)
+    {
+        return $this->historys()->where('type', $type)->orderBy('id', 'DESC')->first();
+    }
+
     public function scopeGeneral($query, $input)
     {
         if ($input)

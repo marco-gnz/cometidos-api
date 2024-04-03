@@ -22,7 +22,7 @@ class CreateSolicitudUserTable extends Migration
             $table->foreign('user_id')->references('id')->on('users')->onDelete('cascade');
 
             $table->boolean('is_pinned')->default(false);
-            $table->primary(['solicitud_id', 'user_id']);
+            /* $table->primary(['solicitud_id', 'user_id']); */
             $table->timestamps();
         });
     }
