@@ -91,6 +91,25 @@
             padding: 5px;
         }
 
+        .column-firma {
+            float: left;
+            width: 30%;
+            padding: 5px;
+        }
+
+        .firma-container {
+            margin-bottom: 10px;
+            position: relative;
+            /* Puedes ajustar este valor según sea necesario */
+        }
+
+        .firma-container h5 {
+            margin-bottom: 0;
+            /* Establece el margen inferior de h5 a 0 para acercarlo a hr */
+            position: absolute;
+            top: 15px;
+        }
+
         .row::after {
             content: "";
             clear: both;
@@ -119,6 +138,7 @@
             border-collapse: collapse;
             border-color: #000000;
             padding: 2px;
+            text-align: left;
         }
 
         table.table-datos-contractuales-2 th,
@@ -135,6 +155,16 @@
             border-color: #000000;
             padding: 2px;
         }
+
+        .seccion-footer {
+            position: fixed;
+            left: 0;
+            bottom: -25px;
+            width: 100%;
+            background-color: rgb(255, 255, 255);
+            color: black;
+            text-align: center;
+        }
     </style>
 </head>
 
@@ -147,9 +177,16 @@
             GASTOS DE COMETIDO FUNCIONAL
         </div>
         <div class="fecha">
-            <p><strong>{{ $proceso_rendicion_gasto->n_folio }}</strong></p>
-            <p>{{ rand() }}</p>
-            <p>{{ now()->format('d M Y') }}</p>
+            <table class="table-datos-contractuales">
+                <tr style="font-size: 8px;">
+                    <th>N° FOLIO:</th>
+                    <td>{{ $proceso_rendicion_gasto->n_folio }}</td>
+                </tr>
+                <tr style="font-size: 8px;">
+                    <th>N° RESOLUCION:</th>
+                    <td>{{ $proceso_rendicion_gasto->solicitud->codigo }}</td>
+                </tr>
+            </table>
         </div>
     </header>
 
@@ -173,12 +210,35 @@
                                 <td>{{ $proceso_rendicion_gasto->solicitud->establecimiento->nombre }}</td>
                             </tr>
                             <tr>
-                                <th>Unidad o Servicio:</th>
+                                <th>Unidad / Servicio / Depto:</th>
                                 <td>{{ $proceso_rendicion_gasto->solicitud->departamento->nombre }}</td>
                             </tr>
                         </tbody>
                     </table>
                 </div>
+                <div class="column">
+                    <table class="table-1">
+                        <tbody>
+                            <tr>
+                                <th>Fecha de cometido:</th>
+                                <td>{{ Carbon\Carbon::parse($proceso_rendicion_gasto->solicitud->fecha_inicio)->format('d-m-Y') }}
+                                    /
+                                    {{ Carbon\Carbon::parse($proceso_rendicion_gasto->solicitud->fecha_termino)->format('d-m-Y') }}
+                                </td>
+                            </tr>
+                            <tr>
+                                <th>Correo electrónico:</th>
+                                <td>{{ $proceso_rendicion_gasto->solicitud->funcionario->email }}</td>
+                            </tr>
+                            <tr>
+                                <th>Teléfono - Anexo:</th>
+                                <td></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            <div class="row">
                 <div class="column">
                     <table class="table-1">
                         <tbody>
@@ -192,25 +252,18 @@
                                     @endif
                                 </td>
                             </tr>
-                            <tr>
-                                <th>Fecha de cometido:</th>
-                                <td>{{ Carbon\Carbon::parse($proceso_rendicion_gasto->solicitud->fecha_inicio)->format('d-m-Y') }}
-                                    /
-                                    {{ Carbon\Carbon::parse($proceso_rendicion_gasto->solicitud->fecha_termino)->format('d-m-Y') }}
-                                </td>
-                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            <div class="row">
+                <div class="column">
+                    <table class="table-1">
+                        <tbody>
                             <tr>
                                 <th>Motivo del viaje:</th>
                                 <td>{{ $proceso_rendicion_gasto->solicitud->motivos->pluck('nombre')->implode(', ') }}
                                 </td>
-                            </tr>
-                            <tr>
-                                <th>Correo electrónico:</th>
-                                <td>{{ $proceso_rendicion_gasto->solicitud->funcionario->email }}</td>
-                            </tr>
-                            <tr>
-                                <th>Teléfono - Anexo:</th>
-                                <td></td>
                             </tr>
                         </tbody>
                     </table>
@@ -232,13 +285,13 @@
             </table>
         </div>
         <div class="seccion">
-            <h2 class="seccion-title">Sección 2</h2>
+            <h2 class="seccion-title">Sección 2 (Rendiciones solicitadas)</h2>
             <div class="row">
                 <div class="column">
                     <table class="table-datos-contractuales-2">
                         <thead>
                             <th>Tipo de locomoción</th>
-                            <th>Monto</th>
+                            <th>Monto solicitado</th>
                         </thead>
                         <tbody>
                             @foreach ($proceso_rendicion_gasto->rendiciones_not_particular as $rendicion)
@@ -259,7 +312,7 @@
                     <table class="table-datos-contractuales-2">
                         <thead>
                             <th>Particular</th>
-                            <th>Monto</th>
+                            <th>Monto solicitado</th>
                         </thead>
                         <tbody>
                             @foreach ($proceso_rendicion_gasto->rendiciones_particular as $rendicion)
@@ -277,9 +330,12 @@
                     </table>
                 </div>
             </div>
+            <div class="row">
+                <p>{{ $proceso_rendicion_gasto->observacion }}</p>
+            </div>
         </div>
         <div class="seccion">
-            <h2 class="seccion-title">Sección 3</h2>
+            <h2 class="seccion-title">Sección 3 (Rendiciones aprobadas)</h2>
             <p><strong>USO EXCLUSIVO DEPTO. FINANZAS</strong></p>
             @if (count($proceso_rendicion_gasto->rendiciones_finanzas) > 0)
                 <table class="table-datos-contractuales">
@@ -287,7 +343,7 @@
                         <th>Concepto Pres.</th>
                         <th>Item Pres.</th>
                         <th>Estado</th>
-                        <th>Monto</th>
+                        <th>Monto aprobado</th>
                     </thead>
                     <tbody>
                         @foreach ($proceso_rendicion_gasto->rendiciones_finanzas as $rendicion)
@@ -308,7 +364,7 @@
             @endif
         </div>
         <div class="seccion">
-            <h2 class="seccion-title">Sección 4</h2> <i>Observaciones</i>
+            <h2 class="seccion-title">Sección 4 (Rendiciones rechazadas)</h2> <i>Observaciones</i>
             @if (count($proceso_rendicion_gasto->observaciones) > 0)
                 <table class="table-datos-contractuales">
                     <thead>
@@ -331,14 +387,22 @@
             @endif
         </div>
         <div class="seccion">
-            <h2 class="seccion-title">Sección 5</h2>
-            <p><strong>V° B° JEFATURA DIRECTA</strong>:</p>
-            {{ $proceso_rendicion_gasto->solicitud->firmaJefatura() }}
+            <h2 class="seccion-title">Sección 5 (V° B°)</h2>
+            <div class="row">
+                <div class="column-firma">
+                    <div class="firma-container">
+                        <p>{{ $proceso_rendicion_gasto->solicitud->firmaJefatura() ? $proceso_rendicion_gasto->solicitud->firmaJefatura() : 'SIN FIRMA' }}
+                        </p>
+                        <hr>
+                        <h5>JEFATURA DIRECTA</h5>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="seccion-footer">
+            <p>Fecha de impresión {{ Carbon\Carbon::now()->format('d-m-Y H:i:s') }} </p>
         </div>
     </div>
-    {{-- <footer class="footer-container">
-        {{ now()->format('d-m-Y') }}
-    </footer> --}}
 </body>
 
 </html>

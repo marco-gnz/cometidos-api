@@ -77,6 +77,7 @@ class Solicitud extends Model
         'hora_salida',
         'derecho_pago',
         'utiliza_transporte',
+        'viaja_acompaniante',
         'afecta_convenio',
         'actividad_realizada',
         'alimentacion_red',
@@ -379,6 +380,33 @@ class Solicitud extends Model
         return $this->hasOne(SoliucitudCalculo::class)->latest()->first();
     }
 
+    public function totalProcesosRendiciones()
+    {
+        $total = 0;
+
+        $procesos = $this->procesoRendicionGastos()
+            ->whereIn('status', [EstadoProcesoRendicionGasto::STATUS_APROBADO_N, EstadoProcesoRendicionGasto::STATUS_APROBADO_S])
+            ->count();
+
+        return $procesos;
+    }
+
+    public function sumTotalProcesosRendiciones()
+    {
+        $total = 0;
+
+        $procesos = $this->procesoRendicionGastos()
+            ->whereIn('status', [EstadoProcesoRendicionGasto::STATUS_APROBADO_N, EstadoProcesoRendicionGasto::STATUS_APROBADO_S])
+            ->get();
+
+        if ($procesos) {
+            foreach ($procesos as $proceso) {
+                $total += $proceso->sumRendicionesAprobadasValue();
+            }
+        }
+        return "$" . number_format($total, 0, ',', '.');
+    }
+
     public function informeCometido()
     {
         return $this->informes()->whereIn('last_status', [EstadoInformeCometido::STATUS_INGRESADA, EstadoInformeCometido::STATUS_APROBADO])->orderBy('fecha_by_user', 'DESC')->first();
@@ -540,12 +568,6 @@ class Solicitud extends Model
                 'url'   => route('resolucioncometidofuncional.show', ['uuid' => $this->uuid]),
                 'exist' => self::isAnulada() ? false : true,
                 'type'  => 'primary'
-            ],
-            [
-                'name'  => 'Convenio de cometido',
-                'url'   => $this->convenio ? route('convenio.show', ['uuid' => $this->convenio->uuid]) : null,
-                'exist' => self::isAnulada() ? false : ($this->convenio ? true : false),
-                'type'  => $this->convenio ? 'primary' : 'info'
             ]
         ];
 
@@ -600,7 +622,7 @@ class Solicitud extends Model
     {
         $last_status_aprobado = self::lastEstadoAprobado();
         if ($last_status_aprobado) {
-            $firma = $this->estados()->where('s_role_id', 3)->where('status', EstadoSolicitud::STATUS_APROBADO)->where('created_at', '>=', $last_status_aprobado->created_at)->orderBy('id', 'DESC')->first();
+            $firma = $this->estados()->where('s_role_id', 3)->where('status', EstadoSolicitud::STATUS_APROBADO)->where('created_at', '<=', $last_status_aprobado->created_at)->orderBy('id', 'DESC')->first();
             if ($firma) {
                 $nombres    = $firma->funcionario->abreNombres();
                 $fecha      = Carbon::parse($firma->created_at)->format('d-m-y H:i:s');
@@ -617,7 +639,7 @@ class Solicitud extends Model
     {
         $last_status_aprobado = self::lastEstadoAprobado();
         if ($last_status_aprobado) {
-            $firma = $this->estados()->where('s_role_id', 4)->where('status', EstadoSolicitud::STATUS_APROBADO)->where('created_at', '>=', $last_status_aprobado->created_at)->orderBy('id', 'DESC')->first();
+            $firma = $this->estados()->where('s_role_id', 4)->where('status', EstadoSolicitud::STATUS_APROBADO)->where('created_at', '<=', $last_status_aprobado->created_at)->orderBy('id', 'DESC')->first();
             if ($firma) {
                 $nombres    = $firma->funcionario->abreNombres();
                 $fecha      = Carbon::parse($firma->created_at)->format('d-m-y H:i:s');
@@ -633,7 +655,7 @@ class Solicitud extends Model
     {
         $last_status_aprobado = self::lastEstadoAprobado();
         if ($last_status_aprobado) {
-            $firma = $this->estados()->where('s_role_id', 5)->where('status', EstadoSolicitud::STATUS_APROBADO)->where('created_at', '>=', $last_status_aprobado->created_at)->orderBy('id', 'DESC')->first();
+            $firma = $this->estados()->where('s_role_id', 5)->where('status', EstadoSolicitud::STATUS_APROBADO)->where('created_at', '<=', $last_status_aprobado->created_at)->orderBy('id', 'DESC')->first();
             if ($firma) {
                 $nombres    = $firma->funcionario->abreNombres();
                 $fecha      = Carbon::parse($firma->created_at)->format('d-m-y H:i:s');

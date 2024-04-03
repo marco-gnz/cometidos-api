@@ -171,7 +171,7 @@ class PdfController extends Controller
 
             $this->paginatePdf($pdf);
 
-            return $pdf->stream("GCF N° {$proceso_rendicion_gasto->n_folio}.pdf");
+            return $pdf->stream(env('APP_NAME') . "GCF N° {$proceso_rendicion_gasto->n_folio}.pdf");
         } catch (\Exception $error) {
             return $error->getMessage();
         }
@@ -214,9 +214,13 @@ class PdfController extends Controller
                 'chroot'                => public_path('/img/')
             ]);
 
-            $this->paginatePdf($pdf);
+            $pdf->output();
+            $domPdf = $pdf->getDomPDF();
 
-            return $pdf->stream("Cometido funcional N° {$solicitud->codigo}.pdf");
+            $canvas = $domPdf->get_canvas();
+            $canvas->page_text(520, 990, "Pagina {PAGE_NUM} de {PAGE_COUNT}", null, 8, [0, 0, 0]);
+
+            return $pdf->stream(env('APP_NAME') . "Resolución N° {$solicitud->codigo}.pdf");
         } catch (\Exception $error) {
             return response()->json(['error' => $error->getMessage()], 500);
         }

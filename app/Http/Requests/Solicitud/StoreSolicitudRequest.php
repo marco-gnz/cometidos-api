@@ -30,6 +30,7 @@ class StoreSolicitudRequest extends FormRequest
             'hora_salida'               => ['required'],
             'derecho_pago'              => ['required'],
             'utiliza_transporte'        => ['required'],
+            'viaja_acompaniante'        => ['required'],
             'alimentacion_red'          => ['required'],
             'motivos_cometido'          => ['required', 'array'],
             'tipo_comision_id'          => ['required'],
@@ -71,6 +72,8 @@ class StoreSolicitudRequest extends FormRequest
 
             'tipo_comision_id.required'             => 'El :attribute es obligatorio',
 
+            'viaja_acompaniante.required'           => 'El :attribute es obligatorio',
+
             'jornada.required'                      => 'La :attribute es obligatoria',
 
             'dentro_pais.required'                  => 'El :attribute es obligatorio',
@@ -104,6 +107,7 @@ class StoreSolicitudRequest extends FormRequest
             'hora_salida'           => 'hora de salida',
             'hora_llegada'          => 'hora de llegada',
             'derecho_pago'          => 'derecho a pago',
+            'viaja_acompaniante'    => 'viaje acompñanante',
             'motivos_cometido'      => 'motivo de cometido',
             'tipo_comision_id'      => 'tipo de comisión',
             'jornada'               => 'jornada de cometido',

@@ -30,6 +30,7 @@ class UpdateSolicitudRequest extends FormRequest
             'hora_llegada'              => ['required'],
             'hora_salida'               => ['required'],
             'utiliza_transporte'        => ['required'],
+            'viaja_acompaniante'        => ['required'],
             'alimentacion_red'          => ['required'],
             'derecho_pago'              => ['required', 'boolean'],
             'motivos_cometido'          => ['required', 'array'],

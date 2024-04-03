@@ -26,6 +26,7 @@ class UpdateSolicitudResource extends JsonResource
             'derecho_pago'                      => $this->derecho_pago ? 1 : 0,
             'alimentacion_red'                  => $this->alimentacion_red ? 1 : 0,
             'utiliza_transporte'                => $this->utiliza_transporte ? 1 : 0,
+            'viaja_acompaniante'                => $this->viaja_acompaniante ? 1 : 0,
             'actividad_realizada'               => $this->actividad_realizada,
             'gastos_alimentacion'               => $this->gastos_alimentacion ? 1 : 0,
             'gastos_alojamiento'                => $this->gastos_alojamiento ? 1 : 0,

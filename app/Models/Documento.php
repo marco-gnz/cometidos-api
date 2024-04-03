@@ -29,6 +29,11 @@ class Documento extends Model
     public const MODEL_SOLICITUD      = 0;
     public const MODEL_RENDICION      = 1;
 
+    public const MODEL_NOM = [
+        self::MODEL_SOLICITUD         => 'Solicitud de cometido',
+        self::MODEL_RENDICION         => 'Rendición de gasto'
+    ];
+
     protected static function booted()
     {
         static::creating(function ($documento) {
@@ -50,7 +55,7 @@ class Documento extends Model
 
     public function solicitud()
     {
-        return $this->belongsTo(Solicitud::class, 'ley_id');
+        return $this->belongsTo(Solicitud::class, 'solicitud_id');
     }
 
     public function authorizedToDelete()

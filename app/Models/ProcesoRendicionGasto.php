@@ -101,6 +101,15 @@ class ProcesoRendicionGasto extends Model
         return self::formatTotal($total);
     }
 
+    public function sumRendicionesAprobadasValue()
+    {
+        $total = $this->hasMany(RendicionGasto::class)
+            ->where('rinde_gasto', true)
+            ->where('last_status', EstadoRendicionGasto::STATUS_APROBADO)
+            ->sum('mount_real');
+        return $total;
+    }
+
     public function sumRendicionesAprobadas()
     {
         $total = $this->hasMany(RendicionGasto::class)

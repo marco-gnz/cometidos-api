@@ -30,6 +30,7 @@ class ValidateInformeUpdateSolicitudRequest extends FormRequest
             'hora_salida'               => ['required'],
             'derecho_pago'              => ['required'],
             'utiliza_transporte'        => ['required'],
+            'viaja_acompaniante'        => ['required'],
             'motivos_cometido'          => ['required', 'array'],
             'tipo_comision_id'          => ['required'],
             'jornada'                   => ['required'],

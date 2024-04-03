@@ -24,6 +24,7 @@ class CreateSolicitudsTable extends Migration
             $table->time('hora_llegada')->nullable();
             $table->time('hora_salida')->nullable();
             $table->boolean('utiliza_transporte')->default(1);
+            $table->boolean('viaja_acompaniante')->default(0);
             $table->boolean('alimentacion_red')->default(0);
             $table->boolean('derecho_pago')->default(0);
             $table->boolean('afecta_convenio')->nullable();

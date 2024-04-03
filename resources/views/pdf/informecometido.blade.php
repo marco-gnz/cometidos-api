@@ -3,7 +3,7 @@
 
 <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-    <title>{{config('app.name')}} | Informe {{$informe->codigo}}</title>
+    <title>{{ config('app.name') }} | Informe {{ $informe->codigo }}</title>
     <link rel="shortcut icon" href="{{ public_path('img/logo-sso.jpeg') }}">
 
     <style type="text/css">
@@ -52,7 +52,8 @@
         table,
         th,
         td {
-            line-height: 1.8; /* Agregar esta línea para el espaciado entre líneas generalizado */
+            line-height: 1.8;
+            /* Agregar esta línea para el espaciado entre líneas generalizado */
         }
 
         .logo {
@@ -95,14 +96,15 @@
             margin-bottom: 10px;
             margin-left: -5px;
         }
+
         @media print {
             .page-break {
                 page-break-before: always;
             }
         }
 
-        .spacing{
-            line-height:1.5;
+        .spacing {
+            line-height: 1.5;
         }
 
         footer {
@@ -141,6 +143,7 @@
             width: 48%;
             padding: 5px;
         }
+
         .firma-container {
             margin-bottom: 10px;
             position: relative;
@@ -162,8 +165,9 @@
                     <img class="center logo" src="{{ public_path('img/logo-sso.jpeg') }}">
                 </td>
                 <td align="left" style="width: 70%;">
-                        <small style="font-size: 9px;" class="text-muted ml-4">SUBD. GESTIÓN Y DESARROLLO DE PERSONAS</small><br>
-                        <small style="font-size: 9px;" class="text-muted ml-4">DEPTO. GESTIÓN DE LAS PERSONAS</small>
+                    <small style="font-size: 9px;" class="text-muted ml-4">SUBD. GESTIÓN Y DESARROLLO DE
+                        PERSONAS</small><br>
+                    <small style="font-size: 9px;" class="text-muted ml-4">DEPTO. GESTIÓN DE LAS PERSONAS</small>
                     </h6>
                 </td>
             </tr>
@@ -175,7 +179,7 @@
     <div class="datos">
         <section class="section-borde">
             <div class="section-position">
-                <h3 class="title">Antecedentes personales del funcionario</h3>
+                <h3 class="title">Antecedentes personales de la funcionaria(o)</h3>
                 <table>
                     <tbody>
                         <tr>
@@ -220,16 +224,18 @@
                             <td>{{ $informe->codigo }}</td>
                         </tr>
                         <tr>
-                            <th>CÓDIGO SOLICITUD COMETIDO:</th>
+                            <th>N° RESOLUCIÓN :</th>
                             <td>{{ $informe->solicitud->codigo }}</td>
                         </tr>
                         <tr>
                             <th>PERIODO:</th>
-                            <td>{{ Carbon\Carbon::parse($informe->fecha_inicio)->format('d-m-Y') }} / {{ Carbon\Carbon::parse($informe->fecha_termino)->format('d-m-Y') }}</td>
+                            <td>{{ Carbon\Carbon::parse($informe->fecha_inicio)->format('d-m-Y') }} /
+                                {{ Carbon\Carbon::parse($informe->fecha_termino)->format('d-m-Y') }}</td>
                         </tr>
                         <tr>
                             <th>HORA:</th>
-                            <td>{{ Carbon\Carbon::parse($informe->hora_llegada)->format('H:i') }} / {{ Carbon\Carbon::parse($informe->hora_salida)->format('H:i') }} hrs.</td>
+                            <td>{{ Carbon\Carbon::parse($informe->hora_llegada)->format('H:i') }} /
+                                {{ Carbon\Carbon::parse($informe->hora_salida)->format('H:i') }} hrs.</td>
                         </tr>
                         <tr>
                             <th>UTILIZA TRANSPORTE:</th>
@@ -237,7 +243,8 @@
                         </tr>
                         <tr>
                             <th>MOVILIZACIÓN UTILIZADA:</th>
-                            <td>{{ $informe->transportes ? $informe->transportes->pluck('nombre')->implode(', ') : ''}}</td>
+                            <td>{{ $informe->transportes ? $informe->transportes->pluck('nombre')->implode(', ') : '' }}
+                            </td>
                         </tr>
                     </tbody>
                 </table>
@@ -246,7 +253,7 @@
         <section class="section-borde">
             <div class="section-position">
                 <h3 class="title">Actividades realizadas</h3>
-                <p>{{$informe->actividad_realizada}}</p>
+                <p>{{ $informe->actividad_realizada }}</p>
             </div>
         </section>
         <div class="seccion">
@@ -254,14 +261,14 @@
             <div class="row">
                 <div class="column-firma">
                     <div class="firma-container">
-                        <p>{{$informe->firmaJefatura() ? $informe->firmaJefatura() : 'SIN FIRMA' }}</p>
+                        <p>{{ $informe->firmaJefatura() ? $informe->firmaJefatura() : 'SIN FIRMA' }}</p>
                         <hr>
                         <h5>JEFATURA DIRECTA</h5>
                     </div>
                 </div>
                 <div class="column-firma">
                     <div class="firma-container">
-                        <p>{{$informe->firmaFuncionario() ? $informe->firmaFuncionario() : 'SIN FIRMA' }}</p>
+                        <p>{{ $informe->firmaFuncionario() ? $informe->firmaFuncionario() : 'SIN FIRMA' }}</p>
                         <hr>
                         <h5>FUNCIONARIA(O)</h5>
                     </div>
