@@ -102,10 +102,9 @@ class InformeCometido extends Model
 
     private static function generarCodigo($informe)
     {
-        $letra                  = "I";
         $correlativo            = $informe->id;
         $anio                   = $informe->created_at->year;
-        $codigo                 = "{$anio}-{$correlativo}-{$letra}";
+        $codigo                 = "{$anio}{$correlativo}";
         return $codigo;
     }
 
@@ -137,7 +136,7 @@ class InformeCometido extends Model
     public function firmaJefatura()
     {
         $firma = $this->estados()->where('status', EstadoInformeCometido::STATUS_APROBADO)->first();
-        if($firma){
+        if ($firma) {
             $nombres    = $firma->userBy->abreNombres();
             $fecha      = Carbon::parse($firma->fecha_by_user)->format('d-m-y H:i:s');
             $new_firma  = "$nombres $fecha";
@@ -149,7 +148,7 @@ class InformeCometido extends Model
     public function firmaFuncionario()
     {
         $firma = $this->estados()->where('status', EstadoInformeCometido::STATUS_INGRESADA)->first();
-        if($firma){
+        if ($firma) {
             $nombres    = $firma->userBy->abreNombres();
             $fecha      = Carbon::parse($firma->fecha_by_user)->format('d-m-y H:i:s');
             $new_firma  = "$nombres $fecha";

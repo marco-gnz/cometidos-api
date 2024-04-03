@@ -58,10 +58,9 @@ class Convenio extends Model
 
     private static function generarCodigo($convenio)
     {
-        $letra                  = "C";
-        $correlativo            = str_pad(self::whereYear('created_at', $convenio->created_at->year)->count() + 1, 5, '0', STR_PAD_LEFT);
+        $correlativo            = str_pad(self::whereYear('created_at', $convenio->created_at->year)->count(), 5, '0', STR_PAD_LEFT);
         $anio                   = $convenio->anio;
-        $codigo                 = "{$anio}-{$correlativo}-{$letra}";
+        $codigo                 = "{$anio}{$correlativo}";
         return $codigo;
     }
 
