@@ -391,7 +391,7 @@
             <div class="row">
                 <div class="column-firma">
                     <div class="firma-container">
-                        <p>{{ $proceso_rendicion_gasto->solicitud->firmaJefatura() ? $proceso_rendicion_gasto->solicitud->firmaJefatura() : 'SIN FIRMA' }}
+                        <p>{{ $proceso_rendicion_gasto->firmaJefePersonal() ? $proceso_rendicion_gasto->firmaJefePersonal() : 'SIN FIRMA' }}
                         </p>
                         <hr>
                         <h5>JEFATURA DIRECTA</h5>
