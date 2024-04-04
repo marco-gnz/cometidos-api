@@ -3,13 +3,15 @@
 namespace App\Policies;
 
 use App\Models\EstadoProcesoRendicionGasto;
+use App\Models\EstadoRendicionGasto;
 use App\Models\RendicionGasto;
 use App\Models\User;
 use Illuminate\Auth\Access\HandlesAuthorization;
+use App\Traits\FirmaDisponibleTrait;
 
 class RendicionGastoPolicy
 {
-    use HandlesAuthorization;
+    use HandlesAuthorization, FirmaDisponibleTrait;
 
     /**
      * Determine whether the user can view any models.
@@ -54,9 +56,78 @@ class RendicionGastoPolicy
      */
     public function update(User $user, RendicionGasto $rendicionGasto)
     {
-        if ($rendicionGasto->procesoRendicionGasto->status !== EstadoProcesoRendicionGasto::STATUS_APROBADO_N && $rendicionGasto->procesoRendicionGasto->status !== EstadoProcesoRendicionGasto::STATUS_APROBADO_S  && $rendicionGasto->procesoRendicionGasto->status !== EstadoProcesoRendicionGasto::STATUS_ANULADO) {
+        $firma = $this->obtenerFirmaDisponibleRendicion($rendicionGasto->procesoRendicionGasto);
+        if ($rendicionGasto->rinde_gasto && $firma->is_firma) {
             return true;
         }
+
+        return false;
+    }
+
+    public function updatemount(User $user, RendicionGasto $rendicionGasto)
+    {
+        $firma = $this->obtenerFirmaDisponibleRendicion($rendicionGasto->procesoRendicionGasto);
+
+        $statusProcesoRendicionAll = [
+            EstadoProcesoRendicionGasto::STATUS_APROBADO_JP,
+            EstadoProcesoRendicionGasto::STATUS_EN_PROCESO,
+            EstadoProcesoRendicionGasto::STATUS_VERIFICADO
+        ];
+
+        $statusRendicionAll = [
+            EstadoRendicionGasto::STATUS_PENDIENTE,
+        ];
+
+        if ($rendicionGasto->rinde_gasto && $firma->is_firma && in_array($rendicionGasto->procesoRendicionGasto->status, $statusProcesoRendicionAll) && in_array($rendicionGasto->last_status, $statusRendicionAll)) {
+            return true;
+        }
+
+        return false;
+    }
+
+
+    public function aprobar(User $user, RendicionGasto $rendicionGasto)
+    {
+        $firma = $this->obtenerFirmaDisponibleRendicion($rendicionGasto->procesoRendicionGasto);
+        $statusProcesoRendicionAll = [
+            EstadoProcesoRendicionGasto::STATUS_APROBADO_JP,
+            EstadoProcesoRendicionGasto::STATUS_EN_PROCESO,
+            EstadoProcesoRendicionGasto::STATUS_VERIFICADO
+        ];
+        if ($rendicionGasto->rinde_gasto && $firma->is_firma && in_array($rendicionGasto->procesoRendicionGasto->status, $statusProcesoRendicionAll) && $rendicionGasto->last_status === EstadoRendicionGasto::STATUS_PENDIENTE) {
+            return true;
+        }
+
+        return false;
+    }
+
+    public function rechazar(User $user, RendicionGasto $rendicionGasto)
+    {
+        $firma = $this->obtenerFirmaDisponibleRendicion($rendicionGasto->procesoRendicionGasto);
+        $statusProcesoRendicionAll = [
+            EstadoProcesoRendicionGasto::STATUS_APROBADO_JP,
+            EstadoProcesoRendicionGasto::STATUS_EN_PROCESO,
+            EstadoProcesoRendicionGasto::STATUS_VERIFICADO
+        ];
+        if ($rendicionGasto->rinde_gasto && $firma->is_firma && in_array($rendicionGasto->procesoRendicionGasto->status, $statusProcesoRendicionAll) && $rendicionGasto->last_status === EstadoRendicionGasto::STATUS_PENDIENTE) {
+            return true;
+        }
+
+        return false;
+    }
+
+    public function resetear(User $user, RendicionGasto $rendicionGasto)
+    {
+        $firma = $this->obtenerFirmaDisponibleRendicion($rendicionGasto->procesoRendicionGasto);
+        $statusProcesoRendicionAll = [
+            EstadoProcesoRendicionGasto::STATUS_APROBADO_JP,
+            EstadoProcesoRendicionGasto::STATUS_EN_PROCESO,
+            EstadoProcesoRendicionGasto::STATUS_VERIFICADO
+        ];
+        if (($rendicionGasto->rinde_gasto && $firma->is_firma && in_array($rendicionGasto->procesoRendicionGasto->status, $statusProcesoRendicionAll))  && ($rendicionGasto->last_status === EstadoRendicionGasto::STATUS_APROBADO || $rendicionGasto->last_status === EstadoRendicionGasto::STATUS_RECHAZADO)) {
+            return true;
+        }
+
         return false;
     }
 

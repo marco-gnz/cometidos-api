@@ -2,6 +2,7 @@
 
 namespace App\Traits;
 
+use App\Models\EstadoProcesoRendicionGasto;
 use App\Models\Solicitud;
 use Illuminate\Support\Facades\Auth;
 
@@ -80,5 +81,93 @@ trait FirmaDisponibleTrait
             ];
         }
         return $data;
+    }
+
+    public function obtenerFirmaDisponibleProcesoRendicion($procesoRendicion)
+    {
+        $auth   = Auth::user();
+        $status = $procesoRendicion->status;
+
+        if ($status === EstadoProcesoRendicionGasto::STATUS_ANULADO) {
+            return (object) [
+                'type'      => 'warning',
+                'is_firma'  => false,
+                'firma'     => null,
+                'title'     => 'Firma no disponible',
+                'message'   => 'Firma no disponible'
+            ];
+        }
+
+        $firma      = null;
+        $role_id    = null;
+
+        if ($status === EstadoProcesoRendicionGasto::STATUS_INGRESADA || $status === EstadoProcesoRendicionGasto::STATUS_MODIFICADA) {
+            $role_id = 4;
+        } elseif ($status === EstadoProcesoRendicionGasto::STATUS_VERIFICADO) {
+            $role_id = 7;
+        }
+
+        $firma = $procesoRendicion->solicitud->firmantes()->where('user_id', $auth->id)->where('status', true)->where('role_id', $role_id)->first();
+
+        return (object) [
+            'type'      => 'success',
+            'is_firma'  => $firma ? true : false,
+            'firma'     => $firma,
+            'title'     => null,
+            'message'   => null
+        ];
+    }
+
+    public function obtenerFirmaDisponibleProcesoRendicionAnular($procesoRendicion)
+    {
+        $auth   = Auth::user();
+        $status = $procesoRendicion->status;
+
+        if ($status === EstadoProcesoRendicionGasto::STATUS_ANULADO) {
+            return (object) [
+                'type'      => 'warning',
+                'is_firma'  => false,
+                'firma'     => null,
+                'title'     => 'Firma no disponible',
+                'message'   => 'Firma no disponible'
+            ];
+        }
+        $roles_id   = [1, 6, 7];
+        $firma      = $procesoRendicion->solicitud->firmantes()->where('user_id', $auth->id)->where('status', true)->whereIn('role_id', $roles_id)->first();
+
+        return (object) [
+            'type'      => 'success',
+            'is_firma'  => $firma ? true : false,
+            'firma'     => $firma,
+            'title'     => null,
+            'message'   => null
+        ];
+    }
+
+    public function obtenerFirmaDisponibleRendicion($procesoRendicion)
+    {
+        $auth = Auth::user();
+        $status = $procesoRendicion->status;
+
+        if ($status === EstadoProcesoRendicionGasto::STATUS_ANULADO) {
+            return (object) [
+                'type'      => 'warning',
+                'is_firma'  => false,
+                'firma'     => null,
+                'title'     => 'Firma no disponible',
+                'message'   => 'Firma no disponible'
+            ];
+        }
+
+        $roles_id    = [6, 7];
+        $firma       = $procesoRendicion->solicitud->firmantes()->where('user_id', $auth->id)->where('status', true)->whereIn('role_id', $roles_id)->first();
+
+        return (object) [
+            'type'      => 'success',
+            'is_firma'  => $firma ? true : false,
+            'firma'     => $firma,
+            'title'     => null,
+            'message'   => null
+        ];
     }
 }

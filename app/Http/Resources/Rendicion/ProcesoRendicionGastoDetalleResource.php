@@ -76,6 +76,7 @@ class ProcesoRendicionGastoDetalleResource extends JsonResource
             'estado_nom'                                    => EstadoProcesoRendicionGasto::STATUS_NOM[$this->status],
             'estado_type'                                   => $this->typeStatus($this->status),
             'authorized_to_anular'                          => $this->authorizedToAnular(),
+            'authorized_to_update_fecha_pago'               => $this->authorizedToUpdateFechaPago(),
             'observacion'                                   => $this->observacion,
             'estados'                                       => $this->estados ? StatusProcesoRendicionGastoResource::collection($this->estados) : null,
             'documentos_r'                                  => $this->exportarDocumentos()

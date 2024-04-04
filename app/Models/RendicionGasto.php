@@ -90,4 +90,24 @@ class RendicionGasto extends Model
     {
         return Gate::allows('update', $this);
     }
+
+    public function authorizedToUpdateMount()
+    {
+        return Gate::allows('updatemount', $this);
+    }
+
+    public function authorizedToAprobar()
+    {
+        return Gate::allows('aprobar', $this);
+    }
+
+    public function authorizedToRechazar()
+    {
+        return Gate::allows('rechazar', $this);
+    }
+
+    public function authorizedToResetear()
+    {
+        return Gate::allows('resetear', $this);
+    }
 }

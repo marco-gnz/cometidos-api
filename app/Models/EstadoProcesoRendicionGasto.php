@@ -8,6 +8,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Str;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Request;
+use Spatie\Permission\Models\Role;
 
 class EstadoProcesoRendicionGasto extends Model
 {
@@ -18,15 +19,17 @@ class EstadoProcesoRendicionGasto extends Model
 
     public const STATUS_INGRESADA   = 0;
     public const STATUS_MODIFICADA  = 1;
-    public const STATUS_EN_PROCESO  = 2;
-    public const STATUS_VERIFICADO  = 3;
-    public const STATUS_APROBADO_N  = 4;
-    public const STATUS_APROBADO_S  = 5;
-    public const STATUS_ANULADO     = 6;
+    public const STATUS_APROBADO_JP = 2;
+    public const STATUS_EN_PROCESO  = 3;
+    public const STATUS_VERIFICADO  = 4;
+    public const STATUS_APROBADO_N  = 5;
+    public const STATUS_APROBADO_S  = 6;
+    public const STATUS_ANULADO     = 7;
 
     public const STATUS_NOM = [
         self::STATUS_INGRESADA      => 'INGRESADO',
         self::STATUS_MODIFICADA     => 'MODIFICADO',
+        self::STATUS_APROBADO_JP    => 'APROBADO JP',
         self::STATUS_EN_PROCESO     => 'EN PROCESO',
         self::STATUS_VERIFICADO     => 'VERIFICADO',
         self::STATUS_APROBADO_N     => 'APROBADO / SM',
@@ -40,7 +43,9 @@ class EstadoProcesoRendicionGasto extends Model
         'uuid',
         'status',
         'observacion',
+        'posicion_firma',
         'p_rendicion_gasto_id',
+        'role_id',
         'user_id_by',
         'fecha_by_user',
         'user_id_update',
@@ -67,6 +72,11 @@ class EstadoProcesoRendicionGasto extends Model
     public function procesoRendicionGasto()
     {
         return $this->belongsTo(ProcesoRendicionGasto::class, 'p_rendicion_gasto_id');
+    }
+
+    public function perfil()
+    {
+        return $this->belongsTo(Role::class, 'role_id');
     }
 
     public function userBy()

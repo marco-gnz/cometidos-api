@@ -21,9 +21,12 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
+use App\Traits\FirmaDisponibleTrait;
 
 class RendicionController extends Controller
 {
+    use FirmaDisponibleTrait;
+
     public function __construct()
     {
         $this->middleware(['auth:sanctum']);
@@ -264,9 +267,12 @@ class RendicionController extends Controller
                     $proceso_rendicion_gasto = $proceso_rendicion_gasto->fresh();
 
                     if ($proceso_rendicion_gasto) {
+                        $firma_disponible = $this->obtenerFirmaDisponibleProcesoRendicion($proceso_rendicion_gasto);
                         $estado = [
                             'status'                => EstadoProcesoRendicionGasto::STATUS_INGRESADA,
-                            'p_rendicion_gasto_id'  => $proceso_rendicion_gasto->id
+                            'p_rendicion_gasto_id'  => $proceso_rendicion_gasto->id,
+                            'role_id'               => $firma_disponible->is_firma ? $firma_disponible->firma->role_id : null,
+                            'posicion_firma'        => $firma_disponible->is_firma ? $firma_disponible->firma->posicion_firma : null
                         ];
                         $status = EstadoProcesoRendicionGasto::create($estado);
                     }
@@ -432,9 +438,12 @@ class RendicionController extends Controller
                 $proceso_rendicion_gasto = $proceso_rendicion_gasto->fresh();
 
                 if ($proceso_rendicion_gasto) {
+                    $firma_disponible = $this->obtenerFirmaDisponibleProcesoRendicion($proceso_rendicion_gasto);
                     $estado = [
                         'status'                => EstadoProcesoRendicionGasto::STATUS_MODIFICADA,
-                        'p_rendicion_gasto_id'  => $proceso_rendicion_gasto->id
+                        'p_rendicion_gasto_id'  => $proceso_rendicion_gasto->id,
+                        'role_id'               => $firma_disponible->is_firma ? $firma_disponible->firma->role_id : null,
+                        'posicion_firma'        => $firma_disponible->is_firma ? $firma_disponible->firma->posicion_firma : null
                     ];
                     $status = EstadoProcesoRendicionGasto::create($estado);
                 }
@@ -481,10 +490,13 @@ class RendicionController extends Controller
         try {
             $proceso_rendicion_gasto = ProcesoRendicionGasto::where('uuid', $request->uuid)->firstOrFail();
             $this->authorize('anular', $proceso_rendicion_gasto);
+            $firma_disponible = $this->obtenerFirmaDisponibleProcesoRendicionAnular($proceso_rendicion_gasto);
             $estado = [
-                'status'                => EstadoProcesoRendicionGasto::STATUS_ANULADO,
                 'observacion'           => $request->observacion,
-                'p_rendicion_gasto_id'  => $proceso_rendicion_gasto->id
+                'status'                => EstadoProcesoRendicionGasto::STATUS_ANULADO,
+                'p_rendicion_gasto_id'  => $proceso_rendicion_gasto->id,
+                'role_id'               => $firma_disponible->is_firma ? $firma_disponible->firma->role_id : null,
+                'posicion_firma'        => $firma_disponible->is_firma ? $firma_disponible->firma->posicion_firma : null
             ];
             $status = EstadoProcesoRendicionGasto::create($estado);
 
@@ -507,17 +519,25 @@ class RendicionController extends Controller
         try {
             $proceso_rendicion_gasto    = ProcesoRendicionGasto::where('uuid', $request->uuid)->firstOrFail();
             $this->authorize('aprobar', $proceso_rendicion_gasto);
-            $status = EstadoProcesoRendicionGasto::STATUS_APROBADO_N;
-            if ($proceso_rendicion_gasto->isRendicionesModificadas()) {
-                $status = EstadoProcesoRendicionGasto::STATUS_APROBADO_S;
+
+            if ($proceso_rendicion_gasto->status === EstadoProcesoRendicionGasto::STATUS_VERIFICADO) {
+                $status = EstadoProcesoRendicionGasto::STATUS_APROBADO_N;
+                if ($proceso_rendicion_gasto->isRendicionesModificadas()) {
+                    $status = EstadoProcesoRendicionGasto::STATUS_APROBADO_S;
+                }
+            } else if ($proceso_rendicion_gasto->status === EstadoProcesoRendicionGasto::STATUS_INGRESADA || $proceso_rendicion_gasto->status === EstadoProcesoRendicionGasto::STATUS_MODIFICADA) {
+                $status = EstadoProcesoRendicionGasto::STATUS_APROBADO_JP;
             }
 
+            $firma_disponible = $this->obtenerFirmaDisponibleProcesoRendicion($proceso_rendicion_gasto);
             $estado = [
                 'status'                => $status,
                 'observacion'           => $request->observacion,
-                'p_rendicion_gasto_id'  => $proceso_rendicion_gasto->id
+                'p_rendicion_gasto_id'  => $proceso_rendicion_gasto->id,
+                'role_id'               => $firma_disponible->is_firma ? $firma_disponible->firma->role_id : null,
+                'posicion_firma'        => $firma_disponible->is_firma ? $firma_disponible->firma->posicion_firma : null
             ];
-            $status = EstadoProcesoRendicionGasto::create($estado);
+            $status_r = EstadoProcesoRendicionGasto::create($estado);
 
             $proceso_rendicion_gasto = $proceso_rendicion_gasto->fresh();
             return response()->json(

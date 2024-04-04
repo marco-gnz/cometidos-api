@@ -23,6 +23,7 @@ class StatusProcesoRendicionGastoResource extends JsonResource
             'observacion'               => $this->observacion ? $this->observacion : null,
             'user_by'                   => $this->userBy ? $this->userBy->abreNombres() : null,
             'created_at'                => $this->fecha_by_user ? Carbon::parse($this->fecha_by_user)->format('d-m-Y H:i') : null,
+            'perfil'                    => $this->perfil ? $this->perfil->name : null,
         ];
     }
 }

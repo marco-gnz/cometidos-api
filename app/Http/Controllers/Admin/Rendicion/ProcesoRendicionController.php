@@ -13,9 +13,12 @@ use App\Models\ProcesoRendicionGasto;
 use App\Models\RendicionGasto;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
+use App\Traits\FirmaDisponibleTrait;
 
 class ProcesoRendicionController extends Controller
 {
+    use FirmaDisponibleTrait;
+
     public function __construct()
     {
         $this->middleware(['auth:sanctum']);
@@ -60,6 +63,7 @@ class ProcesoRendicionController extends Controller
     {
         try {
             $rendicion      = RendicionGasto::where('uuid', $uuid)->firstOrFail();
+            $this->authorize('update', $rendicion);
             $rendicion_old  = $rendicion->replicate();
             $status         = (int)$request->status;
             $message_status = $status === 1 ? 'aprobada' : 'rechazada';
@@ -72,12 +76,15 @@ class ProcesoRendicionController extends Controller
                 ]);
 
                 if ($update) {
+                    $firma_disponible = $this->obtenerFirmaDisponibleRendicion($rendicion->procesoRendicionGasto);
                     $count_rendiciones              = $rendicion->procesoRendicionGasto->rendiciones()->where('rinde_gasto', true)->count();
                     $count_rendiciones_aprobadas    = $rendicion->procesoRendicionGasto->rendiciones()->where('rinde_gasto', true)->where('last_status', '!=', EstadoRendicionGasto::STATUS_PENDIENTE)->count();
                     if ($count_rendiciones_aprobadas >= $count_rendiciones) {
                         $estado = [
                             'status'                => EstadoProcesoRendicionGasto::STATUS_VERIFICADO,
-                            'p_rendicion_gasto_id'  => $rendicion->procesoRendicionGasto->id
+                            'p_rendicion_gasto_id'  => $rendicion->procesoRendicionGasto->id,
+                            'role_id'               => $firma_disponible->is_firma ? $firma_disponible->firma->role_id : null,
+                            'posicion_firma'        => $firma_disponible->is_firma ? $firma_disponible->firma->posicion_firma : null
                         ];
                         $status_r = EstadoProcesoRendicionGasto::create($estado);
                     } else {
@@ -86,7 +93,9 @@ class ProcesoRendicionController extends Controller
                         if ($total_en_proceso <= 0) {
                             $estado = [
                                 'status'                => EstadoProcesoRendicionGasto::STATUS_EN_PROCESO,
-                                'p_rendicion_gasto_id'  => $rendicion->procesoRendicionGasto->id
+                                'p_rendicion_gasto_id'  => $rendicion->procesoRendicionGasto->id,
+                                'role_id'               => $firma_disponible->is_firma ? $firma_disponible->firma->role_id : null,
+                                'posicion_firma'        => $firma_disponible->is_firma ? $firma_disponible->firma->posicion_firma : null
                             ];
                             $status_r = EstadoProcesoRendicionGasto::create($estado);
                         }
@@ -101,11 +110,12 @@ class ProcesoRendicionController extends Controller
                     ];
 
                     $rendicion->addStatus($data);
+                    $status_proceso_rendicion = EstadoProcesoRendicionGasto::STATUS_NOM[$rendicion->procesoRendicionGasto->status];
                     return response()->json(
                         array(
                             'status'  => 'success',
                             'title'   => "Rendición {$message_status} con éxito",
-                            'message' => null,
+                            'message' => "Proceso de rendición $status_proceso_rendicion",
                             'data'    => ProcesoRendicionGastoDetalleResource::make($rendicion->procesoRendicionGasto)
                         )
                     );

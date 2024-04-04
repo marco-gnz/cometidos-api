@@ -160,8 +160,10 @@ class ProcesoRendicionGasto extends Model
     public function isRendicionesModificadas()
     {
         $total_modificaciones = $this->rendiciones()
-            ->whereColumn('mount', '!=', 'mount_real')
-            ->orWhere('last_status', EstadoRendicionGasto::STATUS_RECHAZADO)
+            ->where(function ($q) {
+                $q->where('last_status', EstadoRendicionGasto::STATUS_RECHAZADO)
+                    ->orWhereColumn('mount', '!=', 'mount_real');
+            })
             ->count();
 
         if ($total_modificaciones > 0) {
@@ -179,19 +181,20 @@ class ProcesoRendicionGasto extends Model
                 break;
 
             case 2:
-                $type = 'warning';
-                break;
-
-            case 3:
+            case 4:
                 $type = 'primary';
                 break;
 
-            case 4:
+            case 3:
+                $type = 'warning';
+                break;
+
             case 5:
+            case 6:
                 $type = 'success';
                 break;
 
-            case 6:
+            case 7:
                 $type = 'danger';
                 break;
         }
@@ -206,6 +209,11 @@ class ProcesoRendicionGasto extends Model
     public function authorizedToUpdate()
     {
         return Gate::allows('update', $this);
+    }
+
+    public function authorizedToUpdateFechaPago()
+    {
+        return Gate::allows('updatefechapago', $this);
     }
 
     public function authorizedToAnular()
@@ -229,5 +237,17 @@ class ProcesoRendicionGasto extends Model
         ];
 
         return $documentos;
+    }
+
+    public function firmaJefePersonal()
+    {
+        $last_status_aprobado = $this->estados()->where('status', EstadoProcesoRendicionGasto::STATUS_APROBADO_JP)->orderBy('id', 'DESC')->first();
+        if ($last_status_aprobado) {
+            $nombres    = $last_status_aprobado->userBy->abreNombres();
+            $fecha      = Carbon::parse($last_status_aprobado->created_at)->format('d-m-y H:i:s');
+            $new_firma  = "$nombres $fecha";
+            return $new_firma;
+        }
+        return null;
     }
 }

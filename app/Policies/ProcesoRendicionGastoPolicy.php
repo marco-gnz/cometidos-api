@@ -6,10 +6,11 @@ use App\Models\EstadoProcesoRendicionGasto;
 use App\Models\ProcesoRendicionGasto;
 use App\Models\User;
 use Illuminate\Auth\Access\HandlesAuthorization;
+use App\Traits\FirmaDisponibleTrait;
 
 class ProcesoRendicionGastoPolicy
 {
-    use HandlesAuthorization;
+    use HandlesAuthorization, FirmaDisponibleTrait;
 
     /**
      * Determine whether the user can view any models.
@@ -64,9 +65,19 @@ class ProcesoRendicionGastoPolicy
         return false;
     }
 
+    public function updatefechapago(User $user, ProcesoRendicionGasto $procesoRendicionGasto)
+    {
+        $firma = $this->obtenerFirmaDisponibleProcesoRendicion($procesoRendicionGasto);
+        if ($firma->is_firma && $procesoRendicionGasto->status === EstadoProcesoRendicionGasto::STATUS_APROBADO_N || $procesoRendicionGasto->status === EstadoProcesoRendicionGasto::STATUS_APROBADO_S) {
+            return true;
+        }
+        return false;
+    }
+
     public function anular(User $user, ProcesoRendicionGasto $procesoRendicionGasto)
     {
-        if ($procesoRendicionGasto->status !==  EstadoProcesoRendicionGasto::STATUS_ANULADO) {
+        $firma = $this->obtenerFirmaDisponibleProcesoRendicionAnular($procesoRendicionGasto);
+        if ($firma->is_firma) {
             return true;
         }
         return false;
@@ -74,7 +85,8 @@ class ProcesoRendicionGastoPolicy
 
     public function aprobar(User $user, ProcesoRendicionGasto $procesoRendicionGasto)
     {
-        if ($procesoRendicionGasto->status ===  EstadoProcesoRendicionGasto::STATUS_VERIFICADO) {
+        $firma = $this->obtenerFirmaDisponibleProcesoRendicion($procesoRendicionGasto);
+        if ($firma->is_firma) {
             return true;
         }
         return false;
