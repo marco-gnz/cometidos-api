@@ -18,10 +18,14 @@ class CreateEstadoInformeCometidosTable extends Migration
             $table->uuid('uuid')->unique()->nullable();
             $table->unsignedSmallInteger('status')->default(0);
             $table->text('observacion')->nullable();
+            $table->integer('posicion_firma')->nullable();
             $table->string('ip_address')->nullable();
 
             $table->foreign('informe_cometido_id')->references('id')->on('informe_cometidos')->onDelete('cascade');
             $table->unsignedBigInteger('informe_cometido_id')->nullable();
+
+            $table->foreign('role_id')->references('id')->on('roles');
+            $table->unsignedBigInteger('role_id')->nullable();
 
             $table->unsignedBigInteger('user_id_by')->nullable();
             $table->foreign('user_id_by')->references('id')->on('users');

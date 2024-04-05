@@ -8,10 +8,11 @@ use App\Models\Solicitud;
 use App\Models\User;
 use Carbon\Carbon;
 use Illuminate\Auth\Access\HandlesAuthorization;
+use App\Traits\FirmaDisponibleTrait;
 
 class InformeCometidoPolicy
 {
-    use HandlesAuthorization;
+    use HandlesAuthorization, FirmaDisponibleTrait;
 
     /**
      * Determine whether the user can view any models.
@@ -60,6 +61,26 @@ class InformeCometidoPolicy
                     return false;
                 }
             }
+        }
+
+        return false;
+    }
+
+    public function aprobar(User $user, InformeCometido $informeCometido)
+    {
+        $firma = $this->obtenerFirmaDisponibleInformeCometido($informeCometido);
+        if ($firma->is_firma && $informeCometido->last_status === EstadoInformeCometido::STATUS_INGRESADA) {
+            return true;
+        }
+
+        return false;
+    }
+
+    public function rechazar(User $user, InformeCometido $informeCometido)
+    {
+        $firma = $this->obtenerFirmaDisponibleInformeCometido($informeCometido);
+        if (($firma->is_firma) && ($informeCometido->last_status === EstadoInformeCometido::STATUS_INGRESADA || $informeCometido->last_status === EstadoInformeCometido::STATUS_APROBADO)) {
+            return true;
         }
 
         return false;

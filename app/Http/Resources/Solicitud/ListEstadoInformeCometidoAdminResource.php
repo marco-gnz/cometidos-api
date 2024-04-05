@@ -19,6 +19,7 @@ class ListEstadoInformeCometidoAdminResource extends JsonResource
         return [
             'status_nom'                => EstadoInformeCometido::STATUS_NOM[$this->status],
             'status_type'               => EstadoInformeCometido::STATUS_TYPE[$this->status],
+            'perfil'                    => $this->perfil ? $this->perfil->name : null,
             'observacion'               => $this->observacion,
             'user_by'                   => $this->userBy ? $this->userBy->nombre_completo : null,
             'created_at'                => Carbon::parse($this->fecha_by_user)->format('d-m-Y H:i:s')

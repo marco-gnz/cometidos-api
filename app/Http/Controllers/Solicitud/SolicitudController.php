@@ -28,9 +28,12 @@ use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Validator;
 use Spatie\Permission\Models\Role;
+use App\Traits\FirmaDisponibleTrait;
 
 class SolicitudController extends Controller
 {
+    use FirmaDisponibleTrait;
+
     public function __construct()
     {
         $this->middleware(['auth:sanctum']);
@@ -351,8 +354,8 @@ class SolicitudController extends Controller
     {
         try {
             $informeCometido = InformeCometido::where('uuid', $request->uuid)->firstOrFail();
-
             if ($informeCometido) {
+                $firma_disponible = $this->obtenerFirmaDisponibleInformeCometido($informeCometido);
                 $status = (int)$request->status;
                 switch ($status) {
                     case 1:
@@ -366,7 +369,9 @@ class SolicitudController extends Controller
                 $estados[] = [
                     'status'                    => $status,
                     'informe_cometido_id'       => $informeCometido->id,
-                    'observacion'               => $request->observacion
+                    'observacion'               => $request->observacion,
+                    'role_id'                   => $firma_disponible->is_firma ? $firma_disponible->firma->role_id : null,
+                    'posicion_firma'            => $firma_disponible->is_firma ? $firma_disponible->firma->posicion_firma : null
                 ];
 
                 $create_status      = $informeCometido->addEstados($estados);

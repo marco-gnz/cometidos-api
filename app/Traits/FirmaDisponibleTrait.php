@@ -2,6 +2,7 @@
 
 namespace App\Traits;
 
+use App\Models\EstadoInformeCometido;
 use App\Models\EstadoProcesoRendicionGasto;
 use App\Models\Solicitud;
 use Illuminate\Support\Facades\Auth;
@@ -161,6 +162,21 @@ trait FirmaDisponibleTrait
 
         $roles_id    = [6, 7];
         $firma       = $procesoRendicion->solicitud->firmantes()->where('user_id', $auth->id)->where('status', true)->whereIn('role_id', $roles_id)->first();
+
+        return (object) [
+            'type'      => 'success',
+            'is_firma'  => $firma ? true : false,
+            'firma'     => $firma,
+            'title'     => null,
+            'message'   => null
+        ];
+    }
+
+    public function obtenerFirmaDisponibleInformeCometido($informeCometido)
+    {
+        $auth        = Auth::user();
+        $roles_id    = [4];
+        $firma       = $informeCometido->solicitud->firmantes()->where('user_id', $auth->id)->where('status', true)->whereIn('role_id', $roles_id)->first();
 
         return (object) [
             'type'      => 'success',

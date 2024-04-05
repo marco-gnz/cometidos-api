@@ -133,9 +133,19 @@ class InformeCometido extends Model
         return Gate::allows('view', $this);
     }
 
+    public function authorizedToAprobar()
+    {
+        return Gate::allows('aprobar', $this);
+    }
+
+    public function authorizedToRechazar()
+    {
+        return Gate::allows('rechazar', $this);
+    }
+
     public function firmaJefatura()
     {
-        $firma = $this->estados()->where('status', EstadoInformeCometido::STATUS_APROBADO)->first();
+        $firma = $this->estados()->where('status', EstadoInformeCometido::STATUS_APROBADO)->where('role_id', 4)->first();
         if ($firma) {
             $nombres    = $firma->userBy->abreNombres();
             $fecha      = Carbon::parse($firma->fecha_by_user)->format('d-m-y H:i:s');
