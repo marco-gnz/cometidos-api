@@ -104,7 +104,7 @@ class PdfController extends Controller
     public function showGastosCometidoFuncional($uuid)
     {
         try {
-            $proceso_rendicion_gasto = ProcesoRendicionGasto::where('uuid', $uuid)->first();
+            $proceso_rendicion_gasto = ProcesoRendicionGasto::where('uuid', $uuid)->with('cuentaBancaria')->first();
 
             if (!$proceso_rendicion_gasto) {
                 return response()->view('errors.404');

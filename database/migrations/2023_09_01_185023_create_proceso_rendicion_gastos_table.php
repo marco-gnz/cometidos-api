@@ -21,8 +21,12 @@ class CreateProcesoRendicionGastosTable extends Migration
             $table->date('fecha_pago')->nullable();
             $table->unsignedSmallInteger('status')->default(0);
             $table->text('observacion')->nullable();
+
             $table->foreign('solicitud_id')->references('id')->on('solicituds')->onDelete('cascade');
             $table->unsignedBigInteger('solicitud_id')->nullable();
+
+            $table->unsignedBigInteger('cuenta_bancaria_id')->nullable();
+            $table->foreign('cuenta_bancaria_id')->references('id')->on('cuenta_bancarias');
 
             $table->unsignedBigInteger('user_id_by')->nullable();
             $table->foreign('user_id_by')->references('id')->on('users');

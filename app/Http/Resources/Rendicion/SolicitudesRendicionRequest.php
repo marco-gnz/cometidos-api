@@ -30,7 +30,7 @@ class SolicitudesRendicionRequest extends JsonResource
             'derecho_pago'              => $this->derecho_pago ? "Si" : "No",
             'jornada'                   => Solicitud::JORNADA_NOM[$this->jornada],
             'tipo_comision'             => $this->tipoComision ? $this->tipoComision->nombre : null,
-            'estado_nom'                => EstadoSolicitud::STATUS_NOM[$this->last_status],
+            'estado_nom'                => Solicitud::STATUS_NOM[$this->status],
             'is_avion'                  => $this->transportes ? $this->transportes()->where('solicitud_transporte.transporte_id', 1)->exists() : false
         ];
     }

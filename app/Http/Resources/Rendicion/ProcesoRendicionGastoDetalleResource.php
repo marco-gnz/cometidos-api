@@ -3,6 +3,7 @@
 namespace App\Http\Resources\Rendicion;
 
 use App\Http\Resources\Solicitud\ListSolicitudDocumentosResource;
+use App\Http\Resources\User\CuentaBancariaResource;
 use App\Models\EstadoProcesoRendicionGasto;
 use App\Models\EstadoSolicitud;
 use App\Models\ProcesoRendicionGasto;
@@ -79,7 +80,8 @@ class ProcesoRendicionGastoDetalleResource extends JsonResource
             'authorized_to_update_fecha_pago'               => $this->authorizedToUpdateFechaPago(),
             'observacion'                                   => $this->observacion,
             'estados'                                       => $this->estados ? StatusProcesoRendicionGastoResource::collection($this->estados) : null,
-            'documentos_r'                                  => $this->exportarDocumentos()
+            'documentos_r'                                  => $this->exportarDocumentos(),
+            'cuenta_bancaria'                               => $this->cuentaBancaria ? CuentaBancariaResource::make($this->cuentaBancaria) : null
         ];
     }
 }

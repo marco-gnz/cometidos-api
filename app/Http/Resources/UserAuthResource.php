@@ -2,6 +2,7 @@
 
 namespace App\Http\Resources;
 
+use App\Http\Resources\User\CuentaBancariaResource;
 use App\Models\Grupo;
 use App\Models\HistoryActionUser;
 use Carbon\Carbon;
@@ -41,6 +42,7 @@ class UserAuthResource extends JsonResource
             'last_change_password'      => $this->lastHistory(HistoryActionUser::TYPE_0) ? Carbon::parse($this->lastHistory(HistoryActionUser::TYPE_0)->created_at)->format('d-m-Y H:i:s') : 'Sin registros',
             'last_change_data'          => $this->lastHistory(HistoryActionUser::TYPE_1) ? Carbon::parse($this->lastHistory(HistoryActionUser::TYPE_1)->created_at)->format('d-m-Y H:i:s') : 'Sin registros',
             'last_change_request_data'  => $this->lastHistory(HistoryActionUser::TYPE_3) ? Carbon::parse($this->lastHistory(HistoryActionUser::TYPE_3)->created_at)->format('d-m-Y H:i:s') : 'Sin registros',
+            'last_cuenta_bancaria'      => $this->lastCuentaBancaria() ? CuentaBancariaResource::make($this->lastCuentaBancaria())  : null
         ];
     }
 }

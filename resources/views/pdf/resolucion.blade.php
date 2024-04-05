@@ -458,7 +458,7 @@
                     </div>
                 </div>
                 <div class="column">
-                    <h4>Rendiciones de gastos aprobadas</h4>
+                    <h4>Rendiciones de gastos aprobadas Depto. Finanzas</h4>
                     <table class="table-1">
                         <thead>
                             <th>N° total de rendiciones</th>

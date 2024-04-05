@@ -138,9 +138,19 @@ class User extends Authenticatable
         return $this->hasMany(HistoryActionUser::class);
     }
 
+    public function cuentas()
+    {
+        return $this->hasMany(CuentaBancaria::class);
+    }
+
     public function addHistorys(array $historys)
     {
         return $this->historys()->createMany($historys);
+    }
+
+    public function lastCuentaBancaria()
+    {
+        return $this->cuentas()->where('status', true)->orderBy('id', 'DESC')->first();
     }
 
     public function lastHistory(int $type)

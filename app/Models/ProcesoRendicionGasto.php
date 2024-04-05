@@ -23,6 +23,7 @@ class ProcesoRendicionGasto extends Model
         'status',
         'observacion',
         'solicitud_id',
+        'cuenta_bancaria_id',
         'user_id_by',
         'fecha_by_user',
         'user_id_update',
@@ -52,6 +53,11 @@ class ProcesoRendicionGasto extends Model
     public function solicitud()
     {
         return $this->belongsTo(Solicitud::class, 'solicitud_id');
+    }
+
+    public function cuentaBancaria()
+    {
+        return $this->belongsTo(CuentaBancaria::class, 'cuenta_bancaria_id');
     }
 
     public function rendiciones()

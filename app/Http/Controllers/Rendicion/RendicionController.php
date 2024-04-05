@@ -48,7 +48,7 @@ class RendicionController extends Controller
         try {
             $auth           = Auth::user();
             if ($auth) {
-                $query = Solicitud::where('status', '!=', 2)
+                $query = Solicitud::where('status', '!=', Solicitud::STATUS_ANULADO)
                     ->whereYear('fecha_inicio', $request->year);
 
                 if ($request->month) {
@@ -525,6 +525,18 @@ class RendicionController extends Controller
                 if ($proceso_rendicion_gasto->isRendicionesModificadas()) {
                     $status = EstadoProcesoRendicionGasto::STATUS_APROBADO_S;
                 }
+                $last_cuenta_bancaria = $proceso_rendicion_gasto->solicitud->funcionario->lastCuentaBancaria();
+                if (!$last_cuenta_bancaria) {
+                    return response()->json([
+                        'errors' => [
+                            'e'  => $proceso_rendicion_gasto->solicitud->funcionario->abreNombres() . " no registra cuenta bancaria habilitada."
+                        ]
+                    ], 422);
+                }
+
+                $proceso_rendicion_gasto->update([
+                    'cuenta_bancaria_id'    => $last_cuenta_bancaria->id
+                ]);
             } else if ($proceso_rendicion_gasto->status === EstadoProcesoRendicionGasto::STATUS_INGRESADA || $proceso_rendicion_gasto->status === EstadoProcesoRendicionGasto::STATUS_MODIFICADA) {
                 $status = EstadoProcesoRendicionGasto::STATUS_APROBADO_JP;
             }
