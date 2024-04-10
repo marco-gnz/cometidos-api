@@ -19,7 +19,7 @@ class InformeCometido extends Model
 
     public const STATUS_INGRESO_NOM = [
         self::STATUS_INGRESO_EN_PLAZO   => 'En plazo',
-        self::STATUS_INGRESO_TARDIO     => 'Tardío'
+        self::STATUS_INGRESO_TARDIO     => 'Fuera de plazo'
     ];
 
     public const STATUS_INGRESO_TYPE = [
@@ -94,7 +94,8 @@ class InformeCometido extends Model
             $dias                           = $diferencia->days;
             $horas                          = $diferencia->h;
             $minutos                        = $diferencia->i;
-            return "El Informe se ingresó después del plazo de $dias_permitidos días. La diferencia es de $dias días, $horas horas y $minutos minutos.";
+            $message_dias                   = $dias_permitidos > 1 ? 'días' : 'día';
+            return "El Informe se ingresó después del plazo de $dias_permitidos $message_dias. La diferencia es de $dias días, $horas horas y $minutos minutos.";
         } else {
             return null;
         }

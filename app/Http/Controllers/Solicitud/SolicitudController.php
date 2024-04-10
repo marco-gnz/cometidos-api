@@ -638,10 +638,11 @@ class SolicitudController extends Controller
             return response()->json(['error' => $error->getMessage()], 500);
         }
     }
-    public function getSolicitud($uuid)
+    public function getSolicitudUpdate($uuid)
     {
         try {
             $solicitud = Solicitud::where('uuid', $uuid)->firstOrFail();
+
             return response()->json(
                 array(
                     'status'        => 'success',
@@ -925,22 +926,16 @@ class SolicitudController extends Controller
     {
         try {
             $lastStatus = $solicitud->estados()
-                ->where('status', EstadoSolicitud::STATUS_RECHAZADO)
-                ->where('motivo_rechazo', EstadoSolicitud::RECHAZO_3)
                 ->orderBy('id', 'DESC')
                 ->first();
 
-            if (!$lastStatus) {
-                return true;
-            }
-
             $countDocumentos = $solicitud->documentos()->count();
-            if ($countDocumentos <= 0 && !$archivos) {
+            if ($lastStatus->status === EstadoSolicitud::STATUS_RECHAZADO && $lastStatus->motivo_rechazo === EstadoSolicitud::RECHAZO_3 && ($countDocumentos <= 0 || !$archivos)) {
                 return false;
             }
-
             return true;
         } catch (\Exception $error) {
+            Log::info($error->getMessage());
             return false;
         }
     }

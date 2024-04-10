@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Str;
+use Illuminate\Support\Facades\Gate;
 
 class SoliucitudCalculo extends Model
 {
@@ -58,5 +59,10 @@ class SoliucitudCalculo extends Model
     public function userBy()
     {
         return $this->belongsTo(User::class, 'user_id_by');
+    }
+
+    public function authorizedToCreate($solicitud)
+    {
+        return Gate::allows('create', $solicitud);
     }
 }

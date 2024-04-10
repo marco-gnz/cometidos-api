@@ -408,12 +408,17 @@
                     <td><strong>Afecta</strong></td>
                     <td>{{ $solicitud->afectaConvenio() }}</td>
                 </tr>
-                @if ($solicitud->afecta_convenio)
-                    <tr>
-                        <td><strong>Datos</strong></td>
-                        <td>{{ $solicitud->convenio->codigo }} / Año {{ $solicitud->convenio->anio }}</td>
-                    </tr>
-                @endif
+                <tr>
+                    <td><strong>Datos</strong></td>
+                    <td>
+                        @if ($solicitud->afecta_convenio)
+                            {{ $solicitud->convenio->codigo }} / Año {{ $solicitud->convenio->anio }}
+                        @else
+                            --
+                        @endif
+                    </td>
+                </tr>
+
             </table>
         </div>
         <div class="seccion">

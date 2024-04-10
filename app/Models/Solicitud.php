@@ -66,6 +66,12 @@ class Solicitud extends Model
         self::STATUS_ANULADO            => 'ANULADA',
     ];
 
+    public const STATUS_DESC = [
+        self::STATUS_EN_PROCESO         => 'Solicitud de cometido aún no ha sido verficiada por todos los referentes.',
+        self::STATUS_PROCESADO          => 'Solicitud de cometido ha sido verficiada por todos los referentes',
+        self::STATUS_ANULADO            => 'Solicitud de cometido ha sido sido anulada',
+    ];
+
     protected $fillable = [
         'uuid',
         'codigo',

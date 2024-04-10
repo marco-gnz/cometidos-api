@@ -76,12 +76,13 @@ class DocumentoPolicy
             return true;
         }
 
-        if ($documento->model === Documento::MODEL_RENDICION && $documento->procesoRendicionGasto->status === EstadoProcesoRendicionGasto::STATUS_INGRESADA || $documento->procesoRendicionGasto->status === EstadoProcesoRendicionGasto::STATUS_MODIFICADA) {
+        if ($documento->model === Documento::MODEL_RENDICION && $documento->procesoRendicionGasto && ($documento->procesoRendicionGasto->status === EstadoProcesoRendicionGasto::STATUS_INGRESADA || $documento->procesoRendicionGasto->status === EstadoProcesoRendicionGasto::STATUS_MODIFICADA)) {
             return true;
         }
 
         return false;
     }
+
 
 
     /**

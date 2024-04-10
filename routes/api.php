@@ -53,7 +53,7 @@ Route::group(
         Route::get('/admin/mantenedores/motivos', [MantenedorController::class, 'getMotivos']);
         Route::get('/admin/mantenedores/lugares', [MantenedorController::class, 'getLugares']);
         Route::get('/admin/mantenedores/transportes', [MantenedorController::class, 'getTransporte']);
-        Route::get('/admin/mantenedores/actividades', [MantenedorController::class, 'getActividades']);
+        Route::get('/admin/mantenedores/actividades/{uuid}', [MantenedorController::class, 'getActividades']);
         Route::get('/admin/mantenedores/establecimientos', [MantenedorController::class, 'getEstablecimientos']);
         Route::get('/admin/mantenedores/departamentos', [MantenedorController::class, 'getDepartamentos']);
         Route::get('/admin/mantenedores/subdepartamentos', [MantenedorController::class, 'getSubdepartamentos']);
@@ -99,11 +99,12 @@ Route::group(
         Route::get('/firmantes/list', [FirmantesController::class, 'listFirmantes']);
 
         Route::get('/solicitud/list', [SolicitudesController::class, 'listSolicitudes']);
+        Route::get('/solicitud/{uuid}/{type}', [SolicitudesController::class, 'getSolicitud']);
         Route::post('/solicitud/store', [SolicitudController::class, 'storeSolicitud']);
         Route::post('/solicitud/store/validate', [SolicitudController::class, 'validateSolicitud']);
         Route::post('/solicitud/store/solicitud-dates', [SolicitudController::class, 'datesSolicitudInCalendar']);
 
-        Route::get('/solicitud/update/{uuid}', [SolicitudController::class, 'getSolicitud']);
+        Route::get('/solicitud/update/show/{uuid}', [SolicitudController::class, 'getSolicitudUpdate']);
         Route::post('/solicitud/update/validate', [SolicitudController::class, 'validateUpdateSolicitud']);
         Route::post('/solicitud/update', [SolicitudController::class, 'updateSolicitud']);
 

@@ -23,7 +23,7 @@ class ListSolicitudDocumentosResource extends JsonResource
             'size'                  => $this->size,
             'extension'             => $this->extension,
             'created_at'            => $this->created_at ? Carbon::parse($this->created_at)->format('d-m-Y H:i:s') : null,
-            'url_open'              => route('documento.show', ['uuid' => $this->uuid]),
+            'url_open'              => $this ? route('documento.show', ['uuid' => $this->uuid]) : null,
             'user_by'               => $this->userBy ? $this->userBy->abreNombres() : null,
             'authorized_to_delete'  => $this->authorizedToDelete()
         ];
