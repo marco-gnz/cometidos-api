@@ -51,7 +51,6 @@ class CreateSolicitudsTable extends Migration
             $table->integer('total_horas_cometido')->nullable();
             $table->integer('posicion_firma_actual')->default(0);
             $table->integer('total_firmas')->default(0)->nullable();
-            $table->integer('total_ok')->default(0)->nullable();
             $table->integer('dias_permitidos')->nullable();
 
             $table->foreign('user_id')->references('id')->on('users');

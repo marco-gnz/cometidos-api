@@ -118,6 +118,11 @@ class User extends Authenticatable
         return $this->belongsTo(Hora::class, 'hora_id');
     }
 
+    public function firmas()
+    {
+        return $this->hasMany(SolicitudFirmante::class);
+    }
+
     public function solicitudes()
     {
         return $this->hasMany(Solicitud::class);

@@ -19,7 +19,7 @@ class EstadoProcesoRendicionGasto extends Model
 
     public const STATUS_INGRESADA   = 0;
     public const STATUS_MODIFICADA  = 1;
-    public const STATUS_APROBADO_JP = 2;
+    public const STATUS_APROBADO_JD = 2;
     public const STATUS_EN_PROCESO  = 3;
     public const STATUS_VERIFICADO  = 4;
     public const STATUS_APROBADO_N  = 5;
@@ -29,7 +29,7 @@ class EstadoProcesoRendicionGasto extends Model
     public const STATUS_NOM = [
         self::STATUS_INGRESADA      => 'INGRESADO',
         self::STATUS_MODIFICADA     => 'MODIFICADO',
-        self::STATUS_APROBADO_JP    => 'APROBADO JP',
+        self::STATUS_APROBADO_JD    => 'APROBADO JD',
         self::STATUS_EN_PROCESO     => 'EN PROCESO',
         self::STATUS_VERIFICADO     => 'VERIFICADO',
         self::STATUS_APROBADO_N     => 'APROBADO / SM',

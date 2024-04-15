@@ -28,7 +28,7 @@ class StatusSolicitudRequest extends FormRequest
             'status'            => ['required'],
             'observacion'       => ['required_unless:status,2'],
             'motivo_id'         => ['required_if:status,3'],
-            'firmante_uuid'     => ['required_if:status,3']
+            'firmante_uuid'     => ['required_unless:status,2'],
         ];
     }
 

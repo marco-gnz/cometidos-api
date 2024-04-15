@@ -8,10 +8,11 @@ use App\Models\Solicitud;
 use App\Models\User;
 use Carbon\Carbon;
 use Illuminate\Auth\Access\HandlesAuthorization;
+use App\Traits\FirmaDisponibleTrait;
 
 class SolicitudPolicy
 {
-    use HandlesAuthorization;
+    use HandlesAuthorization, FirmaDisponibleTrait;
 
     /**
      * Determine whether the user can view any models.
@@ -72,7 +73,7 @@ class SolicitudPolicy
         }
 
         $last_status = $solicitud->estados()->orderBy('id', 'DESC')->first();
-        if (($last_status) && ($last_status->status === EstadoSolicitud::STATUS_INGRESADA || $last_status->status === EstadoSolicitud::STATUS_MODIFICADA || $last_status->status === EstadoSolicitud::STATUS_RECHAZADO && $solicitud->posicion_firma_actual === 0) ) {
+        if (($last_status) && ($last_status->status === EstadoSolicitud::STATUS_INGRESADA || $last_status->status === EstadoSolicitud::STATUS_MODIFICADA || $last_status->status === EstadoSolicitud::STATUS_RECHAZADO && $solicitud->posicion_firma_actual === 0 || $last_status->status === EstadoSolicitud::STATUS_PENDIENTE && $last_status->posicion_firma === 0 &&  $last_status->is_reasignado && $solicitud->posicion_firma_actual === 0)) {
             return true;
         }
         return false;
@@ -85,6 +86,49 @@ class SolicitudPolicy
      * @param  \App\Models\Solicitud  $solicitud
      * @return \Illuminate\Auth\Access\Response|bool
      */
+
+    public function firma(User $user, Solicitud $solicitud)
+    {
+        if ($solicitud->status === Solicitud::STATUS_ANULADO) {
+            return false;
+        }
+
+        $firma = $this->obtenerFirmaDisponible($solicitud);
+
+        if ($firma->is_firma && $solicitud->status === Solicitud::STATUS_EN_PROCESO) {
+            return true;
+        }
+
+        return false;
+    }
+
+    public function reasignaremergency(User $user, Solicitud $solicitud)
+    {
+        if ($solicitud->status === Solicitud::STATUS_ANULADO || $solicitud->status === Solicitud::STATUS_EN_PROCESO) {
+            return false;
+        }
+        if ($user->estado && $user->hasRole('SUPER ADMINISTRADOR')) {
+            return true;
+        }
+
+        return false;
+    }
+
+    public function anular(User $user, Solicitud $solicitud)
+    {
+        if ($solicitud->status === Solicitud::STATUS_ANULADO) {
+            return false;
+        }
+
+        $firma = $this->obtenerFirmaDisponibleSolicitudAnular($solicitud);
+
+        if ($firma->is_firma) {
+            return true;
+        }
+
+        return false;
+    }
+
     public function delete(User $user, Solicitud $solicitud)
     {
         //

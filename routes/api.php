@@ -83,7 +83,7 @@ Route::group(
         Route::get('/admin/rendicion/list', [ProcesoRendicionController::class, 'getProcesoRendiciones']);
         Route::get('/admin/rendicion/{uuid}', [ProcesoRendicionController::class, 'getProcesoRendicion']);
         Route::put('/admin/rendicion/{uuid}', [ProcesoRendicionController::class, 'statusRendicion']);
-        Route::post('/admin/rendicion/update-fecha-pago', [ProcesoRendicionController::class, 'updateFechaPago']);
+        Route::post('/admin/rendicion/update-pago', [ProcesoRendicionController::class, 'updatePago']);
     }
 );
 

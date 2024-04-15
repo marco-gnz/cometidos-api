@@ -45,7 +45,7 @@ class ListSolicitudCompleteAdminResource extends JsonResource
             'last_status_type'          => $this->typeLastStatus(),
             'estado_nom'                => Solicitud::STATUS_NOM[$this->status],
             'type_status'               => $this->typeStatus(),
-            'total_actividades'         => $total ? "$".number_format($total, 0, ",", ".") : null,
+            'total_actividades'         => $total ? "$" . number_format($total, 0, ",", ".") : null,
             'motivos'                   => $this->motivos ? $this->motivos->pluck('nombre')->implode(', ') : null,
             'lugares'                   => $this->lugares ? $this->lugares->pluck('nombre')->implode(', ') : null,
             'paises'                    => $this->paises ? $this->paises->pluck('nombre')->implode(', ') : null,
@@ -68,7 +68,10 @@ class ListSolicitudCompleteAdminResource extends JsonResource
             'type_page_firma'           => $this->typePageFirma(),
             'is_update'                 => $this->authorizedToUpdate(),
             'documentos'                => $this->exportarDocumentos(),
-            'not_actividad'             => $this->isNotActividad()
+            'not_actividad'             => $this->isNotActividad(),
+            'authorized_to_firma'       => $this->authorizedToFirma(),
+            'authorized_to_anular'      => $this->authorizedToAnular(),
+            'authorized_to_reasignar_emergency'      => $this->authorizedToReasignarEmergency()
         ];
     }
 }

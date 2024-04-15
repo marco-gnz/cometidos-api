@@ -27,7 +27,10 @@ class ListFirmantesResource extends JsonResource
             'status'                => $this->status ? true : false,
             'total_ausentismos_hoy' => $total_ausentismos_hoy ? 'Si' : 'No',
             'is_reasignado'         => $this->is_reasignado,
-            'is_firma'              => $this->solicitud ? ($this->posicion_firma === $this->solicitud->posicion_firma_actual ? true : false) : false
+            'is_firma'              => $this->solicitud ? ($this->posicion_firma === $this->solicitud->posicion_firma_actual ? true : false) : false,
+            'authorized_to_update'  => $this->authorizedToUpdate(),
+            'is_executed'           => $this->is_executed,
+            'is_success'            => $this->is_success
         ];
     }
 }

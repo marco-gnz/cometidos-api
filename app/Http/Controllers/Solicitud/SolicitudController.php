@@ -461,14 +461,14 @@ class SolicitudController extends Controller
                 ], 422);
             }
 
-            if (!$is_update_files) {
+            /* if (!$is_update_files) {
                 $message = "Se requiere adjuntar documentos.";
                 return response()->json([
                     'errors' => [
                         'file'  => [$message]
                     ]
                 ], 422);
-            }
+            } */
             $form = [
                 'fecha_inicio',
                 'fecha_termino',

@@ -67,9 +67,9 @@ class Solicitud extends Model
     ];
 
     public const STATUS_DESC = [
-        self::STATUS_EN_PROCESO         => 'Solicitud de cometido aún no ha sido verficiada por todos los referentes.',
-        self::STATUS_PROCESADO          => 'Solicitud de cometido ha sido verficiada por todos los referentes',
-        self::STATUS_ANULADO            => 'Solicitud de cometido ha sido sido anulada',
+        self::STATUS_EN_PROCESO         => 'Solicitud de cometido no verficiada por los firmantes.',
+        self::STATUS_PROCESADO          => 'Solicitud de cometido verficiada por todos los firmantes',
+        self::STATUS_ANULADO            => 'Solicitud de cometido anulada',
     ];
 
     protected $fillable = [
@@ -110,7 +110,6 @@ class Solicitud extends Model
         'valor_total',
         'vistos',
         'total_firmas',
-        'total_ok',
         'user_id',
         'grupo_id',
         'convenio_id',
@@ -442,6 +441,21 @@ class Solicitud extends Model
         return Gate::allows('update', $this);
     }
 
+    public function authorizedToFirma()
+    {
+        return Gate::allows('firma', $this);
+    }
+
+    public function authorizedToAnular()
+    {
+        return Gate::allows('anular', $this);
+    }
+
+    public function authorizedToReasignarEmergency()
+    {
+        return Gate::allows('reasignaremergency', $this);
+    }
+
     public function authorizedToCreateInformeCometido()
     {
         $policy = resolve(InformeCometidoPolicy::class);
@@ -463,9 +477,9 @@ class Solicitud extends Model
         return true;
     }
 
-    private function totalFirmasAprobadas()
+    public function totalFirmasAprobadas()
     {
-        return $this->total_ok;
+        return $this->firmantes()->where('role_id', '!=', 1)->where('status', true)->where('is_executed', true)->where('is_success', true)->count();
     }
 
 
@@ -561,6 +575,7 @@ class Solicitud extends Model
     public function exportarDocumentos()
     {
         $informe = self::informeCometido();
+        $is_procesada = $this->status === self::STATUS_PROCESADO ? true : false;
         $documentos = [
             [
                 'name'          => 'Informe de cometido',
@@ -568,12 +583,14 @@ class Solicitud extends Model
                 'exist'         => self::isAnulada() ? false : ($informe ? true : false),
                 'stauts_nom'    => $informe ? EstadoInformeCometido::STATUS_NOM[$informe->last_status] : '',
                 'type'          => $informe ? EstadoInformeCometido::STATUS_TYPE[$informe->last_status] : '',
+                'habilitado'    => ($informe) && ($informe->last_status === EstadoInformeCometido::STATUS_APROBADO && $is_procesada) ? true : false
             ],
             [
                 'name'  => 'Resolución de cometido',
                 'url'   => route('resolucioncometidofuncional.show', ['uuid' => $this->uuid]),
                 'exist' => self::isAnulada() ? false : true,
-                'type'  => 'primary'
+                'type'  => 'primary',
+                'habilitado'    => $is_procesada
             ]
         ];
 
@@ -596,7 +613,7 @@ class Solicitud extends Model
             $data = (object)[
                 'is_not_actividad'  => true,
                 'title'             => '¡Sin actividad!',
-                'message'           => "Se anulará el " . $date_plazo->format('d-m-Y') . " por no editar."
+                'message'           => "Se anulará automáticamente el " . $date_plazo->format('d-m-Y') . " por no editar."
             ];
 
             return $data;

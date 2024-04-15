@@ -8,6 +8,7 @@ use Spatie\Permission\Models\Role;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Str;
 use Carbon\Carbon;
+use Illuminate\Support\Facades\Gate;
 
 class SolicitudFirmante extends Model
 {
@@ -19,6 +20,8 @@ class SolicitudFirmante extends Model
         'posicion_firma',
         'is_reasignado',
         'status',
+        'is_executed',
+        'is_success',
         'solicitud_id',
         'grupo_id',
         'user_id',
@@ -71,5 +74,10 @@ class SolicitudFirmante extends Model
     public function perfil()
     {
         return $this->belongsTo(Role::class, 'role_id');
+    }
+
+    public function authorizedToUpdate()
+    {
+        return Gate::allows('update', $this);
     }
 }

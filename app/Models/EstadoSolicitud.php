@@ -88,12 +88,13 @@ class EstadoSolicitud extends Model
             $ip_address                 = Request::ip();
             $estado->ip_address         = $ip_address;
 
+            $is_super_admin             =  auth()->user()->hasRole('SUPER ADMINISTRADOR');
             $posicion_firma_s           = $estado->posicion_firma_s;
             $estado->posicion_firma_s   = $posicion_firma_s;
             $estado->posicion_firma     = $posicion_firma_s;
-            $estado->s_role_id          = $estado->firmaS->perfil->id;
-            $estado->user_id            = $estado->firmaS->funcionario->id;
-            $estado->firmante_id        = $estado->firmaS->id;
+            $estado->s_role_id          = $estado->firmaS ? $estado->firmaS->perfil->id : ($is_super_admin ? 8 : null);
+            $estado->user_id            = $estado->firmaS ? $estado->firmaS->funcionario->id : auth()->user()->id;
+            $estado->firmante_id        = $estado->firmaS ? $estado->firmaS->id : null;
 
             if ($estado->is_reasignado) {
                 $posicion_firma_r_s         = $estado->posicion_firma_r_s;
@@ -119,25 +120,46 @@ class EstadoSolicitud extends Model
                     ]);
                 }
             }
+
+            if ($estado->is_reasignado) {
+                $estado->solicitud->firmantes->where('status', true)->where('posicion_firma', '>=', $estado->posicion_firma)->toQuery()->update([
+                    'is_executed'   => false,
+                    'is_success'    => false
+                ]);
+            } else {
+                $estado->firmaActual->update([
+                    'is_executed' => true
+                ]);
+                if ($estado->posicion_firma_s === 0) {
+                    $estado->firmaActual->update([
+                        'is_success'    => true
+                    ]);
+                }
+                if ($estado->status === self::STATUS_APROBADO) {
+                    $estado->firmaActual->update([
+                        'is_success'    => true
+                    ]);
+                }
+            }
         });
 
         static::created(function ($estado) {
+            $solicitud = $estado->solicitud->fresh();
             if ($estado->status === self::STATUS_APROBADO) {
-                $total_ok       = $estado->solicitud->total_ok + 1;
                 $total_firmas   = $estado->solicitud->firmantes()->where('role_id', '!=', 1)->where('status', true)->count();
-                if ($total_ok === $total_firmas) {
+                if ($estado->solicitud->totalFirmasAprobadas() === $total_firmas) {
                     $status = Solicitud::STATUS_PROCESADO;
                 } else {
                     $status = Solicitud::STATUS_EN_PROCESO;
                 }
             } else {
-                $total_ok = 0;
                 $status = Solicitud::STATUS_EN_PROCESO;
             }
+
+
             $estado->solicitud->update([
                 'last_status'               => $estado->status,
                 'posicion_firma_actual'     => $estado->posicion_firma,
-                'total_ok'                  => $total_ok,
                 'is_reasignada'             => $estado->is_reasignado ? true : false,
                 'status'                    => $status
             ]);
