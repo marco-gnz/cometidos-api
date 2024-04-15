@@ -55,6 +55,9 @@ class SolicitudFirmantePolicy
      */
     public function update(User $user, SolicitudFirmante $solicitudFirmante)
     {
+        if (!$user->hasRole('SUPER ADMINISTRADOR')) {
+            return false;
+        }
         if ($solicitudFirmante->solicitud->status === Solicitud::STATUS_ANULADO || $solicitudFirmante->posicion_firma === 0) {
             return false;
         }
