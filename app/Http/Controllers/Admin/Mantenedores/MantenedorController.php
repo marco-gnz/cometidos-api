@@ -69,14 +69,21 @@ class MantenedorController extends Controller
         }
     }
 
-    public function getActividades()
+    public function getActividades($uuid)
     {
         try {
-            $actividades = ActividadGasto::orderBy('nombre', 'ASC')->get();
+            $solicitud  = Solicitud::where('uuid', $uuid)->firstOrFail();
+            $actividades    = ActividadGasto::orderBy('nombre', 'ASC')->get();
+            $transportes_id = $solicitud->transportes()->pluck('transporte_id')->toArray();
             foreach ($actividades as $actividad) {
                 $actividad->{'rinde_gasto'}             = 0;
                 $actividad->{'mount'}                   = "";
                 $actividad->{'rinde_gastos_servicio'}   = null;
+                if ((count($transportes_id) > 0) && (in_array($actividad->id, $transportes_id))) {
+                    $actividad->{'exist_solicitud'}   = true;
+                } else {
+                    $actividad->{'exist_solicitud'}   = false;
+                }
             }
 
             return response()->json($actividades);

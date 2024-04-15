@@ -65,9 +65,9 @@ class ProcesoRendicionGastoPolicy
         return false;
     }
 
-    public function updatefechapago(User $user, ProcesoRendicionGasto $procesoRendicionGasto)
+    public function updatepago(User $user, ProcesoRendicionGasto $procesoRendicionGasto)
     {
-        $firma = $this->obtenerFirmaDisponibleProcesoRendicion($procesoRendicionGasto);
+        $firma = $this->obtenerFirmaDisponibleProcesoRendicionPago($procesoRendicionGasto);
         if ($firma->is_firma && $procesoRendicionGasto->status === EstadoProcesoRendicionGasto::STATUS_APROBADO_N || $procesoRendicionGasto->status === EstadoProcesoRendicionGasto::STATUS_APROBADO_S) {
             return true;
         }

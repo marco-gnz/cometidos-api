@@ -33,12 +33,16 @@ class ProcesoRendicionGastoDetalleResource extends JsonResource
             return $this->rendiciones ? $this->rendiciones()->whereHas('actividad', $condition)->get() : null;
         };
 
+        $dias_habiles_pago_message = null;
+        if ($this->dias_habiles_pago !== null) {
+            $message_dias = $this->dias_habiles_pago > 1 ? 'días hábiles' : 'día hábil';
+            $dias_habiles_pago_message = "El pago se realizará dentro de {$this->dias_habiles_pago} {$message_dias} de ser aprobado por Depto Finanzas.";
+        }
         return [
             'uuid'                                          => $this->uuid,
             'n_folio'                                       => $this->n_folio,
-            'n_folio'                                       => $this->n_folio,
-            'fecha_pago_value'                              => $this->fecha_pago ? Carbon::parse($this->fecha_pago)->format('Y-m-d') : null,
-            'fecha_pago'                                    => $this->fecha_pago ? Carbon::parse($this->fecha_pago)->format('d-m-Y') : 'Sin fecha',
+            'dias_habiles_pago'                             => $this->dias_habiles_pago,
+            'dias_habiles_pago_message'                     => $dias_habiles_pago_message,
             'rut_funcionario'                               => optional($this->solicitud->funcionario)->rut_completo,
             'nombres_funcionario'                           => optional($this->solicitud->funcionario)->nombre_completo,
             'correo_funcionario'                            => optional($this->solicitud->funcionario)->email,
@@ -68,7 +72,7 @@ class ProcesoRendicionGastoDetalleResource extends JsonResource
             'rendiciones_particular'                        => $getRendiciones($particularCondition) ? RendicionGastoResource::collection($getRendiciones($particularCondition)) : null,
             'rendiciones_not_particular'                    => $getRendiciones($notParticularCondition) ? RendicionGastoResource::collection($getRendiciones($notParticularCondition)) : null,
             'documentos'                                    => $this->documentos && count($this->documentos) > 0 ? ListSolicitudDocumentosResource::collection($this->documentos) : null,
-            'created_at'                                    => $this->created_at ? Carbon::parse($this->created_at)->format('d-m-Y H:i') : null,
+            'created_at'                                    => $this->created_at ? Carbon::parse($this->created_at)->format('d-m-Y H:i:s') : null,
             'url_gastos_cometido_funcional'                 => $this->uuid ? route('gastoscometidofuncional.show', ['uuid' => $this->uuid]) : null,
             'solicitud_estado_nom'                          => EstadoSolicitud::STATUS_NOM[$this->solicitud->last_status],
             'solicitud_estado_type'                         => $this->solicitud->typeStatus(),
@@ -77,7 +81,7 @@ class ProcesoRendicionGastoDetalleResource extends JsonResource
             'estado_nom'                                    => EstadoProcesoRendicionGasto::STATUS_NOM[$this->status],
             'estado_type'                                   => $this->typeStatus($this->status),
             'authorized_to_anular'                          => $this->authorizedToAnular(),
-            'authorized_to_update_fecha_pago'               => $this->authorizedToUpdateFechaPago(),
+            'authorized_to_update_pago'                     => $this->authorizedToUpdatePago(),
             'observacion'                                   => $this->observacion,
             'estados'                                       => $this->estados ? StatusProcesoRendicionGastoResource::collection($this->estados) : null,
             'documentos_r'                                  => $this->exportarDocumentos(),

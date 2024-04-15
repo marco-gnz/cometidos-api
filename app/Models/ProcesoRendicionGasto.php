@@ -19,7 +19,7 @@ class ProcesoRendicionGasto extends Model
         'uuid',
         'n_rendicion',
         'n_folio',
-        'fecha_pago',
+        'dias_habiles_pago',
         'status',
         'observacion',
         'solicitud_id',
@@ -217,9 +217,9 @@ class ProcesoRendicionGasto extends Model
         return Gate::allows('update', $this);
     }
 
-    public function authorizedToUpdateFechaPago()
+    public function authorizedToUpdatePago()
     {
-        return Gate::allows('updatefechapago', $this);
+        return Gate::allows('updatepago', $this);
     }
 
     public function authorizedToAnular()
@@ -247,7 +247,7 @@ class ProcesoRendicionGasto extends Model
 
     public function firmaJefePersonal()
     {
-        $last_status_aprobado = $this->estados()->where('status', EstadoProcesoRendicionGasto::STATUS_APROBADO_JP)->orderBy('id', 'DESC')->first();
+        $last_status_aprobado = $this->estados()->where('status', EstadoProcesoRendicionGasto::STATUS_APROBADO_JD)->orderBy('id', 'DESC')->first();
         if ($last_status_aprobado) {
             $nombres    = $last_status_aprobado->userBy->abreNombres();
             $fecha      = Carbon::parse($last_status_aprobado->created_at)->format('d-m-y H:i:s');

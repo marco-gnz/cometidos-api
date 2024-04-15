@@ -18,7 +18,7 @@ class CreateProcesoRendicionGastosTable extends Migration
             $table->uuid('uuid')->unique()->nullable();
             $table->string('n_folio')->unique()->nullable();
             $table->integer('n_rendicion')->default(0);
-            $table->date('fecha_pago')->nullable();
+            $table->date('dias_habiles_pago')->nullable();
             $table->unsignedSmallInteger('status')->default(0);
             $table->text('observacion')->nullable();
 

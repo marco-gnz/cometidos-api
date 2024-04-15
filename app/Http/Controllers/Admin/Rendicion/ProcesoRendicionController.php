@@ -126,14 +126,14 @@ class ProcesoRendicionController extends Controller
         }
     }
 
-    public function updateFechaPago(Request $request)
+    public function updatePago(Request $request)
     {
         try {
             $proceso_rendicion_gasto = ProcesoRendicionGasto::where('uuid', $request->uuid)->firstOrFail();
 
             if ($proceso_rendicion_gasto) {
                 $update = $proceso_rendicion_gasto->update([
-                    'fecha_pago'    => $request->fecha_pago ? Carbon::parse($request->fecha_pago)->format('Y-m-d') : NULL
+                    'dias_habiles_pago'    => $request->dias_habiles_pago != null ? (int)$request->dias_habiles_pago : NULL
                 ]);
 
                 if ($update) {
@@ -142,7 +142,7 @@ class ProcesoRendicionController extends Controller
                         array(
                             'status'  => 'success',
                             'title'   => "Rendición $proceso_rendicion_gasto->n_folio.",
-                            'message' => "Fecha de pago modificada con éxito",
+                            'message' => "Días de pago modificado con éxito",
                             'data'    => ProcesoRendicionGastoDetalleResource::make($proceso_rendicion_gasto)
                         )
                     );

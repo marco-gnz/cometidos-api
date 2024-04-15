@@ -69,7 +69,7 @@ class RendicionGastoPolicy
         $firma = $this->obtenerFirmaDisponibleRendicion($rendicionGasto->procesoRendicionGasto);
 
         $statusProcesoRendicionAll = [
-            EstadoProcesoRendicionGasto::STATUS_APROBADO_JP,
+            EstadoProcesoRendicionGasto::STATUS_APROBADO_JD,
             EstadoProcesoRendicionGasto::STATUS_EN_PROCESO,
             EstadoProcesoRendicionGasto::STATUS_VERIFICADO
         ];
@@ -90,7 +90,7 @@ class RendicionGastoPolicy
     {
         $firma = $this->obtenerFirmaDisponibleRendicion($rendicionGasto->procesoRendicionGasto);
         $statusProcesoRendicionAll = [
-            EstadoProcesoRendicionGasto::STATUS_APROBADO_JP,
+            EstadoProcesoRendicionGasto::STATUS_APROBADO_JD,
             EstadoProcesoRendicionGasto::STATUS_EN_PROCESO,
             EstadoProcesoRendicionGasto::STATUS_VERIFICADO
         ];
@@ -105,7 +105,7 @@ class RendicionGastoPolicy
     {
         $firma = $this->obtenerFirmaDisponibleRendicion($rendicionGasto->procesoRendicionGasto);
         $statusProcesoRendicionAll = [
-            EstadoProcesoRendicionGasto::STATUS_APROBADO_JP,
+            EstadoProcesoRendicionGasto::STATUS_APROBADO_JD,
             EstadoProcesoRendicionGasto::STATUS_EN_PROCESO,
             EstadoProcesoRendicionGasto::STATUS_VERIFICADO
         ];
@@ -120,7 +120,7 @@ class RendicionGastoPolicy
     {
         $firma = $this->obtenerFirmaDisponibleRendicion($rendicionGasto->procesoRendicionGasto);
         $statusProcesoRendicionAll = [
-            EstadoProcesoRendicionGasto::STATUS_APROBADO_JP,
+            EstadoProcesoRendicionGasto::STATUS_APROBADO_JD,
             EstadoProcesoRendicionGasto::STATUS_EN_PROCESO,
             EstadoProcesoRendicionGasto::STATUS_VERIFICADO
         ];

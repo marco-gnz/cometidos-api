@@ -538,7 +538,7 @@ class RendicionController extends Controller
                     'cuenta_bancaria_id'    => $last_cuenta_bancaria->id
                 ]);
             } else if ($proceso_rendicion_gasto->status === EstadoProcesoRendicionGasto::STATUS_INGRESADA || $proceso_rendicion_gasto->status === EstadoProcesoRendicionGasto::STATUS_MODIFICADA) {
-                $status = EstadoProcesoRendicionGasto::STATUS_APROBADO_JP;
+                $status = EstadoProcesoRendicionGasto::STATUS_APROBADO_JD;
             }
 
             $firma_disponible = $this->obtenerFirmaDisponibleProcesoRendicion($proceso_rendicion_gasto);
