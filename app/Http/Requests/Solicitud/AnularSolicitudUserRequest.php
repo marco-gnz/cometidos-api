@@ -4,7 +4,7 @@ namespace App\Http\Requests\Solicitud;
 
 use Illuminate\Foundation\Http\FormRequest;
 
-class StatusSolicitudRequest extends FormRequest
+class AnularSolicitudUserRequest extends FormRequest
 {
     /**
      * Determine if the user is authorized to make this request.
@@ -24,20 +24,15 @@ class StatusSolicitudRequest extends FormRequest
     public function rules()
     {
         return [
-            'solicitud_uuid'    => ['exists:solicituds,uuid', 'required'],
-            'status'            => ['required'],
-            'observacion'       => ['required_unless:status,2'],
-            'motivo_id'         => ['required_if:status,3'],
-            'firmante_uuid'     => ['required_if:status,1|required_if:status,3'],
+            'solicitud_uuid'    => ['required', 'exists:solicituds,uuid'],
+            'observacion'       => ['required', 'max:250']
         ];
     }
 
     public function messages()
     {
         return [
-            'observacion.required_unless'   => 'La :attribute es obligatoria',
-
-            'motivo_id.required_if'         => 'El :attribute es obligatorio',
+            'observacion.required'   => 'La :attribute es obligatoria',
         ];
     }
 
@@ -45,7 +40,6 @@ class StatusSolicitudRequest extends FormRequest
     {
         return [
             'observacion'           => 'observación',
-            'motivo_id'             => 'motivo',
         ];
     }
 }

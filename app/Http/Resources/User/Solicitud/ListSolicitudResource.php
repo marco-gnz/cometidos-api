@@ -47,7 +47,8 @@ class ListSolicitudResource extends JsonResource
             'informe'                   => $informe,
             'is_update'                 => $this->authorizedToUpdate(),
             'valor_total'               => $this->valorTotal(),
-            'not_actividad'             => $this->isNotActividad()
+            'not_actividad'             => $this->isNotActividad(),
+            'authorized_to_anular'      => $this->authorizedToAnular()
         ];
     }
 }

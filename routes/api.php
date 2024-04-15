@@ -99,6 +99,7 @@ Route::group(
         Route::get('/firmantes/list', [FirmantesController::class, 'listFirmantes']);
 
         Route::get('/solicitud/list', [SolicitudesController::class, 'listSolicitudes']);
+        Route::post('/solicitud/anular', [SolicitudesController::class, 'anularSolicitud']);
         Route::get('/solicitud/{uuid}/{type}', [SolicitudesController::class, 'getSolicitud']);
         Route::post('/solicitud/store', [SolicitudController::class, 'storeSolicitud']);
         Route::post('/solicitud/store/validate', [SolicitudController::class, 'validateSolicitud']);

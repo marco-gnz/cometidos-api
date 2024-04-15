@@ -736,6 +736,10 @@ class SolicitudAdminController extends Controller
                     $firmantes_disponible = $solicitud->firmantes()->whereIn('role_id', [1, 2])->where('status', true)->where('id', '!=', $firma_disponible->id_firma)->where('posicion_firma', '<', $firma_disponible->posicion_firma)->orderBy('posicion_firma', 'ASC')->get();
                 }
             }
+
+            if ($status === EstadoSolicitud::STATUS_ANULADO) {
+                $firma_disponible       = $this->obtenerFirmaDisponibleSolicitudAnular($solicitud, $status);
+            }
             return response()->json(
                 array(
                     'status'                    => 'success',
@@ -880,7 +884,12 @@ class SolicitudAdminController extends Controller
             }
 
             $status             = (int)$request->status;
-            $firma_disponible   = $this->firmaDisponible($solicitud, $status);
+            if ($status === EstadoSolicitud::STATUS_ANULADO) {
+                $firma_disponible   = $this->obtenerFirmaDisponibleSolicitudAnular($solicitud, $status);
+            } else {
+                $firma_disponible   = $this->firmaDisponible($solicitud, $status);
+            }
+
             if (($solicitud) && (!$firma_disponible->is_firma)) {
                 return $this->errorResponse("No es posible ejecutar firma. Sin firma disponible.", 422);
             }

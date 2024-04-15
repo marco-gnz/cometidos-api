@@ -122,7 +122,7 @@ class SolicitudPolicy
 
         $firma = $this->obtenerFirmaDisponibleSolicitudAnular($solicitud);
 
-        if ($firma->is_firma) {
+        if ($firma->is_firma || $user->hasRole('SUPER ADMINISTRADOR')) {
             return true;
         }
 

@@ -95,15 +95,19 @@ trait FirmaDisponibleTrait
                 'message'   => 'Firma no disponible'
             ];
         }
-        $roles_id   = [1, 2, 3];
+        $roles_id   = [1, 2];
         $firma      = $solicitud->firmantes()->where('user_id', $auth->id)->where('status', true)->whereIn('role_id', $roles_id)->first();
 
+        $title = $firma ? 'Si registras firma para anular.' : 'No registras firma para anular.';
         return (object) [
-            'type'      => 'success',
-            'is_firma'  => $firma ? true : false,
-            'firma'     => $firma,
-            'title'     => null,
-            'message'   => null
+            'type'                      => 'success',
+            'title'                     => $title,
+            'message'                   => null,
+            'is_firma'                  => $firma ? true : false,
+            'firma'                     => $firma,
+            'posicion_firma_solicitud'  => $solicitud->posicion_firma_actual,
+            'posicion_firma'            => $firma ? $firma->posicion_firma : null,
+            'id_firma'                  => $firma ? $firma->id : null,
         ];
     }
 
