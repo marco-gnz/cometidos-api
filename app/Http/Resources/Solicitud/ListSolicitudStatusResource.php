@@ -18,17 +18,19 @@ class ListSolicitudStatusResource extends JsonResource
      */
     public function toArray($request)
     {
-
+        $email_ejecucion    = null;
         $ejecucion_firma    = null;
         $perfil_name        = $this->perfil ? "- {$this->perfil->name}" : '';
         $posicion           = $this->posicion_firma_s !== null ? "- $this->posicion_firma_s" : '';
         if ($this->funcionario) {
             $ejecucion_firma = "Ejecutado por {$this->funcionario->nombre_completo} {$perfil_name} {$posicion}";
+            $email_ejecucion = $this->funcionario ? $this->funcionario->email : null;
         }
 
         $reasignado_firma = null;
         if ($this->funcionarioRs) {
             $reasignado_firma = "{$this->funcionarioRs->nombre_completo} - {$this->perfilRs->name} ({$this->posicion_firma_r_s})";
+            $email_ejecucion = $this->funcionarioRs ? $this->funcionarioRs->email : null;
         }
 
         return [
@@ -41,6 +43,7 @@ class ListSolicitudStatusResource extends JsonResource
             'ip_address'                => null,
             'created_at'                => $this->created_at ? Carbon::parse($this->created_at)->format('d-m-Y H:i:s') : null,
             'ejecucion'                 => $ejecucion_firma,
+            'email_ejecucion'           => $email_ejecucion,
             'reasignado_firma'          => $reasignado_firma,
         ];
     }

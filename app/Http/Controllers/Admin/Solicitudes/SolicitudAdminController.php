@@ -45,29 +45,37 @@ class SolicitudAdminController extends Controller
         $this->middleware(['auth:sanctum']);
     }
 
-    public function listSolicitudes()
+    public function listSolicitudes(Request $request)
     {
         try {
-            $user = auth()->user();
+            $params = $request->validate([
+                'result' => 'required|in:all,noverify,verify',
+            ]);
 
-            // Obtener las solicitudes del usuario autenticado ordenadas por "fijado" primero
-            $solicitudes = Solicitud::/* leftJoin('solicitud_user', function ($join) use ($user) {
-                $join->on('solicituds.id', '=', 'solicitud_user.solicitud_id')
-                    ->where('solicitud_user.user_id', '=', $user->id);
-            })
-                ->orderByDesc('solicitud_user.is_pinned') */orderByDesc('fecha_inicio')
-                ->get();
+            $resultSolicitud    = $params['result'];
+            $auth               = auth()->user();
+            $query = Solicitud::whereHas('firmantes', function ($q) use ($auth, $resultSolicitud) {
+                $q->where('user_id', $auth->id)
+                    ->where('status', true)
+                    ->where('role_id', '!=', 1);
+                if ($resultSolicitud === 'noverify') {
+                    $q->where('is_executed', false);
+                } elseif ($resultSolicitud === 'verify') {
+                    $q->where('is_executed', true);
+                }
+            });
 
-            return response()->json(
-                array(
-                    'status'        => 'success',
-                    'title'         => null,
-                    'message'       => null,
-                    'data'          => ListSolicitudAdminResource::collection($solicitudes)
-                )
-            );
+            $solicitudes = $query->orderByDesc('fecha_inicio')->get();
+
+            return response()->json([
+                'status'    => 'success',
+                'data'      => ListSolicitudAdminResource::collection($solicitudes),
+            ]);
         } catch (\Exception $error) {
-            return $error->getMessage();
+            return response()->json([
+                'status'    => 'error',
+                'message'   => $error->getMessage(),
+            ], 500);
         }
     }
 

@@ -18,6 +18,7 @@ class UserAuthResource extends JsonResource
      */
     public function toArray($request)
     {
+        $is_firmante = $this->firmas()->where('status', true)->where('role_id', '!=', 1)->count();
         return [
             'uuid'                      => $this->uuid,
             'id'                        => $this->id,
@@ -42,7 +43,8 @@ class UserAuthResource extends JsonResource
             'last_change_password'      => $this->lastHistory(HistoryActionUser::TYPE_0) ? Carbon::parse($this->lastHistory(HistoryActionUser::TYPE_0)->created_at)->format('d-m-Y H:i:s') : 'Sin registros',
             'last_change_data'          => $this->lastHistory(HistoryActionUser::TYPE_1) ? Carbon::parse($this->lastHistory(HistoryActionUser::TYPE_1)->created_at)->format('d-m-Y H:i:s') : 'Sin registros',
             'last_change_request_data'  => $this->lastHistory(HistoryActionUser::TYPE_3) ? Carbon::parse($this->lastHistory(HistoryActionUser::TYPE_3)->created_at)->format('d-m-Y H:i:s') : 'Sin registros',
-            'last_cuenta_bancaria'      => $this->lastCuentaBancaria() ? CuentaBancariaResource::make($this->lastCuentaBancaria())  : null
+            'last_cuenta_bancaria'      => $this->lastCuentaBancaria() ? CuentaBancariaResource::make($this->lastCuentaBancaria())  : null,
+            'is_firmante'               => $is_firmante > 0 ? true : false
         ];
     }
 }
