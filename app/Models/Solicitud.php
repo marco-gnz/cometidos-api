@@ -456,6 +456,11 @@ class Solicitud extends Model
         return Gate::allows('reasignaremergency', $this);
     }
 
+    public function authorizedToSincronizarGrupo()
+    {
+        return Gate::allows('sincronizargrupo', $this);
+    }
+
     public function authorizedToCreateInformeCometido()
     {
         $policy = resolve(InformeCometidoPolicy::class);
@@ -509,15 +514,6 @@ class Solicitud extends Model
             $type = 'success';
         }
         return $type;
-    }
-
-    public function pageFirmaPorcentaje()
-    {
-        $count_firmantes = self::totalFirmas();
-        $firmas_aprobadas = self::totalFirmasAprobadas();
-        $porcentaje = ($firmas_aprobadas / $count_firmantes) * 100;
-
-        return $porcentaje;
     }
 
     public function pageFirmaIsOk()
@@ -705,5 +701,16 @@ class Solicitud extends Model
             return true;
         }
         return false;
+    }
+
+    public function isGrupo()
+    {
+        $is_grupo =  $this->grupo ? true : false;
+        $data = (object)[
+            'value'             => $is_grupo,
+            'message'           =>  !$is_grupo ? 'Sin grupo de firma' : null,
+        ];
+
+        return $data;
     }
 }

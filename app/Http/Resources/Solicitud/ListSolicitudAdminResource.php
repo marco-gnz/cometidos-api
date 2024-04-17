@@ -34,6 +34,7 @@ class ListSolicitudAdminResource extends JsonResource
             'estado_type'               => $this->typeStatus(),
             'page_firma'                => $this->pageFirma(),
             'type_page_firma'           => $this->typePageFirma(),
+            'is_grupo'                  => $this->isGrupo()
         ];
     }
 }

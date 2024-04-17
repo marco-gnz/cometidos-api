@@ -129,6 +129,19 @@ class SolicitudPolicy
         return false;
     }
 
+    public function sincronizargrupo(User $user, Solicitud $solicitud)
+    {
+        if ($solicitud->status === Solicitud::STATUS_ANULADO) {
+            return false;
+        }
+
+        if (!$solicitud->grupo && $user->hasRole('SUPER ADMINISTRADOR')) {
+            return true;
+        }
+
+        return false;
+    }
+
     public function delete(User $user, Solicitud $solicitud)
     {
         //

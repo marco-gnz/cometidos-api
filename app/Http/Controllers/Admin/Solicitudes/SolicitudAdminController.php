@@ -23,6 +23,7 @@ use App\Http\Resources\User\InformeCometido\ListInformeCometidoResource;
 use App\Models\Convenio;
 use App\Models\Escala;
 use App\Models\EstadoSolicitud;
+use App\Models\Grupo;
 use App\Models\Solicitud;
 use App\Models\SolicitudFirmante;
 use App\Models\SoliucitudCalculo;
@@ -54,16 +55,25 @@ class SolicitudAdminController extends Controller
 
             $resultSolicitud    = $params['result'];
             $auth               = auth()->user();
-            $query = Solicitud::whereHas('firmantes', function ($q) use ($auth, $resultSolicitud) {
-                $q->where('user_id', $auth->id)
-                    ->where('status', true)
-                    ->where('role_id', '!=', 1);
-                if ($resultSolicitud === 'noverify') {
-                    $q->where('is_executed', false);
-                } elseif ($resultSolicitud === 'verify') {
-                    $q->where('is_executed', true);
-                }
-            });
+
+            $query = Solicitud::query();
+            if ($resultSolicitud === 'noverify') {
+                $query->whereDoesntHave('firmantes', function ($q) use ($auth) {
+                    $q->where('status', true)->where('is_executed', true)
+                        ->where('role_id', '!=', 1);
+                    if (!$auth->hasRole('SUPER ADMINISTRADOR')) {
+                        $query->where('user_id', $auth->id);
+                    }
+                });
+            } elseif ($resultSolicitud === 'verify') {
+                $query->whereHas('firmantes', function ($q) use ($auth) {
+                    $q->where('status', true)->where('is_executed', true)
+                        ->where('role_id', '!=', 1);
+                    if (!$auth->hasRole('SUPER ADMINISTRADOR')) {
+                        $query->where('user_id', $auth->id);
+                    }
+                });
+            }
 
             $solicitudes = $query->orderByDesc('fecha_inicio')->get();
 
@@ -76,6 +86,69 @@ class SolicitudAdminController extends Controller
                 'status'    => 'error',
                 'message'   => $error->getMessage(),
             ], 500);
+        }
+    }
+
+    public function syncGrupoSolicitud(Request $request)
+    {
+        try {
+            $solicitud = Solicitud::where('uuid', $request->solicitud_uuid)->firstOrFail();
+            $this->authorize('sincronizargrupo', $solicitud);
+
+            $grupo = Grupo::where('establecimiento_id', $solicitud->funcionario->establecimiento_id)
+                ->where('departamento_id', $solicitud->funcionario->departamento_id)
+                ->where('sub_departamento_id', $solicitud->funcionario->sub_departamento_id)
+                ->first();
+
+            if (!$grupo) {
+                return $this->errorResponse("No es posible sincronizar grupo. No existe un grupo de firma dispobile para el funcionario.", 422);
+            }
+
+            $solicitud->update([
+                'departamento_id'       => $grupo->departamento_id,
+                'sub_departamento_id'   => $grupo->sub_departamento_id,
+                'establecimiento_id'    => $grupo->establecimiento_id,
+                'grupo_id'              => $grupo->id,
+            ]);
+            $solicitud  = $solicitud->fresh();
+
+            if ($solicitud->grupo) {
+                $firmantes = $solicitud->grupo->firmantes()->where('status', true)->get();
+                if ($firmantes) {
+                    foreach ($firmantes as $firmante) {
+                        $status = true;
+                        if ($firmante->role_id === 6 || $firmante->role_id === 7) {
+                            $status = true;
+                            if (!$solicitud->derecho_pago) {
+                                $status = false;
+                            }
+                        }
+                        $firmantes_solicitud[] = [
+                            'posicion_firma'    => $firmante->posicion_firma,
+                            'status'            => $firmante->status,
+                            'solicitud_id'      => $solicitud->id,
+                            'grupo_id'          => $firmante->grupo_id,
+                            'user_id'           => $firmante->user_id,
+                            'role_id'           => $firmante->role_id,
+                            'status'            => $status
+                        ];
+                    }
+                    $solicitud->addFirmantes($firmantes_solicitud);
+                }
+            }
+            $navStatus  = $this->navStatusSolicitud($solicitud);
+
+            return response()->json(
+                array(
+                    'status'        => 'success',
+                    'title'         => "Solicitud $solicitud->codigo sincronizada con éxito.",
+                    'message'       => null,
+                    'data'          => ListSolicitudCompleteAdminResource::make($solicitud),
+                    'nav'           => $navStatus
+                )
+            );
+        } catch (\Exception $error) {
+            return $error->getMessage();
         }
     }
 

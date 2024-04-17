@@ -41,7 +41,6 @@ class ListSolicitudResource extends JsonResource
             'type_last_status'          => $this->typeLastStatus(),
             'page_firma'                => $this->pageFirma(),
             'type_page_firma'           => $this->typePageFirma(),
-            'page_firma_porcentaje'     => $this->pageFirmaPorcentaje(),
             'created_at'                => Carbon::parse($this->created_at)->format('d-m-Y H:m'),
             'page_firma_ok'             => $this->pageFirmaIsOk(),
             'informe'                   => $informe,

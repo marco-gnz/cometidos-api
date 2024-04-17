@@ -79,6 +79,7 @@ Route::group(
         Route::post('/admin/solicitudes/status/check', [SolicitudAdminController::class, 'checkActionFirma']);
         Route::post('/admin/solicitudes/update-convenio', [SolicitudAdminController::class, 'updateConvenio']);
         Route::put('/admin/solicitudes/status/firmante/{uuid}', [SolicitudAdminController::class, 'updateStatusFirmante']);
+        Route::post('/admin/solicitudes/sync-grupo', [SolicitudAdminController::class, 'syncGrupoSolicitud']);
 
         Route::get('/admin/rendicion/list', [ProcesoRendicionController::class, 'getProcesoRendiciones']);
         Route::get('/admin/rendicion/{uuid}', [ProcesoRendicionController::class, 'getProcesoRendicion']);
