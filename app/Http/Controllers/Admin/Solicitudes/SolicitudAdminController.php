@@ -58,11 +58,12 @@ class SolicitudAdminController extends Controller
 
             $query = Solicitud::query();
             if ($resultSolicitud === 'noverify') {
+                $query->where('status', '!=', Solicitud::STATUS_ANULADO);
                 $query->whereDoesntHave('firmantes', function ($q) use ($auth) {
                     $q->where('status', true)->where('is_executed', true)
                         ->where('role_id', '!=', 1);
                     if (!$auth->hasRole('SUPER ADMINISTRADOR')) {
-                        $query->where('user_id', $auth->id);
+                        $q->where('user_id', $auth->id);
                     }
                 });
             } elseif ($resultSolicitud === 'verify') {
@@ -70,7 +71,15 @@ class SolicitudAdminController extends Controller
                     $q->where('status', true)->where('is_executed', true)
                         ->where('role_id', '!=', 1);
                     if (!$auth->hasRole('SUPER ADMINISTRADOR')) {
-                        $query->where('user_id', $auth->id);
+                        $q->where('user_id', $auth->id);
+                    }
+                });
+            } elseif ($resultSolicitud === 'all') {
+                $query->whereHas('firmantes', function ($q) use ($auth) {
+                    $q->where('status', true)
+                        ->where('role_id', '!=', 1);
+                    if (!$auth->hasRole('SUPER ADMINISTRADOR')) {
+                        $q->where('user_id', $auth->id);
                     }
                 });
             }
