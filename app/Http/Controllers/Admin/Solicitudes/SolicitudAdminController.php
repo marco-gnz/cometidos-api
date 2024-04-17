@@ -733,6 +733,7 @@ class SolicitudAdminController extends Controller
     {
         try {
             $solicitud = Solicitud::where('uuid', $uuid)->firstOrFail();
+            $this->authorize('createcalculo', $solicitud);
 
             if ($this->solicitudAnulada($solicitud)) {
                 return $this->errorResponse("No es posible ejecutar acción. Solicitud anulada.", 422);
@@ -751,14 +752,21 @@ class SolicitudAdminController extends Controller
             $new_calculo    = SoliucitudCalculo::create($data_calculo);
 
             if ($new_calculo) {
+                $solicitud = $solicitud->fresh();
                 $this->actualizarSolicitud($solicitud);
+                $navStatus = $this->navStatusSolicitud($solicitud);
 
-                return response()->json([
-                    'status'    => 'success',
-                    'title'     => "Cálculo aplicado correctamente.",
-                    'message'   => null,
-                    'data'      => ListCalculoResoruce::make($new_calculo),
-                ]);
+                $calculo = $solicitud->getLastCalculo();
+                return response()->json(
+                    array(
+                        'status'        => 'success',
+                        'title'         => "Valorización aplicada correctamente.",
+                        'message'       => null,
+                        'data'          => ListSolicitudCompleteAdminResource::make($solicitud),
+                        'calculo'       => $calculo ? ListCalculoResoruce::make($calculo) : null,
+                        'nav'           => $navStatus,
+                    )
+                );
             }
         } catch (\Exception $error) {
             return $error->getMessage();

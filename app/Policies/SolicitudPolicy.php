@@ -142,6 +142,18 @@ class SolicitudPolicy
         return false;
     }
 
+    public function createcalculo(User $user, Solicitud $solicitud)
+    {
+        if ($solicitud->status === Solicitud::STATUS_ANULADO) {
+            return false;
+        }
+        $firma  = $this->obtenerFirmaDisponibleCalculo($solicitud);
+        if ($firma->is_firma) {
+            return true;
+        }
+        return false;
+    }
+
     public function delete(User $user, Solicitud $solicitud)
     {
         //

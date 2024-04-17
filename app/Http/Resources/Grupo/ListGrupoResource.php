@@ -20,7 +20,7 @@ class ListGrupoResource extends JsonResource
             'departamento'      => $this->departamento ? $this->departamento->nombre : null,
             'subdepartamento'   => $this->subdepartamento ? $this->subdepartamento->nombre : null,
             'total_firmantes'   => count($this->firmantes),
-            'firmantes'         => $this->firmantes ? ListFirmantesResource::collection($this->firmantes) : null
+            'firmantes'         => $this->firmantes ? ListFirmantesGrupoResource::collection($this->firmantes) : null
         ];
     }
 }

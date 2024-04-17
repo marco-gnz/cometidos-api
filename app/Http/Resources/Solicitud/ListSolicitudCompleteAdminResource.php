@@ -73,7 +73,8 @@ class ListSolicitudCompleteAdminResource extends JsonResource
             'authorized_to_anular'      => $this->authorizedToAnular(),
             'authorized_to_reasignar_emergency'     => $this->authorizedToReasignarEmergency(),
             'is_grupo'                              => $this->isGrupo(),
-            'authorized_to_sincronizar_grupo'       => $this->authorizedToSincronizarGrupo()
+            'authorized_to_sincronizar_grupo'       => $this->authorizedToSincronizarGrupo(),
+            'authorized_to_create_calculo'             => $this->authorizedToCreateCalculo()
         ];
     }
 }

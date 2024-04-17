@@ -461,6 +461,11 @@ class Solicitud extends Model
         return Gate::allows('sincronizargrupo', $this);
     }
 
+    public function authorizedToCreateCalculo()
+    {
+        return Gate::allows('createcalculo', $this);
+    }
+
     public function authorizedToCreateInformeCometido()
     {
         $policy = resolve(InformeCometidoPolicy::class);

@@ -47,6 +47,14 @@ trait FirmaDisponibleTrait
                 $is_firma           = true;
                 $next_firma         = $solicitud->firmantes()->whereIn('role_id', $roles_id)->where('status', true)->where('posicion_firma', '>', $first_firma_auth->posicion_firma)->orderBy('posicion_firma', 'ASC')->first();
                 $name_user          = $first_firma_auth->funcionario->abreNombres();
+
+                $get_last_calculo = $solicitud->getLastCalculo();
+                if (!$get_last_calculo && $first_firma_auth->role_id === 2) {
+                    $is_firma           = false;
+                    $type               = 'success';
+                    $title              = "{$name_user}, si registras firma disponible, pero existen tareas por ejecutar.";
+                    $message            = "Una vez ejecutadas las tareas será posible continuar con ciclo de firma.";
+                }
                 if ($next_firma) {
                     $type               = 'success';
                     $title              = "{$name_user}, si registras firma disponible.";
@@ -258,7 +266,7 @@ trait FirmaDisponibleTrait
         }
 
         $roles_id    = [2];
-        $firma       = $procesoRendicion->solicitud->firmantes()->where('user_id', $auth->id)->where('status', true)->whereIn('role_id', $roles_id)->first();
+        $firma       = $solicitud->firmantes()->where('user_id', $auth->id)->where('status', true)->whereIn('role_id', $roles_id)->first();
 
         return (object) [
             'type'      => 'success',

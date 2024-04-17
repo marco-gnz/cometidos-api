@@ -41,13 +41,8 @@ class SoliucitudCalculoPolicy
      * @param  \App\Models\User  $user
      * @return \Illuminate\Auth\Access\Response|bool
      */
-    public function create(User $user, Solicitud $solicitud)
+    public function create(User $user)
     {
-        $firma = $this->obtenerFirmaDisponibleCalculo($solicitud);
-        if ($firma->is_firma) {
-            return true;
-        }
-        return false;
     }
 
     /**
