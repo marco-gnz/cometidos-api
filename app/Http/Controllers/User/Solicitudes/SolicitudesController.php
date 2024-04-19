@@ -58,7 +58,7 @@ class SolicitudesController extends Controller
             if ($solicitud) {
                 $observacion        = $request->observacion;
                 $status             = EstadoSolicitud::STATUS_ANULADO;
-                $firma_disponible   = $this->obtenerFirmaDisponibleSolicitudAnular($solicitud, $status);
+                $firma_disponible   = $this->isFirmaDisponibleActionPolicy($solicitud, 'solicitud.firma.anular');
                 $firma_query        = null;
                 if ($firma_disponible->id_firma) {
                     $firma_search = SolicitudFirmante::where('id', $firma_disponible->id_firma)->first();

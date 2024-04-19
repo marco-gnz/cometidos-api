@@ -372,7 +372,7 @@ class SolicitudController extends Controller
         try {
             $informeCometido = InformeCometido::where('uuid', $request->uuid)->firstOrFail();
             if ($informeCometido) {
-                $firma_disponible = $this->obtenerFirmaDisponibleInformeCometido($informeCometido);
+                $firma_disponible = $this->isFirmaDisponibleActionPolicy($informeCometido->solicitud, 'solicitud.informes.validar');
                 $status = (int)$request->status;
                 switch ($status) {
                     case 1:

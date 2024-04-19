@@ -76,7 +76,7 @@ class ProcesoRendicionController extends Controller
                 ]);
 
                 if ($update) {
-                    $firma_disponible = $this->obtenerFirmaDisponibleRendicion($rendicion->procesoRendicionGasto);
+                    $firma_disponible = $this->isFirmaDisponibleActionPolicy($rendicion->procesoRendicionGasto->solicitud, 'rendicion.actividad.validar');
                     $count_rendiciones              = $rendicion->procesoRendicionGasto->rendiciones()->where('rinde_gasto', true)->count();
                     $count_rendiciones_aprobadas    = $rendicion->procesoRendicionGasto->rendiciones()->where('rinde_gasto', true)->where('last_status', '!=', EstadoRendicionGasto::STATUS_PENDIENTE)->count();
                     if ($count_rendiciones_aprobadas >= $count_rendiciones) {

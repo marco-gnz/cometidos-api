@@ -267,7 +267,7 @@ class RendicionController extends Controller
                     $proceso_rendicion_gasto = $proceso_rendicion_gasto->fresh();
 
                     if ($proceso_rendicion_gasto) {
-                        $firma_disponible = $this->obtenerFirmaDisponibleProcesoRendicion($proceso_rendicion_gasto);
+                        $firma_disponible = $this->isFirmaDisponibleActionPolicy($proceso_rendicion_gasto, null);
                         $estado = [
                             'status'                => EstadoProcesoRendicionGasto::STATUS_INGRESADA,
                             'p_rendicion_gasto_id'  => $proceso_rendicion_gasto->id,
@@ -438,7 +438,7 @@ class RendicionController extends Controller
                 $proceso_rendicion_gasto = $proceso_rendicion_gasto->fresh();
 
                 if ($proceso_rendicion_gasto) {
-                    $firma_disponible = $this->obtenerFirmaDisponibleProcesoRendicion($proceso_rendicion_gasto);
+                    $firma_disponible = $this->isFirmaDisponibleActionPolicy($proceso_rendicion_gasto, null);
                     $estado = [
                         'status'                => EstadoProcesoRendicionGasto::STATUS_MODIFICADA,
                         'p_rendicion_gasto_id'  => $proceso_rendicion_gasto->id,
