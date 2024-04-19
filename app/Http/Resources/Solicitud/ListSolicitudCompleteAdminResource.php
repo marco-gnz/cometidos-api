@@ -64,6 +64,7 @@ class ListSolicitudCompleteAdminResource extends JsonResource
             'afecta_convenio'           => $this->afectaConvenio(),
             'url_convenio'              => $this->convenio ? route('convenio.show', ['uuid' => $this->convenio->uuid]) : null,
             'url_resolucion'            => route('resolucioncometidofuncional.show', ['uuid' => $this->uuid]),
+            'menu_admin'                => $this->menuAdmin(),
             'page_firma'                => $this->pageFirma(),
             'type_page_firma'           => $this->typePageFirma(),
             'is_update'                 => $this->authorizedToUpdate(),
@@ -74,7 +75,8 @@ class ListSolicitudCompleteAdminResource extends JsonResource
             'authorized_to_reasignar_emergency'     => $this->authorizedToReasignarEmergency(),
             'is_grupo'                              => $this->isGrupo(),
             'authorized_to_sincronizar_grupo'       => $this->authorizedToSincronizarGrupo(),
-            'authorized_to_create_calculo'             => $this->authorizedToCreateCalculo()
+            'authorized_to_create_calculo'             => $this->authorizedToCreateCalculo(),
+            'authorized_to_create_convenio'            => $this->authorizedToCreateConvenio()
         ];
     }
 }

@@ -15,4 +15,9 @@ class Establecimiento extends Model
         'sigla',
         'nombre'
     ];
+
+    public function cicloFirmas()
+    {
+        return $this->hasMany(CicloFirma::class);
+    }
 }

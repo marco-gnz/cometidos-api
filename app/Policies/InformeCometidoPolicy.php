@@ -68,7 +68,11 @@ class InformeCometidoPolicy
 
     public function aprobar(User $user, InformeCometido $informeCometido)
     {
-        $firma = $this->obtenerFirmaDisponibleInformeCometido($informeCometido);
+        if ($informeCometido->solicitud->status === Solicitud::STATUS_ANULADO) {
+            return false;
+        }
+
+        $firma = $this->isFirmaDisponibleActionPolicy($informeCometido->solicitud, 'solicitud.informes.validar');
         if ($firma->is_firma && $informeCometido->last_status === EstadoInformeCometido::STATUS_INGRESADA) {
             return true;
         }
@@ -78,7 +82,11 @@ class InformeCometidoPolicy
 
     public function rechazar(User $user, InformeCometido $informeCometido)
     {
-        $firma = $this->obtenerFirmaDisponibleInformeCometido($informeCometido);
+        if ($informeCometido->solicitud->status === Solicitud::STATUS_ANULADO) {
+            return false;
+        }
+
+        $firma = $this->isFirmaDisponibleActionPolicy($informeCometido->solicitud, 'solicitud.informes.validar');
         if (($firma->is_firma) && ($informeCometido->last_status === EstadoInformeCometido::STATUS_INGRESADA || $informeCometido->last_status === EstadoInformeCometido::STATUS_APROBADO)) {
             return true;
         }

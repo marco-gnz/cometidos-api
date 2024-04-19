@@ -21,6 +21,7 @@ class CreateSolicitudFirmantesTable extends Migration
             $table->boolean('status')->default(1);
             $table->boolean('is_executed')->default(0);
             $table->boolean('is_success')->default(0);
+            $table->text('permissions_id')->nullable();
 
             $table->foreign('solicitud_id')->references('id')->on('solicituds')->onDelete('cascade');
             $table->unsignedBigInteger('solicitud_id')->nullable();

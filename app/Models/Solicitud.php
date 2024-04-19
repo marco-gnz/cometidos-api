@@ -466,6 +466,51 @@ class Solicitud extends Model
         return Gate::allows('createcalculo', $this);
     }
 
+    public function authorizedToCreateConvenio()
+    {
+        return Gate::allows('createconvenio', $this);
+    }
+
+    public function authorizedToVerDatos()
+    {
+        return Gate::allows('verdatos', $this);
+    }
+
+    public function authorizedToVerFirmantes()
+    {
+        return Gate::allows('verfirmantes', $this);
+    }
+
+    public function authorizedToVerValorizacion()
+    {
+        return Gate::allows('vervalorizacion', $this);
+    }
+
+    public function authorizedToVerConvenio()
+    {
+        return Gate::allows('verconvenio', $this);
+    }
+
+    public function authorizedToVerRendicion()
+    {
+        return Gate::allows('verrendicion', $this);
+    }
+
+    public function authorizedToVerArchivos()
+    {
+        return Gate::allows('verarchivos', $this);
+    }
+
+    public function authorizedToVerInformes()
+    {
+        return Gate::allows('verinformes', $this);
+    }
+
+    public function authorizedToVerHistorial()
+    {
+        return Gate::allows('verhistorial', $this);
+    }
+
     public function authorizedToCreateInformeCometido()
     {
         $policy = resolve(InformeCometidoPolicy::class);
@@ -717,5 +762,81 @@ class Solicitud extends Model
         ];
 
         return $data;
+    }
+
+    public function menuAdmin()
+    {
+        $menu = [];
+        if (self::authorizedToVerDatos()) {
+            $menu[] = [
+                'code'      => 'datos',
+                'name'      => 'Datos',
+                'extra'     => null
+            ];
+        }
+
+        if (self::authorizedToVerFirmantes()) {
+            $n_firmantes            = $this->firmantes()->where('posicion_firma', '>', 0)->count();
+            $menu[] = [
+                'code'      => 'firmantes',
+                'name'      => 'Firmantes',
+                'extra'     => "($n_firmantes)"
+            ];
+        }
+
+        if (self::authorizedToVerInformes()) {
+            $n_informes_cometido    = $this->informes()->count();
+            $menu[] = [
+                'code'      => 'informes',
+                'name'      => 'Informes',
+                'extra'     => "($n_informes_cometido)"
+            ];
+        }
+
+        if (self::authorizedToVerValorizacion()) {
+            $is_calculo             = self::getLastCalculo() ? 'Si' : 'No';
+            $menu[] = [
+                'code'      => 'calculo',
+                'name'      => 'Valorización',
+                'extra'     => "($is_calculo)"
+            ];
+        }
+
+        if (self::authorizedToVerConvenio()) {
+            $is_convenio            = $this->convenio ? 'Si' : 'No';
+            $menu[] = [
+                'code'      => 'convenio',
+                'name'      => 'Convenio',
+                'extra'     => "($is_convenio)"
+            ];
+        }
+
+        if (self::authorizedToVerRendicion()) {
+            $n_proceso_rendiciones  = $this->procesoRendicionGastos()->count();
+            $menu[] = [
+                'code'      => 'rendiciones',
+                'name'      => 'Rendiciones',
+                'extra'     => "($n_proceso_rendiciones)"
+            ];
+        }
+
+        if (self::authorizedToVerArchivos()) {
+            $n_documentos           = $this->documentos()->count();
+            $menu[] = [
+                'code'      => 'archivos',
+                'name'      => 'Archivos',
+                'extra'     => "($n_documentos)"
+            ];
+        }
+
+        if (self::authorizedToVerHistorial()) {
+            $n_estados              = $this->estados()->count();
+            $menu[] = [
+                'code'      => 'seguimiento',
+                'name'      => 'Historial',
+                'extra'     => "($n_estados)"
+            ];
+        }
+        return $menu;
     }
 }

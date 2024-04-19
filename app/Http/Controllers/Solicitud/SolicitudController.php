@@ -11,7 +11,9 @@ use App\Http\Requests\Solicitud\ValidateFileSolicitudRequest;
 use App\Http\Requests\Solicitud\ValidateInformeSolicitudRequest;
 use App\Http\Requests\Solicitud\ValidateInformeUpdateSolicitudRequest;
 use App\Http\Resources\Solicitud\ListInformeCometidoAdminResource;
+use App\Http\Resources\Solicitud\ListSolicitudCompleteAdminResource;
 use App\Http\Resources\Solicitud\UpdateSolicitudResource;
+use App\Models\CicloFirma;
 use App\Models\Convenio;
 use App\Models\Documento;
 use App\Models\EstadoInformeCometido;
@@ -29,10 +31,11 @@ use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Validator;
 use Spatie\Permission\Models\Role;
 use App\Traits\FirmaDisponibleTrait;
+use App\Traits\StatusSolicitudTrait;
 
 class SolicitudController extends Controller
 {
-    use FirmaDisponibleTrait;
+    use FirmaDisponibleTrait, StatusSolicitudTrait;
 
     public function __construct()
     {
@@ -191,7 +194,8 @@ class SolicitudController extends Controller
                                 'grupo_id'          => $firmante->grupo_id,
                                 'user_id'           => $firmante->user_id,
                                 'role_id'           => $firmante->role_id,
-                                'status'            => $status
+                                'status'            => $status,
+                                'permissions_id'    => $this->getPermissions($firmante, $solicitud)
                             ];
                         }
                         $solicitud->addFirmantes($firmantes_solicitud);
@@ -265,6 +269,19 @@ class SolicitudController extends Controller
         } catch (\Exception $error) {
             return response()->json($error->getMessage());
         }
+    }
+
+    private function getPermissions($firmante, $solicitud)
+    {
+        $ciclo_firma = CicloFirma::where('establecimiento_id', $solicitud->establecimiento_id)
+            ->where('role_id', $firmante->role_id)
+            ->first();
+
+        if (!$ciclo_firma) {
+            return null;
+        }
+
+        return $ciclo_firma->permissions()->pluck('permission_id')->toArray();
     }
 
     private function solicitudInformeEstados($solicitud)
@@ -379,12 +396,17 @@ class SolicitudController extends Controller
                 $nom_status         = EstadoInformeCometido::STATUS_NOM[$status];
 
                 if ($create_status) {
+                    $solicitud  = $informeCometido->solicitud->fresh();
+                    $navStatus  = $this->navStatusSolicitud($solicitud);
+
                     return response()->json(
                         array(
                             'status'        => 'success',
                             'title'         => "Informe de cometido {$informeCometido->codigo} {$nom_status} con éxito.",
                             'message'       => null,
-                            'data'          => ListInformeCometidoAdminResource::make($informeCometido)
+                            'data'          => ListSolicitudCompleteAdminResource::make($solicitud),
+                            'informes'      => ListInformeCometidoAdminResource::collection($solicitud->informes),
+                            'nav'           => $navStatus,
                         )
                     );
                 }

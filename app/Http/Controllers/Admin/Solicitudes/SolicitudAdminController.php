@@ -250,6 +250,7 @@ class SolicitudAdminController extends Controller
                             'title'         => null,
                             'message'       => null,
                             'data'          => ListSolicitudCompleteAdminResource::make($solicitud),
+                            'convenio'      => $convenio ? ListConvenioResource::make($convenio) : null,
                             'nav'           => $navStatus,
                             'convenios'     => $convenios ? ListConvenioResource::collection($convenios) : null
                         )
@@ -265,7 +266,7 @@ class SolicitudAdminController extends Controller
                             'title'         => null,
                             'message'       => null,
                             'data'          => ListSolicitudCompleteAdminResource::make($solicitud),
-                            'rendiciones'          => ProcesoRendicionGastoDetalleResource::collection($rendiciones),
+                            'rendiciones'   => ProcesoRendicionGastoDetalleResource::collection($rendiciones),
                             'nav'           => $navStatus,
                         )
                     );
@@ -324,8 +325,6 @@ class SolicitudAdminController extends Controller
             $firmante = SolicitudFirmante::where('uuid', $uuid)->firstOrFail();
             $this->authorize('update', $firmante);
 
-
-
             $update = $firmante->update([
                 'status' => !$firmante->status
             ]);
@@ -382,6 +381,7 @@ class SolicitudAdminController extends Controller
         try {
             $corresponde = (int)$request->corresponde;
             $solicitud   = Solicitud::where('uuid', $request->solicitud_uuid)->firstOrFail();
+            $this->authorize('createconvenio', $solicitud);
             switch ($corresponde) {
                 case 1:
                     $convenio                   = Convenio::where('id', $request->convenio_id)->where('active', true)->firstOrFail();
@@ -422,10 +422,10 @@ class SolicitudAdminController extends Controller
                     array(
                         'status'        => 'success',
                         'title'         => "Solicitud modifcada con éxito.",
-                        'message'       => $message,
-                        'data'          => $convenio ? ListConvenioResource::make($convenio) : null,
-                        'nav'           => $navStatus->nav,
-                        'is_anulada'    => $navStatus->is_anulada,
+                        'message'       => null,
+                        'data'          => ListSolicitudCompleteAdminResource::make($solicitud),
+                        'convenio'      => $convenio ? ListConvenioResource::make($convenio) : null,
+                        'nav'           => $navStatus,
                         'convenios'     => $convenios ? ListConvenioResource::collection($convenios) : null
                     )
                 );
@@ -482,99 +482,6 @@ class SolicitudAdminController extends Controller
         }
     }
 
-    private function permissionsSolicitud($solicitud)
-    {
-        $permissions = [];
-
-        if ($solicitud->last_status !== 4) {
-            array_push($permissions, 'solicitud.edit');
-        }
-
-        return $permissions;
-    }
-
-    private function getStatus($last_estado, &$total_pendiente, &$total_reasignado, $last_estado_solicitud)
-    {
-        $status = [
-            'is_firma'              => false,
-            'status_nom'            => null,
-            'status_value'          => null,
-            'status_date'           => null,
-            'reasignacion'          => false,
-            'reasignar_firma_value' => true,
-            'type'                  => '#808080',
-            'total_pendiente'       => $total_pendiente,
-            'is_actual'             => false,
-        ];
-
-        if ($last_estado) {
-            $status['is_firma']     = $last_estado->status !== null;
-            $status['status_nom']   = $last_estado ? EstadoSolicitud::STATUS_NOM[$last_estado->status] : null;
-            $status['status_value'] = $last_estado ? $last_estado->status : null;
-            $status['status_date']  = $last_estado ? Carbon::parse($last_estado->created_at)->format('d-m-Y H:i') : null;
-            $status['reasignacion'] = false;
-
-            if ($last_estado->status === 1) {
-                $total_pendiente++;
-            }
-
-            /* if ($last_estado->reasignacion) {
-                $total_reasignado++;
-            } */
-        }
-
-        $status['reasignar_firma_value']    = $this->getReasignarFirmaValue($last_estado, $total_reasignado);
-        $status['type']                     = $this->getType($last_estado, $total_pendiente);
-        $status['is_actual']                = ($last_estado && $this->isActual($last_estado, $last_estado_solicitud)) ? true : false;
-
-        return $status;
-    }
-
-    private function getReasignarFirmaValue($last_estado, $total_reasignado)
-    {
-        $reasignar_firma_value = true;
-        if (!$last_estado) {
-            $reasignar_firma_value = false;
-        } else if (($last_estado) && ($last_estado->status === 1)) {
-            $reasignar_firma_value = false;
-        } else if ($total_reasignado > 0) {
-            $reasignar_firma_value = false;
-        } else if (($last_estado) && ($last_estado->reasignacion)) {
-            $reasignar_firma_value = false;
-        }
-        return $reasignar_firma_value;
-    }
-
-    private function getType($last_estado, $total_pendiente)
-    {
-        $type = '#808080';
-
-        if ($last_estado) {
-            switch ($last_estado->status) {
-                case 1:
-                    $type = '#0e6db8';
-                    break;
-                case 0:
-                case 2:
-                    if ($total_pendiente <= 0) {
-                        $type = '#7ac143';
-                    }
-                    break;
-                case 3:
-                case 4:
-                    $type = '#dc3545';
-                    break;
-            }
-        }
-
-        return $type;
-    }
-
-    private function isActual($last_estado, $last_estado_solicitud)
-    {
-        return ($last_estado) && ($last_estado_solicitud && $last_estado->id === $last_estado_solicitud->id);
-    }
-
     public function reasignarFirmaSolicitud(Request $request)
     {
         try {
@@ -586,7 +493,7 @@ class SolicitudAdminController extends Controller
             $firmante               = $solicitud->firmantes()->where('user_id', $funcionario_firmante->id)->where('posicion_firma', $request->posicion_firma)->firstOrFail();
             $auth_user              = Auth::user();
             $estados[] = [
-                'status'                    => 1,
+                'status'                    => EstadoSolicitud::STATUS_PENDIENTE,
                 'posicion_firma'            => null,
                 'posicion_next_firma'       => $firmante->posicion_firma,
                 'reasignacion'              => true,
@@ -753,7 +660,6 @@ class SolicitudAdminController extends Controller
 
             if ($new_calculo) {
                 $solicitud = $solicitud->fresh();
-                $this->actualizarSolicitud($solicitud);
                 $navStatus = $this->navStatusSolicitud($solicitud);
 
                 $calculo = $solicitud->getLastCalculo();
@@ -776,16 +682,6 @@ class SolicitudAdminController extends Controller
     private function existeCalculoIdentico($data_calculo)
     {
         return SoliucitudCalculo::where($data_calculo)->exists();
-    }
-
-    private function actualizarSolicitud($solicitud)
-    {
-        /* $solicitud->update(['calculo_aplicado' => true]); */
-        $solicitud = $solicitud->fresh();
-
-        $solicitud = $solicitud->withCount('calculos')->with(['calculos' => function ($q) {
-            $q->orderBy('id', 'DESC')->first();
-        }])->first();
     }
 
     private function crearDataCalculo($solicitud, $escala)
@@ -819,7 +715,7 @@ class SolicitudAdminController extends Controller
 
     private function solicitudAnulada($solicitud)
     {
-        return $solicitud && $solicitud->last_status === 4;
+        return $solicitud && $solicitud->status === Solicitud::STATUS_ANULADO;
     }
 
     public function checkActionFirma(Request $request)
@@ -827,16 +723,38 @@ class SolicitudAdminController extends Controller
         try {
             $status                 = (int)$request->status;
             $solicitud              = Solicitud::where('uuid', $request->solicitud_uuid)->firstOrFail();
-            $firma_disponible       = $this->firmaDisponible($solicitud, $status);
+            $firma_disponible       = $this->obtenerFirmaDisponible($solicitud, 'solicitud.firma.validar');
             $firmantes_disponible   = [];
             if ($status === EstadoSolicitud::STATUS_RECHAZADO) {
                 if ($firma_disponible->is_firma) {
-                    $firmantes_disponible = $solicitud->firmantes()->whereIn('role_id', [1, 2])->where('status', true)->where('id', '!=', $firma_disponible->id_firma)->where('posicion_firma', '<', $firma_disponible->posicion_firma)->orderBy('posicion_firma', 'ASC')->get();
+                    $id_permission_valorizacion_crear   = $this->idPermission('solicitud.valorizacion.crear');
+                    $id_permission_convenio_crear       = $this->idPermission('solicitud.convenio.crear');
+                    $id_permission_ajustes_crear        = $this->idPermission('solicitud.ajustes.crear');
+                    $ids_permissions = [
+                        $id_permission_valorizacion_crear,
+                        $id_permission_convenio_crear,
+                        $id_permission_ajustes_crear
+                    ];
+                    $filtered_permissions_id = array_filter($ids_permissions, function ($value) {
+                        return $value !== null;
+                    });
+                    $firmantes_disponible = $solicitud->firmantes()
+                        ->where('status', true)
+                        ->where('id', '!=', $firma_disponible->id_firma)
+                        ->where(function ($query) use ($filtered_permissions_id) {
+                            foreach ($filtered_permissions_id as $permission_id) {
+                                $query->orWhereRaw("JSON_CONTAINS(permissions_id, CAST('$permission_id' AS JSON))");
+                            }
+                        })
+                        ->orWhere('role_id', 1)
+                        ->where('posicion_firma', '<', $firma_disponible->posicion_firma)
+                        ->orderBy('posicion_firma', 'ASC')
+                        ->get();
                 }
             }
 
             if ($status === EstadoSolicitud::STATUS_ANULADO) {
-                $firma_disponible       = $this->obtenerFirmaDisponibleSolicitudAnular($solicitud, $status);
+                $firma_disponible       = $this->isFirmaDisponibleAction($solicitud, 'solicitud.firma.anular');
             }
             return response()->json(
                 array(
@@ -855,10 +773,10 @@ class SolicitudAdminController extends Controller
         }
     }
 
-    private function firmaDisponible($solicitud, $status)
+    /* private function firmaDisponible($solicitud, $status)
     {
         return $firma_disponible = $this->obtenerFirmaDisponible($solicitud);
-    }
+    } */
 
     private function positionFirma($solicitud)
     {
@@ -983,9 +901,9 @@ class SolicitudAdminController extends Controller
 
             $status             = (int)$request->status;
             if ($status === EstadoSolicitud::STATUS_ANULADO) {
-                $firma_disponible   = $this->obtenerFirmaDisponibleSolicitudAnular($solicitud, $status);
+                $firma_disponible   = $this->isFirmaDisponibleAction($solicitud, 'solicitud.firma.anular');
             } else {
-                $firma_disponible   = $this->firmaDisponible($solicitud, $status);
+                $firma_disponible   = $this->obtenerFirmaDisponible($solicitud, 'solicitud.firma.validar');
             }
 
             if (($solicitud) && (!$firma_disponible->is_firma)) {

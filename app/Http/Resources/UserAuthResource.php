@@ -44,7 +44,7 @@ class UserAuthResource extends JsonResource
             'last_change_data'          => $this->lastHistory(HistoryActionUser::TYPE_1) ? Carbon::parse($this->lastHistory(HistoryActionUser::TYPE_1)->created_at)->format('d-m-Y H:i:s') : 'Sin registros',
             'last_change_request_data'  => $this->lastHistory(HistoryActionUser::TYPE_3) ? Carbon::parse($this->lastHistory(HistoryActionUser::TYPE_3)->created_at)->format('d-m-Y H:i:s') : 'Sin registros',
             'last_cuenta_bancaria'      => $this->lastCuentaBancaria() ? CuentaBancariaResource::make($this->lastCuentaBancaria())  : null,
-            'is_firmante'               => $is_firmante > 0 ? true : false
+            'is_firmante'               => $is_firmante > 0 || $this->hasRole('SUPER ADMINISTRADOR') ? true : false
         ];
     }
 }

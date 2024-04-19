@@ -22,6 +22,7 @@ class SolicitudFirmante extends Model
         'status',
         'is_executed',
         'is_success',
+        'permissions_id',
         'solicitud_id',
         'grupo_id',
         'user_id',
@@ -30,6 +31,10 @@ class SolicitudFirmante extends Model
         'fecha_by_user',
         'user_id_update',
         'fecha_by_user_update'
+    ];
+
+    protected $casts = [
+        'permissions_id' => 'array',
     ];
 
     protected static function booted()

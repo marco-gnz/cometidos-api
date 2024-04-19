@@ -6,9 +6,13 @@ use App\Models\EstadoSolicitud;
 use App\Models\Solicitud;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Auth;
+use App\Traits\FirmaDisponibleTrait;
+use Illuminate\Support\Facades\Log;
 
 trait StatusSolicitudTrait
 {
+    use FirmaDisponibleTrait;
+
     public function navStatusSolicitud($solicitud)
     {
         $data_nav   = [];
@@ -70,8 +74,26 @@ trait StatusSolicitudTrait
 
     private function isReasignar($last_estado, $firmante,  $solicitud)
     {
-        $auth = auth()->user();
-        $reasginar  = $last_estado ? (($auth->id !== $firmante->user_id) && ($firmante->role_id === 1 || $firmante->role_id === 2) && ($firmante->status) && ($last_estado->posicion_firma <= $solicitud->posicion_firma_actual && !$firmante->is_reasignado) ? true : false) : false;
-        return $reasginar;
+        $id_permission_valorizacion_crear   = $this->idPermission('solicitud.valorizacion.crear');
+        $id_permission_ajustes_crear        = $this->idPermission('solicitud.ajustes.crear');
+        $ids_permissions = [
+            $id_permission_valorizacion_crear,
+            $id_permission_ajustes_crear
+        ];
+        $auth       = auth()->user();
+
+        if ($firmante->posicion_firma !== 0) {
+            $filtered_permissions_id = array_filter($firmante->permissions_id, function ($value) {
+                return $value !== null;
+            });
+
+            $intersection           = array_intersect($ids_permissions, $filtered_permissions_id);
+            $al_menos_uno_presente  = !empty($intersection);
+            $reasginar              = $last_estado ? (($auth->id !== $firmante->user_id) && ($al_menos_uno_presente) && ($firmante->status) && ($last_estado->posicion_firma <= $solicitud->posicion_firma_actual && !$firmante->is_reasignado) ? true : false) : false;
+            return $reasginar;
+        } else {
+            $reasginar  = $last_estado ? (($auth->id !== $firmante->user_id) && ($firmante->status) && ($last_estado->posicion_firma <= $solicitud->posicion_firma_actual && !$firmante->is_reasignado) ? true : false) : false;
+            return $reasginar;
+        }
     }
 }

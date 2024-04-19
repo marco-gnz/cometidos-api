@@ -25,6 +25,93 @@ class SolicitudPolicy
         //
     }
 
+    public function verdatos(User $user, Solicitud $solicitud)
+    {
+        $firma = $this->isFirmaDisponibleActionPolicy($solicitud, 'solicitud.datos.ver');
+
+        if ($user->estado && $user->hasRole('SUPER ADMINISTRADOR') || $firma->is_firma) {
+            return true;
+        }
+
+        return false;
+    }
+
+    public function verfirmantes(User $user, Solicitud $solicitud)
+    {
+        $firma = $this->isFirmaDisponibleActionPolicy($solicitud, 'solicitud.firmantes.ver');
+
+        if ($user->estado && $user->hasRole('SUPER ADMINISTRADOR') || $firma->is_firma) {
+            return true;
+        }
+
+        return false;
+    }
+
+    public function vervalorizacion(User $user, Solicitud $solicitud)
+    {
+        $firma = $this->isFirmaDisponibleActionPolicy($solicitud, 'solicitud.valorizacion.ver');
+
+        if ($user->estado && $user->hasRole('SUPER ADMINISTRADOR') || $firma->is_firma) {
+            return true;
+        }
+
+        return false;
+    }
+
+    public function verconvenio(User $user, Solicitud $solicitud)
+    {
+        $firma = $this->isFirmaDisponibleActionPolicy($solicitud, 'solicitud.convenio.ver');
+
+        if ($user->estado && $user->hasRole('SUPER ADMINISTRADOR') || $firma->is_firma) {
+            return true;
+        }
+
+        return false;
+    }
+
+    public function verrendicion(User $user, Solicitud $solicitud)
+    {
+        $firma = $this->isFirmaDisponibleActionPolicy($solicitud, 'solicitud.rendiciones.ver');
+
+        if ($user->estado && $user->hasRole('SUPER ADMINISTRADOR') || $firma->is_firma) {
+            return true;
+        }
+
+        return false;
+    }
+
+    public function verarchivos(User $user, Solicitud $solicitud)
+    {
+        $firma = $this->isFirmaDisponibleActionPolicy($solicitud, 'solicitud.archivos.ver');
+
+        if ($user->estado && $user->hasRole('SUPER ADMINISTRADOR') || $firma->is_firma) {
+            return true;
+        }
+
+        return false;
+    }
+
+    public function verinformes(User $user, Solicitud $solicitud)
+    {
+        $firma = $this->isFirmaDisponibleActionPolicy($solicitud, 'solicitud.informes.ver');
+
+        if ($user->estado && $user->hasRole('SUPER ADMINISTRADOR') || $firma->is_firma) {
+            return true;
+        }
+
+        return false;
+    }
+
+    public function verhistorial(User $user, Solicitud $solicitud)
+    {
+        $firma = $this->isFirmaDisponibleActionPolicy($solicitud, 'solicitud.historial.ver');
+
+        if ($user->estado && $user->hasRole('SUPER ADMINISTRADOR') || $firma->is_firma) {
+            return true;
+        }
+
+        return false;
+    }
     /**
      * Determine whether the user can view the model.
      *
@@ -71,9 +158,15 @@ class SolicitudPolicy
         if ($solicitud->status === Solicitud::STATUS_ANULADO) {
             return false;
         }
-
-        $last_status = $solicitud->estados()->orderBy('id', 'DESC')->first();
-        if (($last_status) && ($last_status->status === EstadoSolicitud::STATUS_INGRESADA || $last_status->status === EstadoSolicitud::STATUS_MODIFICADA || $last_status->status === EstadoSolicitud::STATUS_RECHAZADO && $solicitud->posicion_firma_actual === 0 || $last_status->status === EstadoSolicitud::STATUS_PENDIENTE && $last_status->posicion_firma === 0 &&  $last_status->is_reasignado && $solicitud->posicion_firma_actual === 0)) {
+        $status_disponibles = [
+            EstadoSolicitud::STATUS_INGRESADA,
+            EstadoSolicitud::STATUS_MODIFICADA,
+            EstadoSolicitud::STATUS_RECHAZADO,
+            EstadoSolicitud::STATUS_PENDIENTE
+        ];
+        $firma          = $this->isFirmaDisponibleActionPolicy($solicitud, 'solicitud.datos.editar-solicitud');
+        $last_status    = $solicitud->estados()->orderBy('id', 'DESC')->first();
+        if (($last_status) && (in_array($last_status->status, $status_disponibles) && $solicitud->posicion_firma_actual === 0 || in_array($last_status->status, $status_disponibles) && $last_status->posicion_firma === 0 &&  $last_status->is_reasignado && $solicitud->posicion_firma_actual === 0) && ($firma->is_firma || $user->id === $solicitud->user_id)) {
             return true;
         }
         return false;
@@ -93,7 +186,7 @@ class SolicitudPolicy
             return false;
         }
 
-        $firma = $this->obtenerFirmaDisponible($solicitud);
+        $firma = $this->obtenerFirmaDisponible($solicitud, 'solicitud.firma.validar');
 
         if ($firma->is_firma && $solicitud->status === Solicitud::STATUS_EN_PROCESO) {
             return true;
@@ -120,7 +213,7 @@ class SolicitudPolicy
             return false;
         }
 
-        $firma = $this->obtenerFirmaDisponibleSolicitudAnular($solicitud);
+        $firma = $this->isFirmaDisponibleActionPolicy($solicitud, 'solicitud.firma.anular');
 
         if ($firma->is_firma || $user->hasRole('SUPER ADMINISTRADOR')) {
             return true;
@@ -135,7 +228,8 @@ class SolicitudPolicy
             return false;
         }
 
-        if (!$solicitud->grupo && $user->hasRole('SUPER ADMINISTRADOR')) {
+        $firma = $this->isFirmaDisponibleActionPolicy($solicitud, 'solicitud.datos.sincronizar-grupo');
+        if ((!$solicitud->grupo) && ($firma->is_firma || $user->hasRole('SUPER ADMINISTRADOR'))) {
             return true;
         }
 
@@ -147,7 +241,19 @@ class SolicitudPolicy
         if ($solicitud->status === Solicitud::STATUS_ANULADO) {
             return false;
         }
-        $firma  = $this->obtenerFirmaDisponibleCalculo($solicitud);
+        $firma  = $this->isFirmaDisponibleActionPolicy($solicitud, 'solicitud.valorizacion.crear');
+        if ($firma->is_firma) {
+            return true;
+        }
+        return false;
+    }
+
+    public function createconvenio(User $user, Solicitud $solicitud)
+    {
+        if ($solicitud->status === Solicitud::STATUS_ANULADO) {
+            return false;
+        }
+        $firma  = $this->isFirmaDisponibleActionPolicy($solicitud, 'solicitud.convenio.crear');
         if ($firma->is_firma) {
             return true;
         }

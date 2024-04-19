@@ -103,9 +103,9 @@ class InformeCometido extends Model
 
     private static function generarCodigo($informe)
     {
-        $correlativo            = $informe->id;
+        $correlativo            = self::whereYear('created_at', $informe->created_at->year)->count();
         $anio                   = $informe->created_at->year;
-        $codigo                 = "{$anio}{$correlativo}";
+        $codigo                 = "{$correlativo}/{$anio}";
         return $codigo;
     }
 
