@@ -238,7 +238,7 @@ class SolicitudPolicy
 
     public function createcalculo(User $user, Solicitud $solicitud)
     {
-        if ($solicitud->status === Solicitud::STATUS_ANULADO) {
+        if ($solicitud->status === Solicitud::STATUS_ANULADO || $solicitud->status === Solicitud::STATUS_PROCESADO) {
             return false;
         }
         $firma  = $this->isFirmaDisponibleActionPolicy($solicitud, 'solicitud.valorizacion.crear');
@@ -250,7 +250,7 @@ class SolicitudPolicy
 
     public function createconvenio(User $user, Solicitud $solicitud)
     {
-        if ($solicitud->status === Solicitud::STATUS_ANULADO) {
+        if ($solicitud->status === Solicitud::STATUS_ANULADO || $solicitud->status === Solicitud::STATUS_PROCESADO) {
             return false;
         }
         $firma  = $this->isFirmaDisponibleActionPolicy($solicitud, 'solicitud.convenio.crear');

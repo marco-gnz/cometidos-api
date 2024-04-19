@@ -5,6 +5,7 @@ namespace App\Policies;
 use App\Models\EstadoProcesoRendicionGasto;
 use App\Models\EstadoRendicionGasto;
 use App\Models\RendicionGasto;
+use App\Models\Solicitud;
 use App\Models\User;
 use Illuminate\Auth\Access\HandlesAuthorization;
 use App\Traits\FirmaDisponibleTrait;
@@ -56,7 +57,11 @@ class RendicionGastoPolicy
      */
     public function update(User $user, RendicionGasto $rendicionGasto)
     {
-        $firma = $this->obtenerFirmaDisponibleRendicion($rendicionGasto->procesoRendicionGasto);
+        if ($rendicionGasto->procesoRendicionGasto->solicitud->status !== Solicitud::STATUS_PROCESADO) {
+            return false;
+        }
+
+        $firma = $this->isFirmaDisponibleActionPolicy($rendicionGasto->procesoRendicionGasto->solicitud, 'rendicion.actividad.validar');
         if ($rendicionGasto->rinde_gasto && $firma->is_firma) {
             return true;
         }
@@ -66,7 +71,11 @@ class RendicionGastoPolicy
 
     public function updatemount(User $user, RendicionGasto $rendicionGasto)
     {
-        $firma = $this->obtenerFirmaDisponibleRendicion($rendicionGasto->procesoRendicionGasto);
+        if ($rendicionGasto->procesoRendicionGasto->solicitud->status !== Solicitud::STATUS_PROCESADO) {
+            return false;
+        }
+
+        $firma = $this->isFirmaDisponibleActionPolicy($rendicionGasto->procesoRendicionGasto->solicitud, 'rendicion.actividad.validar');
 
         $statusProcesoRendicionAll = [
             EstadoProcesoRendicionGasto::STATUS_APROBADO_JD,
@@ -88,7 +97,11 @@ class RendicionGastoPolicy
 
     public function aprobar(User $user, RendicionGasto $rendicionGasto)
     {
-        $firma = $this->obtenerFirmaDisponibleRendicion($rendicionGasto->procesoRendicionGasto);
+        if ($rendicionGasto->procesoRendicionGasto->solicitud->status !== Solicitud::STATUS_PROCESADO) {
+            return false;
+        }
+
+        $firma = $this->isFirmaDisponibleActionPolicy($rendicionGasto->procesoRendicionGasto->solicitud, 'rendicion.actividad.validar');
         $statusProcesoRendicionAll = [
             EstadoProcesoRendicionGasto::STATUS_APROBADO_JD,
             EstadoProcesoRendicionGasto::STATUS_EN_PROCESO,
@@ -103,7 +116,11 @@ class RendicionGastoPolicy
 
     public function rechazar(User $user, RendicionGasto $rendicionGasto)
     {
-        $firma = $this->obtenerFirmaDisponibleRendicion($rendicionGasto->procesoRendicionGasto);
+        if ($rendicionGasto->procesoRendicionGasto->solicitud->status !== Solicitud::STATUS_PROCESADO) {
+            return false;
+        }
+
+        $firma = $this->isFirmaDisponibleActionPolicy($rendicionGasto->procesoRendicionGasto->solicitud, 'rendicion.actividad.validar');
         $statusProcesoRendicionAll = [
             EstadoProcesoRendicionGasto::STATUS_APROBADO_JD,
             EstadoProcesoRendicionGasto::STATUS_EN_PROCESO,
@@ -118,7 +135,11 @@ class RendicionGastoPolicy
 
     public function resetear(User $user, RendicionGasto $rendicionGasto)
     {
-        $firma = $this->obtenerFirmaDisponibleRendicion($rendicionGasto->procesoRendicionGasto);
+        if ($rendicionGasto->procesoRendicionGasto->solicitud->status !== Solicitud::STATUS_PROCESADO) {
+            return false;
+        }
+
+        $firma = $this->isFirmaDisponibleActionPolicy($rendicionGasto->procesoRendicionGasto->solicitud, 'rendicion.actividad.resetear');
         $statusProcesoRendicionAll = [
             EstadoProcesoRendicionGasto::STATUS_APROBADO_JD,
             EstadoProcesoRendicionGasto::STATUS_EN_PROCESO,

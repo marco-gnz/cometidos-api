@@ -490,7 +490,7 @@ class RendicionController extends Controller
         try {
             $proceso_rendicion_gasto = ProcesoRendicionGasto::where('uuid', $request->uuid)->firstOrFail();
             $this->authorize('anular', $proceso_rendicion_gasto);
-            $firma_disponible = $this->obtenerFirmaDisponibleProcesoRendicionAnular($proceso_rendicion_gasto);
+            $firma_disponible = $this->isFirmaDisponibleActionPolicy($proceso_rendicion_gasto->solicitud, 'rendicion.firma.anular');
             $estado = [
                 'observacion'           => $request->observacion,
                 'status'                => EstadoProcesoRendicionGasto::STATUS_ANULADO,
@@ -541,7 +541,7 @@ class RendicionController extends Controller
                 $status = EstadoProcesoRendicionGasto::STATUS_APROBADO_JD;
             }
 
-            $firma_disponible = $this->obtenerFirmaDisponibleProcesoRendicion($proceso_rendicion_gasto);
+            $firma_disponible = $this->isFirmaDisponibleActionPolicy($proceso_rendicion_gasto->solicitud, 'rendicion.firma.validar');
             $estado = [
                 'status'                => $status,
                 'observacion'           => $request->observacion,

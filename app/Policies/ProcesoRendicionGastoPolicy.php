@@ -4,6 +4,7 @@ namespace App\Policies;
 
 use App\Models\EstadoProcesoRendicionGasto;
 use App\Models\ProcesoRendicionGasto;
+use App\Models\Solicitud;
 use App\Models\User;
 use Illuminate\Auth\Access\HandlesAuthorization;
 use App\Traits\FirmaDisponibleTrait;
@@ -55,6 +56,10 @@ class ProcesoRendicionGastoPolicy
      */
     public function update(User $user, ProcesoRendicionGasto $procesoRendicionGasto)
     {
+        if ($procesoRendicionGasto->solicitud->status === Solicitud::STATUS_ANULADO) {
+            return false;
+        }
+
         if (!$user->id || !$procesoRendicionGasto->user_id_by) {
             return false;
         }
@@ -67,7 +72,10 @@ class ProcesoRendicionGastoPolicy
 
     public function updatepago(User $user, ProcesoRendicionGasto $procesoRendicionGasto)
     {
-        $firma = $this->obtenerFirmaDisponibleProcesoRendicionPago($procesoRendicionGasto);
+        if ($procesoRendicionGasto->solicitud->status !== Solicitud::STATUS_PROCESADO) {
+            return false;
+        }
+        $firma = $this->isFirmaDisponibleActionPolicy($procesoRendicionGasto->solicitud, 'rendicion.dias-pago');
         if ($firma->is_firma && $procesoRendicionGasto->status === EstadoProcesoRendicionGasto::STATUS_APROBADO_N || $procesoRendicionGasto->status === EstadoProcesoRendicionGasto::STATUS_APROBADO_S) {
             return true;
         }
@@ -76,8 +84,12 @@ class ProcesoRendicionGastoPolicy
 
     public function anular(User $user, ProcesoRendicionGasto $procesoRendicionGasto)
     {
-        $firma = $this->obtenerFirmaDisponibleProcesoRendicionAnular($procesoRendicionGasto);
-        if ($firma->is_firma) {
+        if ($procesoRendicionGasto->solicitud->status === Solicitud::STATUS_ANULADO) {
+            return false;
+        }
+
+        $firma = $this->isFirmaDisponibleActionPolicy($procesoRendicionGasto->solicitud, 'rendicion.firma.anular');
+        if ($firma->is_firma || $procesoRendicionGasto->user_id_by === $user->id) {
             return true;
         }
         return false;
@@ -85,8 +97,16 @@ class ProcesoRendicionGastoPolicy
 
     public function aprobar(User $user, ProcesoRendicionGasto $procesoRendicionGasto)
     {
-        $firma = $this->obtenerFirmaDisponibleProcesoRendicion($procesoRendicionGasto);
-        if ($firma->is_firma) {
+        if ($procesoRendicionGasto->solicitud->status !== Solicitud::STATUS_PROCESADO) {
+            return false;
+        }
+        $status = $procesoRendicionGasto->status;
+        $firma  = $this->isFirmaDisponibleActionPolicy($procesoRendicionGasto->solicitud, 'rendicion.firma.validar');
+        if (($firma->is_firma) && ($firma->firma->role_id === 3 && $status === EstadoProcesoRendicionGasto::STATUS_INGRESADA || $status === EstadoProcesoRendicionGasto::STATUS_MODIFICADA)) {
+            return true;
+        }
+
+        if (($firma->is_firma) && ($firma->firma->role_id === 7 && $status === EstadoProcesoRendicionGasto::STATUS_VERIFICADO)) {
             return true;
         }
         return false;
@@ -101,6 +121,10 @@ class ProcesoRendicionGastoPolicy
      */
     public function delete(User $user, ProcesoRendicionGasto $procesoRendicionGasto)
     {
+        if ($procesoRendicionGasto->solicitud->status === Solicitud::STATUS_ANULADO) {
+            return false;
+        }
+
         if (!$user->id || !$procesoRendicionGasto->user_id_by) {
             return false;
         }
