@@ -4,8 +4,7 @@
 <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     <title>{{ config('app.name') }} | Informe {{ $informe->codigo }}</title>
-    <link rel="shortcut icon" href="{{ public_path('img/logo-sso.jpeg') }}">
-
+    <link rel="icon" href="{{ asset('favicon.ico') }}">
     <style type="text/css">
         @page {
             margin: 1%;
