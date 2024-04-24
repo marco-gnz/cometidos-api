@@ -85,6 +85,9 @@ Route::group(
         Route::get('/admin/rendicion/{uuid}', [ProcesoRendicionController::class, 'getProcesoRendicion']);
         Route::put('/admin/rendicion/{uuid}', [ProcesoRendicionController::class, 'statusRendicion']);
         Route::post('/admin/rendicion/update-pago', [ProcesoRendicionController::class, 'updatePago']);
+
+        Route::post('/admin/solicitudes/store-ajuste-calculo', [SolicitudAdminController::class, 'storeAjuste']);
+        Route::delete('/admin/solicitudes/delete-ajuste-calculo/{uuid}', [SolicitudAdminController::class, 'deleteAjuste']);
     }
 );
 

@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{{ config('app.name') }} | Resolución {{ $solicitud->n_resolucion }}</title>
+    <title>{{ config('app.name') }} | Resolución {{ $solicitud->codigo }}</title>
     <link rel="icon" href="{{ asset('favicon.ico') }}">
     <style type="text/css">
         body {
@@ -430,37 +430,76 @@
                         <table class="table-1">
                             <thead>
                                 <th></th>
-                                <th>Total Días</th>
-                                <th>Total monto aplicado</th>
+                                <th>40 %</th>
+                                <th>100 %</th>
+                                <th>Total</th>
                             </thead>
                             <tbody>
                                 <tr>
-                                    <td><strong>40%</strong></td>
-                                    <td>{{ $solicitud->ultimoCalculo->n_dias_40 }}</td>
+                                    <td colspan="1"><strong>Escala de valores</strong></td>
                                     <td>{{ $solicitud->ultimoCalculo->monto_40 != null ? "$" . number_format($solicitud->ultimoCalculo->monto_40, 0, ',', '.') : 'N/A' }}
                                     </td>
-                                </tr>
-                                <tr>
-                                    <td><strong>100%</strong></td>
-                                    <td>{{ $solicitud->ultimoCalculo->n_dias_100 }}</td>
                                     <td>{{ $solicitud->ultimoCalculo->monto_100 != null ? "$" . number_format($solicitud->ultimoCalculo->monto_100, 0, ',', '.') : 'N/A' }}
+                                    </td>
+                                    <td>{{ $solicitud->ultimoCalculo->monto_total != null ? "$" . number_format($solicitud->ultimoCalculo->monto_total, 0, ',', '.') : 'N/A' }}
                                     </td>
                                 </tr>
                             </tbody>
                             <tfoot>
-                                <td colspan="1"><strong>TOTAL</strong></td>
-                                <td><strong>{{ $solicitud->ultimoCalculo->n_dias_40 + $solicitud->ultimoCalculo->n_dias_100 }}</strong>
-                                </td>
-                                <td><strong>{{ "$" . number_format($solicitud->ultimoCalculo->monto_total, 0, ',', '.') }}</strong>
-                                </td>
+                                <tr>
+                                    <td colspan="1"><strong>Total ajustes</strong></td>
+                                    <td><strong>{{ $solicitud->ultimoCalculo->valorizacionTotalAjusteMonto()->total_40 }}</strong>
+                                    </td>
+                                    <td><strong>{{ $solicitud->ultimoCalculo->valorizacionTotalAjusteMonto()->total_100 }}</strong>
+                                    </td>
+                                    <td><strong>{{ $solicitud->ultimoCalculo->valorizacionTotalAjusteMonto()->total_monto_ajustes }}</strong>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td colspan="3"><strong>TOTAL VALORIZACION</strong></td>
+                                    <td><strong>{{ $solicitud->ultimoCalculo->valorizacionTotalAjusteMonto()->total_valorizacion }}</strong>
+                                    </td>
+                                </tr>
                             </tfoot>
                         </table>
                     @endif
-                    <div class="row">
+                    {{-- <div class="row">
                         <div class="column">
                             <h4>Ajustes aplicados</h4>
+                            @if ($solicitud->ultimoCalculo && $solicitud->ultimoCalculo->ajustes)
+                                <table class="table-1">
+                                    <thead>
+                                        <th></th>
+                                        <th>40 %</th>
+                                        <th>100 %</th>
+                                    </thead>
+                                    <tbody>
+                                        <tr>
+                                            <td><strong>Ajuste en días</strong></td>
+                                            <td>{{ $solicitud->ultimoCalculo->valorizacionAjuste40()->total_monto }}
+                                            </td>
+                                            <td>{{ $solicitud->ultimoCalculo->valorizacionAjuste100()->total_monto }}
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <td><strong>Ajuste en montos</strong></td>
+                                            <td>{{ $solicitud->ultimoCalculo->valorizacionAjusteMonto40()->total_monto }}
+                                            </td>
+                                            <td>{{ $solicitud->ultimoCalculo->valorizacionAjusteMonto100()->total_monto }}
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                    <tfoot>
+                                        <td colspan="1"><strong>TOTAL</strong></td>
+                                        <td><strong>{{ $solicitud->ultimoCalculo->valorizacionTotalAjusteMonto()->total_40 }}</strong>
+                                        </td>
+                                        <td><strong>{{ $solicitud->ultimoCalculo->valorizacionTotalAjusteMonto()->total_100 }}</strong>
+                                        </td>
+                                    </tfoot>
+                                </table>
+                            @endif
                         </div>
-                    </div>
+                    </div> --}}
                 </div>
                 <div class="column">
                     <h4>Rendiciones de gastos aprobadas Depto. Finanzas</h4>

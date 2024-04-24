@@ -76,6 +76,8 @@ class ListSolicitudCompleteAdminResource extends JsonResource
             'is_grupo'                              => $this->isGrupo(),
             'authorized_to_sincronizar_grupo'       => $this->authorizedToSincronizarGrupo(),
             'authorized_to_create_calculo'             => $this->authorizedToCreateCalculo(),
+            'authorized_to_create_calculo_ajuste'      => $this->authorizedToCreateCalculoAjuste(),
+            'authorized_to_delete_calculo_ajuste'      => $this->authorizedToDeleteCalculoAjuste(),
             'authorized_to_create_convenio'            => $this->authorizedToCreateConvenio()
         ];
     }

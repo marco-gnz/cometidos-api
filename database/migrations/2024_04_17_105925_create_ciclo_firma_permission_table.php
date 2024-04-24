@@ -16,7 +16,7 @@ class CreateCicloFirmaPermissionTable extends Migration
         Schema::create('ciclo_firma_permission', function (Blueprint $table) {
             $table->bigIncrements('id');
             $table->unsignedInteger('ciclo_firma_id');
-            $table->unsignedInteger('permissions_id');
+            $table->unsignedInteger('permission_id');
             $table->timestamps();
         });
     }

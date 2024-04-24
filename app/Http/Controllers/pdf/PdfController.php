@@ -7,6 +7,7 @@ use App\Http\Resources\Rendicion\StatusRendicionResource;
 use App\Models\Convenio;
 use App\Models\Documento;
 use App\Models\EstadoInformeCometido;
+use App\Models\EstadoProcesoRendicionGasto;
 use App\Models\InformeCometido;
 use App\Models\ProcesoRendicionGasto;
 use App\Models\Solicitud;
@@ -111,6 +112,10 @@ class PdfController extends Controller
             }
 
             if (($proceso_rendicion_gasto) && ($proceso_rendicion_gasto->solicitud->status === Solicitud::STATUS_ANULADO)) {
+                return response()->view('errors.401');
+            }
+
+            if (($proceso_rendicion_gasto) && ($proceso_rendicion_gasto->status === EstadoProcesoRendicionGasto::STATUS_ANULADO)) {
                 return response()->view('errors.401');
             }
 

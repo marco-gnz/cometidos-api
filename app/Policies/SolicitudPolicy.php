@@ -248,6 +248,30 @@ class SolicitudPolicy
         return false;
     }
 
+    public function createcalculoajuste(User $user, Solicitud $solicitud)
+    {
+        if ($solicitud->status === Solicitud::STATUS_ANULADO) {
+            return false;
+        }
+        $firma  = $this->isFirmaDisponibleActionPolicy($solicitud, 'solicitud.ajuste.crear');
+        if ($firma->is_firma && $solicitud->getLastCalculo()) {
+            return true;
+        }
+        return false;
+    }
+
+    public function deletecalculoajuste(User $user, Solicitud $solicitud)
+    {
+        if ($solicitud->status === Solicitud::STATUS_ANULADO || $solicitud->status === Solicitud::STATUS_PROCESADO) {
+            return false;
+        }
+        $firma  = $this->isFirmaDisponibleActionPolicy($solicitud, 'solicitud.ajuste.eliminar');
+        if ($firma->is_firma && $solicitud->getLastCalculo()) {
+            return true;
+        }
+        return false;
+    }
+
     public function createconvenio(User $user, Solicitud $solicitud)
     {
         if ($solicitud->status === Solicitud::STATUS_ANULADO || $solicitud->status === Solicitud::STATUS_PROCESADO) {

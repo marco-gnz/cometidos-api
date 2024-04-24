@@ -466,6 +466,16 @@ class Solicitud extends Model
         return Gate::allows('createcalculo', $this);
     }
 
+    public function authorizedToCreateCalculoAjuste()
+    {
+        return Gate::allows('createcalculoajuste', $this);
+    }
+
+    public function authorizedToDeleteCalculoAjuste()
+    {
+        return Gate::allows('deletecalculoajuste', $this);
+    }
+
     public function authorizedToCreateConvenio()
     {
         return Gate::allows('createconvenio', $this);

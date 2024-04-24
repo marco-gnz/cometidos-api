@@ -61,8 +61,83 @@ class SoliucitudCalculo extends Model
         return $this->belongsTo(User::class, 'user_id_by');
     }
 
+    public function ajustes()
+    {
+        return $this->hasMany(CalculoAjuste::class)->orderBy('id', 'DESC');
+    }
+
     public function authorizedToCreate($solicitud)
     {
         return Gate::allows('create', $solicitud);
+    }
+
+    public function valorizacionAjuste40()
+    {
+        $total_dias  = $this->ajustes()->where('active', true)->sum('n_dias_40');
+        $total_monto = $this->valor_dia_40 * $total_dias;
+
+        $result = (object) [
+            'total_dias'            => number_format($total_dias, 0, ',', '.'),
+            'total_monto'           => "$" . number_format($total_monto, 0, ',', '.'),
+            'total_monto_value'     => $total_monto
+        ];
+        return $result;
+    }
+
+    public function valorizacionAjuste100()
+    {
+        $total_dias  = $this->ajustes()->where('active', true)->sum('n_dias_100');
+        $total_monto = $this->valor_dia_100 * $total_dias;
+
+        $result = (object) [
+            'total_dias'            => number_format($total_dias, 0, ',', '.'),
+            'total_monto'           => "$" . number_format($total_monto, 0, ',', '.'),
+            'total_monto_value'     => $total_monto
+        ];
+        return $result;
+    }
+
+    public function valorizacionAjusteMonto40()
+    {
+        $total_monto  = $this->ajustes()->where('active', true)->sum('monto_40');
+
+        $result = (object) [
+            'total_monto'           => "$" . number_format($total_monto, 0, ',', '.'),
+            'total_monto_value'     => $total_monto
+        ];
+        return $result;
+    }
+
+    public function valorizacionAjusteMonto100()
+    {
+        $total_monto  = $this->ajustes()->where('active', true)->sum('monto_100');
+
+        $result = (object) [
+            'total_monto'           => "$" . number_format($total_monto, 0, ',', '.'),
+            'total_monto_value'     => $total_monto
+        ];
+        return $result;
+    }
+
+    public function valorizacionTotalAjusteMonto()
+    {
+        $a1 = self::valorizacionAjuste40()->total_monto_value;
+        $a2 = self::valorizacionAjuste100()->total_monto_value;
+        $a3 = self::valorizacionAjusteMonto40()->total_monto_value;
+        $a4 = self::valorizacionAjusteMonto100()->total_monto_value;
+
+        $total_40           = $a1 + $a3;
+        $total_100          = $a2 + $a4;
+        $total_ajustes      = $a1 + $a2 + $a3 + $a4;
+        $total_valorizacion = $total_ajustes + $this->monto_total;
+
+        $result = (object) [
+            'total_40'                      => "$" . number_format($total_40, 0, ',', '.'),
+            'total_100'                     => "$" . number_format($total_100, 0, ',', '.'),
+            'total_monto_ajustes'           => "$" . number_format($total_ajustes, 0, ',', '.'),
+            'total_valorizacion'            => "$" . number_format($total_valorizacion, 0, ',', '.'),
+            'total_valorizacion_value'      => $total_valorizacion
+        ];
+        return $result;
     }
 }

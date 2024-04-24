@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Admin\Solicitudes;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Solicitud\Ajuste\StoreAjusteRequest;
 use App\Http\Requests\Solicitud\StatusSolicitudRequest;
 use App\Http\Resources\Escala\ListEscalaResource;
 use App\Http\Resources\Grupo\ListFirmantesResource;
@@ -20,8 +21,10 @@ use App\Http\Resources\Solicitud\ListSolicitudStatusResource;
 use App\Http\Resources\Solicitud\PropuestaCalculoSolicitud;
 use App\Http\Resources\Solicitud\StatusSolicitudResource;
 use App\Http\Resources\User\InformeCometido\ListInformeCometidoResource;
+use App\Models\CalculoAjuste;
 use App\Models\Convenio;
 use App\Models\Escala;
+use App\Models\EstadoCalculoAjuste;
 use App\Models\EstadoSolicitud;
 use App\Models\Grupo;
 use App\Models\Solicitud;
@@ -702,6 +705,97 @@ class SolicitudAdminController extends Controller
             'ley_id'        => $escala->ley_id,
             'grado_id'      => $escala->grado_id,
         ];
+    }
+
+    public function storeAjuste(StoreAjusteRequest $request)
+    {
+        try {
+            $solicitud_calculo = SoliucitudCalculo::where('uuid', $request->calculo_uuid)->firstOrFail();
+            $this->authorize('createcalculoajuste', $solicitud_calculo->solicitud);
+            $form = [
+                'tipo_ajuste',
+                'n_dias_40',
+                'n_dias_100',
+                'monto_40',
+                'monto_100',
+                'observacion'
+            ];
+
+            $isValidateValor = $this->isValidateValor($request, $solicitud_calculo);
+
+            if (!$isValidateValor) {
+                return response()->json([
+                    'errors' => [
+                        'observacion'  => ['No es posible ingresar ajuste. La valorización total no puede ser $0']
+                    ]
+                ], 422);
+            }
+
+            $new_ajuste = $solicitud_calculo->ajustes()->create($request->only($form));
+            if ($new_ajuste) {
+                $solicitud = $solicitud_calculo->solicitud->fresh();
+                $calculo   = $new_ajuste->calculo->fresh();
+                $navStatus = $this->navStatusSolicitud($solicitud);
+
+                return response()->json(
+                    array(
+                        'status'        => 'success',
+                        'title'         => "Ajuste ingresado con éxito.",
+                        'message'       => null,
+                        'data'          => ListSolicitudCompleteAdminResource::make($solicitud),
+                        'calculo'       => $calculo ? ListCalculoResoruce::make($calculo) : null,
+                        'nav'           => $navStatus,
+                    )
+                );
+            }
+        } catch (\Exception $error) {
+            return $error->getMessage();
+        }
+    }
+
+    private function isValidateValor($request, $solicitud_calculo)
+    {
+        $total_nuevo_ajuste = 0;
+        $tipo_ajuste = (int)$request->tipo_ajuste;
+
+        if ($tipo_ajuste === CalculoAjuste::TYPE_0) {
+            $dmontov40          = $solicitud_calculo->valor_dia_40 * (int)$request->n_dias_40;
+            $dmontov100         = $solicitud_calculo->valor_dia_100 * (int)$request->n_dias_100;
+            $total_nuevo_ajuste = $dmontov40 +  $dmontov100;
+        } else if ($tipo_ajuste === CalculoAjuste::TYPE_1) {
+            $montov40            = (int)$request->monto_40;
+            $montov100           = (int)$request->monto_100;
+            $total_nuevo_ajuste  = $montov40 +  $montov100;
+        }
+
+        $total_valorizacion             = $solicitud_calculo->valorizacionTotalAjusteMonto()->total_valorizacion_value;
+        $total_valorizacion_mas_ajuste  = $total_valorizacion + $total_nuevo_ajuste;
+        if ($total_valorizacion_mas_ajuste <= 0) {
+            return false;
+        }
+        return true;
+    }
+
+    public function deleteAjuste($uuid)
+    {
+        try {
+            $ajuste = CalculoAjuste::where('uuid', $uuid)->firstOrFail();
+            $this->authorize('deletecalculoajuste', $ajuste->calculo->solicitud);
+            $delete = $ajuste->delete();
+            if ($delete) {
+                $calculo        = $ajuste->calculo->fresh();
+                return response()->json(
+                    array(
+                        'status'        => 'success',
+                        'title'         => "Ajuste eliminado con éxito.",
+                        'message'       => null,
+                        'calculo'       => $calculo ? ListCalculoResoruce::make($calculo) : null,
+                    )
+                );
+            }
+        } catch (\Exception $error) {
+            return $error->getMessage();
+        }
     }
 
     private function errorResponse($message, $statusCode)
