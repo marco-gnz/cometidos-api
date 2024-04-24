@@ -153,6 +153,11 @@ class User extends Authenticatable
         return $this->historys()->createMany($historys);
     }
 
+    public function addAusentismos(array $ausentismos)
+    {
+        return $this->ausentismos()->createMany($ausentismos);
+    }
+
     public function lastCuentaBancaria()
     {
         return $this->cuentas()->where('status', true)->orderBy('id', 'DESC')->first();

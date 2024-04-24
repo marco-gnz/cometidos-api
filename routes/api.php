@@ -9,6 +9,7 @@ use App\Http\Controllers\File\FileController;
 use App\Http\Controllers\Rendicion\RendicionController;
 use App\Http\Controllers\Solicitud\SolicitudController;
 use App\Http\Controllers\User\Archivos\ArchivosController;
+use App\Http\Controllers\User\Ausentismos\AusentismosController;
 use App\Http\Controllers\User\Cuenta\CuentaController;
 use App\Http\Controllers\User\Firmantes\FirmantesController;
 use App\Http\Controllers\User\Solicitudes\SolicitudesController;
@@ -125,6 +126,10 @@ Route::group(
 
         Route::post('/informe/store', [SolicitudController::class, 'storeInformeCometido']);
         Route::post('/informe/status', [SolicitudController::class, 'statusInformeCometido']);
+
+        Route::get('/ausentismo/list', [AusentismosController::class, 'listAusentismos']);
+        Route::post('/ausentismo/store', [AusentismosController::class, 'storeAusentismo']);
+        Route::delete('/ausentismo/{uuid}', [AusentismosController::class, 'deleteAusentismo']);
     }
 );
 

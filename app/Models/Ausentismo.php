@@ -15,15 +15,11 @@ class Ausentismo extends Model
 
     protected $fillable = [
         'uuid',
-        'status',
         'fecha_inicio',
         'fecha_termino',
         'user_ausente_id',
-        'user_reemplazo_id',
         'user_id_by',
         'fecha_by_user',
-        'user_id_update',
-        'fecha_by_user_update'
     ];
 
     protected static function booted()
@@ -40,8 +36,8 @@ class Ausentismo extends Model
         return $this->belongsTo(User::class, 'user_ausente_id');
     }
 
-    public function firmanteReemplazo()
+    public function subrogantes()
     {
-        return $this->belongsTo(User::class, 'user_reemplazo_id');
+        return $this->belongsToMany(User::class);
     }
 }
