@@ -3,6 +3,7 @@
 namespace App\Http\Resources;
 
 use App\Http\Resources\User\CuentaBancariaResource;
+use App\Models\Ausentismo;
 use App\Models\Grupo;
 use App\Models\HistoryActionUser;
 use Carbon\Carbon;
@@ -18,7 +19,14 @@ class UserAuthResource extends JsonResource
      */
     public function toArray($request)
     {
-        $is_firmante = $this->firmas()->where('status', true)->where('role_id', '!=', 1)->count();
+        $is_firmante = false;
+        $firmas = $this->firmas()->where('status', true)->where('role_id', '!=', 1)->count();
+        $subrogancias = Ausentismo::whereHas('subrogantes', function ($q) {
+            $q->where('users.id', $this->id);
+        })->count();
+        if ($firmas > 0 || $subrogancias > 0 || $this->hasRole('SUPER ADMINISTRADOR')) {
+            $is_firmante = true;
+        }
         return [
             'uuid'                      => $this->uuid,
             'id'                        => $this->id,
@@ -44,7 +52,7 @@ class UserAuthResource extends JsonResource
             'last_change_data'          => $this->lastHistory(HistoryActionUser::TYPE_1) ? Carbon::parse($this->lastHistory(HistoryActionUser::TYPE_1)->created_at)->format('d-m-Y H:i:s') : 'Sin registros',
             'last_change_request_data'  => $this->lastHistory(HistoryActionUser::TYPE_3) ? Carbon::parse($this->lastHistory(HistoryActionUser::TYPE_3)->created_at)->format('d-m-Y H:i:s') : 'Sin registros',
             'last_cuenta_bancaria'      => $this->lastCuentaBancaria() ? CuentaBancariaResource::make($this->lastCuentaBancaria())  : null,
-            'is_firmante'               => $is_firmante > 0 || $this->hasRole('SUPER ADMINISTRADOR') ? true : false
+            'is_firmante'               => $is_firmante
         ];
     }
 }
