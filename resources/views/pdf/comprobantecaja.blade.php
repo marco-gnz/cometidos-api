@@ -365,6 +365,7 @@
                         </td>
                     </tfoot>
                 </table>
+                <p>{{ $proceso_rendicion_gasto->pagoHabilesMessage() }}</p>
             @endif
         </div>
         <div class="seccion">
@@ -395,7 +396,7 @@
             <div class="row">
                 <div class="column-firma">
                     <div class="firma-container">
-                        <p>{{ $proceso_rendicion_gasto->firmaJefePersonal() ? $proceso_rendicion_gasto->firmaJefePersonal() : 'SIN FIRMA' }}
+                        <p>{{ $proceso_rendicion_gasto->firmaJefeDirecto() ? $proceso_rendicion_gasto->firmaJefeDirecto() : 'SIN FIRMA' }}
                         </p>
                         <hr>
                         <h5>JEFATURA DIRECTA</h5>

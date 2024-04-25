@@ -52,10 +52,21 @@ trait StatusSolicitudTrait
                         break;
                 }
             }
+            $reasignar_firma_value = $this->isReasignar($last_estado, $firmante, $solicitud);
+            $nombres_firmante = null;
+            if ($last_estado) {
+                if ($is_reasignado) {
+                    $nombres_firmante = $last_estado->funcionarioRs->abreNombres();
+                } else {
+                    $nombres_firmante = $last_estado->funcionario->abreNombres();
+                }
+            } else {
+                $nombres_firmante = $firmante->funcionario->abreNombres();
+            }
             $data       = (object) [
                 'user_uuid'                         => $firmante->funcionario->uuid,
                 'firmante_uuid'                     => $firmante->uuid,
-                'nombres_firmante'                  => $firmante->funcionario->abreNombres(),
+                'nombres_firmante'                  => $nombres_firmante,
                 'posicion_firma'                    => $firmante->posicion_firma,
                 'perfil'                            => $firmante->perfil->name,
                 'status_nom'                        => $is_ciclo ? EstadoSolicitud::STATUS_NOM[$last_estado->status] : EstadoSolicitud::STATUS_NOM[1],
@@ -65,7 +76,8 @@ trait StatusSolicitudTrait
                 'type_nav'                          => $type_nav,
                 'type_tag'                          => $type_tag,
                 'is_firma'                          => $last_estado ? ($last_estado->posicion_firma <= $solicitud->posicion_firma_actual) : false,
-                'reasignar_firma_value'             => $this->isReasignar($last_estado, $firmante, $solicitud)
+                'reasignar_firma_value'             => $reasignar_firma_value,
+                'is_subrogancia'                    => $last_estado ? ($last_estado->is_subrogante ? true : false) : false
             ];
             array_push($data_nav, $data);
         }

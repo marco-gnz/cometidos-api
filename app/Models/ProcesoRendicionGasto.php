@@ -232,6 +232,16 @@ class ProcesoRendicionGasto extends Model
         return Gate::allows('aprobar', $this);
     }
 
+    public function pagoHabilesMessage()
+    {
+        $dias_habiles_pago_message = null;
+        if ($this->dias_habiles_pago !== null) {
+            $message_dias = $this->dias_habiles_pago > 1 ? 'días hábiles' : 'día hábil';
+            $dias_habiles_pago_message = "El pago se realizará dentro de {$this->dias_habiles_pago} {$message_dias} de ser aprobado por Depto Finanzas.";
+        }
+        return $dias_habiles_pago_message;
+    }
+
     public function exportarDocumentos()
     {
         $documentos = [
@@ -245,12 +255,12 @@ class ProcesoRendicionGasto extends Model
         return $documentos;
     }
 
-    public function firmaJefePersonal()
+    public function firmaJefeDirecto()
     {
         $last_status_aprobado = $this->estados()->where('status', EstadoProcesoRendicionGasto::STATUS_APROBADO_JD)->orderBy('id', 'DESC')->first();
         if ($last_status_aprobado) {
             $nombres    = $last_status_aprobado->userBy->abreNombres();
-            $fecha      = Carbon::parse($last_status_aprobado->created_at)->format('d-m-y H:i:s');
+            $fecha      = Carbon::parse($last_status_aprobado->fecha_by_user)->format('d-m-Y H:i:s');
             $new_firma  = "$nombres $fecha";
             return $new_firma;
         }

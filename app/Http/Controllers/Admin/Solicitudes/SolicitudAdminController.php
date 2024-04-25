@@ -56,50 +56,87 @@ class SolicitudAdminController extends Controller
                 'result' => 'required|in:all,noverify,verify',
             ]);
 
-            $resultSolicitud    = $params['result'];
-            $auth               = auth()->user();
+            $resultSolicitud = $params['result'];
+            $auth = auth()->user();
 
             $query = Solicitud::query();
+
             if ($resultSolicitud === 'noverify') {
-                $query->where('status', '!=', Solicitud::STATUS_ANULADO);
-                $query->whereDoesntHave('firmantes', function ($q) use ($auth) {
-                    $q->where('status', true)->where('is_executed', true)
-                        ->where('role_id', '!=', 1);
-                    if (!$auth->hasRole('SUPER ADMINISTRADOR')) {
-                        $q->where('user_id', $auth->id);
-                    }
-                });
+                $this->filterNoVerify($query, $auth);
             } elseif ($resultSolicitud === 'verify') {
-                $query->whereHas('firmantes', function ($q) use ($auth) {
-                    $q->where('status', true)->where('is_executed', true)
-                        ->where('role_id', '!=', 1);
-                    if (!$auth->hasRole('SUPER ADMINISTRADOR')) {
-                        $q->where('user_id', $auth->id);
-                    }
-                });
+                $this->filterVerify($query, $auth);
             } elseif ($resultSolicitud === 'all') {
-                $query->whereHas('firmantes', function ($q) use ($auth) {
-                    $q->where('status', true)
-                        ->where('role_id', '!=', 1);
-                    if (!$auth->hasRole('SUPER ADMINISTRADOR')) {
-                        $q->where('user_id', $auth->id);
-                    }
-                });
+                $this->filterAll($query, $auth);
             }
 
             $solicitudes = $query->orderByDesc('fecha_inicio')->get();
 
             return response()->json([
-                'status'    => 'success',
-                'data'      => ListSolicitudAdminResource::collection($solicitudes),
+                'status' => 'success',
+                'data' => ListSolicitudAdminResource::collection($solicitudes),
             ]);
         } catch (\Exception $error) {
             return response()->json([
-                'status'    => 'error',
-                'message'   => $error->getMessage(),
+                'status' => 'error',
+                'message' => $error->getMessage(),
             ], 500);
         }
     }
+
+    private function filterNoVerify($query, $auth)
+    {
+        $query->whereHas('firmantes', function ($q) use ($auth) {
+            $q->where('status', true)->where('is_executed', false)
+                ->where('role_id', '!=', 1);
+            if (!$auth->hasRole('SUPER ADMINISTRADOR')) {
+                $q->where('user_id', $auth->id);
+            }
+        })->orWhereHas('firmantes', function ($q) use ($auth) {
+            $q->where('is_executed', false)
+                ->whereHas('funcionario.ausentismos', function ($q) use ($auth) {
+                    $q->whereHas('subrogantes', function ($q) use ($auth) {
+                        $q->where('users.id', $auth->id);
+                    })->whereRaw("DATE(solicituds.fecha_by_user) >= ausentismos.fecha_inicio")
+                        ->whereRaw("DATE(solicituds.fecha_by_user) <= ausentismos.fecha_termino");
+                });
+        });
+    }
+
+    private function filterVerify($query, $auth)
+    {
+        $query->whereHas('firmantes', function ($q) use ($auth) {
+            $q->where('status', true)->where('is_executed', true)
+                ->where('role_id', '!=', 1);
+            if (!$auth->hasRole('SUPER ADMINISTRADOR')) {
+                $q->where('user_id', $auth->id);
+            }
+        })->orWhereHas('firmantes', function ($q) use ($auth) {
+            $q->where('is_executed', true)
+                ->whereHas('funcionario.ausentismos', function ($q) use ($auth) {
+                    $q->whereHas('subrogantes', function ($q) use ($auth) {
+                        $q->where('users.id', $auth->id);
+                    })->whereRaw("DATE(solicituds.fecha_by_user) >= ausentismos.fecha_inicio")
+                        ->whereRaw("DATE(solicituds.fecha_by_user) <= ausentismos.fecha_termino");
+                });
+        });
+    }
+
+    private function filterAll($query, $auth)
+    {
+        $query->whereHas('firmantes', function ($q) use ($auth) {
+            $q->where('status', true)
+                ->where('role_id', '!=', 1);
+            if (!$auth->hasRole('SUPER ADMINISTRADOR')) {
+                $q->where('user_id', $auth->id);
+            }
+        })->orWhereHas('firmantes.funcionario.ausentismos', function ($q) use ($auth) {
+            $q->whereHas('subrogantes', function ($q) use ($auth) {
+                $q->where('users.id', $auth->id);
+            })->whereRaw("DATE(solicituds.fecha_by_user) >= ausentismos.fecha_inicio")
+                ->whereRaw("DATE(solicituds.fecha_by_user) <= ausentismos.fecha_termino");
+        });
+    }
+
 
     public function syncGrupoSolicitud(Request $request)
     {
@@ -843,7 +880,7 @@ class SolicitudAdminController extends Controller
                         ->orWhere('role_id', 1)
                         ->where('posicion_firma', '<', $firma_disponible->posicion_firma)
                         ->orderBy('posicion_firma', 'ASC')
-                        ->get();
+                        ->get()->unique('user_id');
                 }
             }
 
@@ -856,6 +893,7 @@ class SolicitudAdminController extends Controller
                     'title'                     => $firma_disponible->title,
                     'message'                   => $firma_disponible->message,
                     'is_firma'                  => $firma_disponible->is_firma,
+                    'if_buttom'                 => $firma_disponible->if_buttom,
                     'posicion_firma_solicitud'  => $firma_disponible->posicion_firma_solicitud,
                     'posicion_firma'            => $firma_disponible->posicion_firma,
                     'type'                      => $firma_disponible->type,
@@ -919,6 +957,8 @@ class SolicitudAdminController extends Controller
                 'solicitud_id'              => $solicitud->id,
                 'posicion_firma'            => $firma_disponible ? $firma_disponible->posicion_firma : null,
                 's_firmante_id'             => $firma_disponible ? $firma_disponible->id : null,
+                'user_id'                   => $firma_disponible ? $firma_disponible->id_user_ejecuted_firma : null,
+                'is_subrogante'             => $firma_disponible ? $firma_disponible->is_subrogante : false,
                 'observacion'               => $observacion
             ];
             return $estados;
@@ -975,8 +1015,10 @@ class SolicitudAdminController extends Controller
                 'history_solicitud_old'     => json_encode($solicitud->only($form)),
                 'solicitud_id'              => $solicitud->id,
                 'posicion_firma'            => $firma_disponible ? $firma_disponible->posicion_firma : null,
-                's_firmante_id'             => $firma_disponible ? $firma_disponible->id : null,
-                'observacion'               => $observacion
+                's_firmante_id'             => $firma_disponible ? $firma_disponible->id_firma : null,
+                'user_id'                   => $firma_disponible ? $firma_disponible->id_user_ejecuted_firma : null,
+                'is_subrogante'             => $firma_disponible ? $firma_disponible->is_subrogante : false,
+                'observacion'               => $observacion,
             ];
             return $estados;
         } catch (\Exception $error) {
@@ -1004,10 +1046,10 @@ class SolicitudAdminController extends Controller
                 return $this->errorResponse("No es posible ejecutar firma. Sin firma disponible.", 422);
             }
 
-            $firma_query = null;
+            /* $firma_query = null;
             if ($firma_disponible->id_firma) {
                 $firma_query = SolicitudFirmante::where('id', $firma_disponible->id_firma)->first();
-            }
+            } */
 
             $firma_reasignada = null;
             if ($status === EstadoSolicitud::STATUS_PENDIENTE || $status === EstadoSolicitud::STATUS_RECHAZADO) {
@@ -1017,12 +1059,12 @@ class SolicitudAdminController extends Controller
                 case 1:
                 case 2:
                 case 3:
-                    $estados         = $this->verificarSolicitud($solicitud, $firma_query, $firma_reasignada, $status, $request->observacion, $request->motivo_id);
+                    $estados         = $this->verificarSolicitud($solicitud, $firma_disponible, $firma_reasignada, $status, $request->observacion, $request->motivo_id);
                     $create_status   = $solicitud->addEstados($estados);
                     break;
 
                 case 4:
-                    $estados         = $this->anularSolicitud($solicitud, $firma_query, $request->observacion);
+                    $estados         = $this->anularSolicitud($solicitud, $firma_disponible, $request->observacion);
                     $create_status   = $solicitud->addEstados($estados);
                     break;
             }

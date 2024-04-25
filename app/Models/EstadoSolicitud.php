@@ -71,6 +71,7 @@ class EstadoSolicitud extends Model
         'history_solicitud_old',
         'history_solicitud_new',
         'is_reasignado',
+        'is_subrogante',
         'solicitud_id',
         'firmante_id',
         'user_id',
@@ -93,7 +94,7 @@ class EstadoSolicitud extends Model
             $estado->posicion_firma_s   = $posicion_firma_s;
             $estado->posicion_firma     = $posicion_firma_s;
             $estado->s_role_id          = $estado->firmaS ? $estado->firmaS->perfil->id : ($is_super_admin ? 8 : null);
-            $estado->user_id            = $estado->firmaS ? $estado->firmaS->funcionario->id : auth()->user()->id;
+            /* $estado->user_id            = $estado->firmaS ? $estado->firmaS->funcionario->id : auth()->user()->id; */
             $estado->firmante_id        = $estado->firmaS ? $estado->firmaS->id : null;
 
             if ($estado->is_reasignado) {

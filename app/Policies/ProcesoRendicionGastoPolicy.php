@@ -8,6 +8,7 @@ use App\Models\Solicitud;
 use App\Models\User;
 use Illuminate\Auth\Access\HandlesAuthorization;
 use App\Traits\FirmaDisponibleTrait;
+use Illuminate\Support\Facades\Log;
 
 class ProcesoRendicionGastoPolicy
 {
@@ -101,7 +102,9 @@ class ProcesoRendicionGastoPolicy
             return false;
         }
         $status = $procesoRendicionGasto->status;
+
         $firma  = $this->isFirmaDisponibleActionPolicy($procesoRendicionGasto->solicitud, 'rendicion.firma.validar');
+        Log::info($firma->firma);
         if (($firma->is_firma) && ($firma->firma->role_id === 3 && $status === EstadoProcesoRendicionGasto::STATUS_INGRESADA || $status === EstadoProcesoRendicionGasto::STATUS_MODIFICADA)) {
             return true;
         }

@@ -130,7 +130,7 @@ class User extends Authenticatable
 
     public function ausentismos()
     {
-        return $this->hasMany(Ausentismo::class);
+        return $this->hasMany(Ausentismo::class, 'user_ausente_id');
     }
 
     public function estados()

@@ -17,7 +17,7 @@ class ListAusentismoResource extends JsonResource
     {
         if ($this->subrogantes) {
             $nombres = $this->subrogantes->map(function ($subrogante) {
-                return $subrogante->abreNombres();
+                return "{$subrogante->abreNombres()} {$subrogante->email}";
             })->toArray();
 
             $resultado = implode(', ', $nombres);

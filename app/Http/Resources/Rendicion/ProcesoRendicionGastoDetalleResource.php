@@ -32,17 +32,11 @@ class ProcesoRendicionGastoDetalleResource extends JsonResource
         $getRendiciones = function ($condition) {
             return $this->rendiciones ? $this->rendiciones()->whereHas('actividad', $condition)->get() : null;
         };
-
-        $dias_habiles_pago_message = null;
-        if ($this->dias_habiles_pago !== null) {
-            $message_dias = $this->dias_habiles_pago > 1 ? 'días hábiles' : 'día hábil';
-            $dias_habiles_pago_message = "El pago se realizará dentro de {$this->dias_habiles_pago} {$message_dias} de ser aprobado por Depto Finanzas.";
-        }
         return [
             'uuid'                                          => $this->uuid,
             'n_folio'                                       => $this->n_folio,
             'dias_habiles_pago'                             => $this->dias_habiles_pago,
-            'dias_habiles_pago_message'                     => $dias_habiles_pago_message,
+            'dias_habiles_pago_message'                     => $this->pagoHabilesMessage(),
             'rut_funcionario'                               => optional($this->solicitud->funcionario)->rut_completo,
             'nombres_funcionario'                           => optional($this->solicitud->funcionario)->nombre_completo,
             'correo_funcionario'                            => optional($this->solicitud->funcionario)->email,

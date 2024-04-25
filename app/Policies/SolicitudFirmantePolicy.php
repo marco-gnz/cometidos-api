@@ -55,14 +55,11 @@ class SolicitudFirmantePolicy
      */
     public function update(User $user, SolicitudFirmante $solicitudFirmante)
     {
-        if (!$user->hasRole('SUPER ADMINISTRADOR')) {
-            return false;
-        }
-        if ($solicitudFirmante->solicitud->status === Solicitud::STATUS_ANULADO || $solicitudFirmante->posicion_firma === 0) {
+        if ((!$user->hasRole('SUPER ADMINISTRADOR')) &&  $solicitudFirmante->solicitud->status === Solicitud::STATUS_ANULADO || $solicitudFirmante->posicion_firma === 0) {
             return false;
         }
 
-        if ($solicitudFirmante->posicion_firma > $solicitudFirmante->solicitud->posicion_firma_actual) {
+        if ((!$user->hasRole('SUPER ADMINISTRADOR')) && $solicitudFirmante->posicion_firma > $solicitudFirmante->solicitud->posicion_firma_actual) {
             if ($this->isFinanzas($solicitudFirmante) && !$solicitudFirmante->solicitud->derecho_pago) {
                 return false;
             }

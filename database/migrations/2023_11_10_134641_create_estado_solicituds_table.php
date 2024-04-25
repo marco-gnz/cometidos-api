@@ -24,6 +24,7 @@ class CreateEstadoSolicitudsTable extends Migration
             $table->text('history_solicitud_old')->nullable();
             $table->text('history_solicitud_new')->nullable();
             $table->boolean('is_reasignado')->default(0); // registro anterior creado, con valor reasignado en true
+            $table->boolean('is_subrogante')->default(0);
 
             $table->foreign('solicitud_id')->references('id')->on('solicituds');
             $table->unsignedBigInteger('solicitud_id')->nullable();

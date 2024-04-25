@@ -19,6 +19,7 @@ class CreateEstadoInformeCometidosTable extends Migration
             $table->unsignedSmallInteger('status')->default(0);
             $table->text('observacion')->nullable();
             $table->integer('posicion_firma')->nullable();
+            $table->boolean('is_subrogante')->default(0);
             $table->string('ip_address')->nullable();
 
             $table->foreign('informe_cometido_id')->references('id')->on('informe_cometidos')->onDelete('cascade');

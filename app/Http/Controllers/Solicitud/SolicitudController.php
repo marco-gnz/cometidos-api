@@ -387,6 +387,7 @@ class SolicitudController extends Controller
                     'status'                    => $status,
                     'informe_cometido_id'       => $informeCometido->id,
                     'observacion'               => $request->observacion,
+                    'is_subrogante'             => $firma_disponible->is_subrogante,
                     'role_id'                   => $firma_disponible->is_firma ? $firma_disponible->firma->role_id : null,
                     'posicion_firma'            => $firma_disponible->is_firma ? $firma_disponible->firma->posicion_firma : null
                 ];

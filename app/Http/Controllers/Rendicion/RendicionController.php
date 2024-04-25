@@ -48,7 +48,9 @@ class RendicionController extends Controller
         try {
             $auth           = Auth::user();
             if ($auth) {
-                $query = Solicitud::where('status', '!=', Solicitud::STATUS_ANULADO)
+                $query = Solicitud::where('user_id', auth()->user()->id)
+                    ->where('status', '!=', Solicitud::STATUS_ANULADO)
+                    ->where('derecho_pago', true)
                     ->whereYear('fecha_inicio', $request->year);
 
                 if ($request->month) {

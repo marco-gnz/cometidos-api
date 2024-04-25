@@ -37,6 +37,7 @@ class EstadoInformeCometido extends Model
         'uuid',
         'status',
         'posicion_firma',
+        'is_subrogante',
         'observacion',
         'ip_address',
         'role_id',

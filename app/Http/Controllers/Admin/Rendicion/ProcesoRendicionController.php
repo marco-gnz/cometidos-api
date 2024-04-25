@@ -27,7 +27,21 @@ class ProcesoRendicionController extends Controller
     public function getProcesoRendiciones()
     {
         try {
-            $proceso_rendiciones = ProcesoRendicionGasto::all();
+            $auth = auth()->user();
+            $proceso_rendiciones = ProcesoRendicionGasto::whereHas('solicitud.firmantes', function ($q) use ($auth) {
+                if (!$auth->hasRole('SUPER ADMINISTRADOR')) {
+                    $q->where('user_id', $auth->id);
+                }
+            })->orWhereHas('solicitud.firmantes', function ($q) use ($auth) {
+                $q->whereIn('is_executed', [true, false])
+                    ->whereHas('funcionario.ausentismos', function ($q) use ($auth) {
+                        $q->whereHas('subrogantes', function ($q) use ($auth) {
+                            $q->where('users.id', $auth->id);
+                        })->whereRaw("DATE(proceso_rendicion_gastos.fecha_by_user) >= ausentismos.fecha_inicio")
+                            ->whereRaw("DATE(proceso_rendicion_gastos.fecha_by_user) <= ausentismos.fecha_termino");
+                    });
+            })
+                ->orderBy('id', 'DESC')->get();
 
             return response()->json(
                 array(
