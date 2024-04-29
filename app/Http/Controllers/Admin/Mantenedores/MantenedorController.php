@@ -128,7 +128,33 @@ class MantenedorController extends Controller
     public function getFirmantes(Request $request)
     {
         try {
-            $firmantes = User::general($request->input)->orderBy('nombres', 'ASC')->get();
+            $firmante_uuid = $request->input('firmante_uuid');
+            $is_habilitado = $request->input('ishabilitado');
+            $is_subrogante = $request->input('is_subrogante');
+            $is_admin      = $request->input('is_admin');
+            $is_admin = $is_admin === 'true' ? true : false;
+            $is_subrogante = $is_subrogante === 'true' ? true : false;
+            $is_habilitado = $is_habilitado === 'true' ? true : false;
+
+            $firmantes = User::general($request->input);
+
+            if ($is_habilitado) {
+                $firmantes = $firmantes->where('uuid', '!=', $firmante_uuid)
+                    ->whereHas('firmas', function ($q) {
+                        $q->where('status', true)
+                            ->where('posicion_firma', '>', 0);
+                    });
+            }
+            if ($is_subrogante) {
+                $firmantes = $firmantes->where('is_subrogante', true);
+            }
+
+            if ($is_admin) {
+                $firmantes = $firmantes->where('id', '!=', auth()->user()->id);
+            }
+
+            $firmantes = $firmantes->orderBy('nombres', 'ASC')
+                ->get();
 
             return response()->json($firmantes);
         } catch (\Exception $error) {

@@ -4,7 +4,7 @@ namespace App\Http\Requests\Ausentismo;
 
 use Illuminate\Foundation\Http\FormRequest;
 
-class StoreAusentismoRequest extends FormRequest
+class StoreAdminAusentismoRequest extends FormRequest
 {
     /**
      * Determine if the user is authorized to make this request.
@@ -24,6 +24,7 @@ class StoreAusentismoRequest extends FormRequest
     public function rules()
     {
         return [
+            'firmante_uuid'             => ['required', 'exists:users,uuid'],
             'fecha_inicio'              => ['required', 'date', 'before_or_equal:fecha_termino'],
             'fecha_termino'             => ['required', 'date', 'after_or_equal:fecha_inicio'],
             'subrogantes_id'            => ['required']
@@ -33,6 +34,7 @@ class StoreAusentismoRequest extends FormRequest
     public function messages()
     {
         return [
+            'firmante_uuid.required'                => 'El :attribute es obligatorio',
             'fecha_inicio.required'                 => 'La :attribute es obligatoria',
             'fecha_inicio.date'                     => 'La :attribute debe ser una fecha válida',
             'fecha_inicio.before_or_equal'          => 'La :attribute debe ser anterior a fecha de término',
@@ -48,6 +50,7 @@ class StoreAusentismoRequest extends FormRequest
     public function attributes()
     {
         return [
+            'firmante_uuid'     => 'firmante',
             'fecha_inicio'      => 'fecha',
             'fecha_termino'     => 'fecha',
             'subrogantes_id'    => 'subrogante'

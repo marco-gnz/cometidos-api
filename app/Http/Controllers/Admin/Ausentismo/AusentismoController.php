@@ -1,26 +1,74 @@
 <?php
 
-namespace App\Http\Controllers\User\Ausentismos;
+namespace App\Http\Controllers\Admin\Ausentismo;
 
 use App\Http\Controllers\Controller;
-use App\Http\Requests\Ausentismo\StoreAusentismoRequest;
+use App\Http\Requests\Ausentismo\StoreAdminAusentismoRequest;
 use App\Http\Resources\User\Ausentismo\ListAusentismoResource;
 use App\Models\Ausentismo;
+use App\Models\Solicitud;
 use App\Models\User;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
 
-class AusentismosController extends Controller
+class AusentismoController extends Controller
 {
     public function __construct()
     {
         $this->middleware(['auth:sanctum']);
     }
 
+    public function getSolicitudesDate(Request $request)
+    {
+        try {
+            $firmante       = User::where('uuid', $request->firmante_uuid)->firstOrFail();
+            $fecha_inicio   = Carbon::parse($request->fecha_inicio)->startOfDay();
+            $fecha_termino  = Carbon::parse($request->fecha_termino)->endOfDay();
+
+            $count_solicitudes_anterior = Solicitud::where('fecha_by_user', '<', $fecha_inicio)
+                ->whereHas('firmantes', function ($q) use ($firmante) {
+                    $q->where('user_id', $firmante->id)
+                        ->where('status', true)
+                        ->where('is_executed', false);
+                })->count();
+
+            $count_solicitudes_rango = Solicitud::whereBetween('fecha_by_user', [$fecha_inicio, $fecha_termino])
+                ->whereHas('firmantes', function ($q) use ($firmante) {
+                    $q->where('user_id', $firmante->id)
+                        ->where('status', true)
+                        ->where('is_executed', false);
+                })->count();
+
+            $count_solicitudes_posterior = Solicitud::where('fecha_by_user', '>', $fecha_termino)
+                ->whereHas('firmantes', function ($q) use ($firmante) {
+                    $q->where('user_id', $firmante->id)
+                        ->where('status', true)
+                        ->where('is_executed', false);
+                })->count();
+
+            $totales = (object)[
+                'count_solicitudes_anterior'    => $count_solicitudes_anterior,
+                'count_solicitudes_rango'       => $count_solicitudes_rango,
+                'count_solicitudes_posterior'   => $count_solicitudes_posterior
+            ];
+
+            return response()->json([
+                'status'        => 'success',
+                'title'         => null,
+                'message'       => null,
+                'totalesDate'   => $totales
+            ]);
+        } catch (\Exception $error) {
+            return response()->json($error->getMessage());
+        }
+    }
+
+
     public function listAusentismos()
     {
         try {
-            $ausentismos = Ausentismo::where('user_ausente_id', auth()->user()->id)->get();
+            $ausentismos = Ausentismo::orderBy('fecha_inicio', 'DESC')->get();
 
             return response()->json(
                 array(
@@ -35,22 +83,23 @@ class AusentismosController extends Controller
         }
     }
 
-    public function storeAusentismo(StoreAusentismoRequest $request)
+    public function storeAusentismo(StoreAdminAusentismoRequest $request)
     {
         try {
+            $firmante = User::where('uuid', $request->firmante_uuid)->firstOrFail();
             $data = [
+                'user_ausente_id'   => $firmante->id,
                 'fecha_inicio'      => $request->fecha_inicio,
-                'fecha_termino'     => $request->fecha_termino,
-                'user_ausente_id'   => auth()->user()->id
+                'fecha_termino'     => $request->fecha_termino
             ];
 
-            $validateExistAusentismoUser = $this->validateExistAusentismoUser($request);
+            $validateExistAusentismoUser = $this->validateExistAusentismoUser($request, $firmante);
             $validateExistAusentismoFirmantes = $this->validateExistAusentismoFirmantes($request);
 
             if (!$validateExistAusentismoUser) {
                 return response()->json([
                     'errors' => [
-                        'fecha_inicio'  => ['Ya registras otro ausentismo en el periodo de ausentismo.'],
+                        'fecha_inicio'  => ['Funcionario ausente registras otro ausentismo en el periodo de ausentismo.'],
                     ]
                 ], 422);
             }
@@ -104,13 +153,12 @@ class AusentismosController extends Controller
         }
     }
 
-    private function validateExistAusentismoUser($request)
+    private function validateExistAusentismoUser($request, $firmante)
     {
-        $auth               = auth()->user();
         $fecha_inicio       = $request->fecha_inicio;
         $fecha_termino      = $request->fecha_termino;
 
-        $total = Ausentismo::where('user_ausente_id', $auth->id)
+        $total = Ausentismo::where('user_ausente_id', $firmante->id)
             ->where(function ($query) use ($fecha_inicio, $fecha_termino) {
                 $query->where(function ($query) use ($fecha_inicio, $fecha_termino) {
                     $query->where('fecha_inicio', '<=', $fecha_inicio)

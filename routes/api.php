@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Admin\Ausentismo\AusentismoController;
 use App\Http\Controllers\Admin\Grupos\GrupoFirmaController;
 use App\Http\Controllers\Admin\Mantenedores\MantenedorController;
 use App\Http\Controllers\Admin\Rendicion\ProcesoRendicionController;
@@ -88,7 +89,13 @@ Route::group(
         Route::post('/admin/rendicion/update-pago', [ProcesoRendicionController::class, 'updatePago']);
 
         Route::post('/admin/solicitudes/store-ajuste-calculo', [SolicitudAdminController::class, 'storeAjuste']);
+        Route::get('/admin/solicitudes/preview-ajuste-calculo', [SolicitudAdminController::class, 'previewAjuste']);
         Route::delete('/admin/solicitudes/delete-ajuste-calculo/{uuid}', [SolicitudAdminController::class, 'deleteAjuste']);
+
+        Route::get('/admin/ausentismo/list', [AusentismoController::class, 'listAusentismos']);
+        Route::get('/admin/ausentismo/tota-solicitudes', [AusentismoController::class, 'getSolicitudesDate']);
+        Route::post('/admin/ausentismo/store', [AusentismoController::class, 'storeAusentismo']);
+        Route::delete('/admin/ausentismo/{uuid}', [AusentismoController::class, 'deleteAusentismo']);
     }
 );
 
