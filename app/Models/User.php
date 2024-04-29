@@ -41,7 +41,9 @@ class User extends Authenticatable
         'sub_departamento_id',
         'establecimiento_id',
         'hora_id',
-        'calidad_id'
+        'calidad_id',
+        'is_firmante',
+        'is_subrogante'
     ];
 
     /**

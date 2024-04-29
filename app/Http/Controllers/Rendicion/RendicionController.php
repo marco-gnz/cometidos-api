@@ -274,7 +274,8 @@ class RendicionController extends Controller
                             'status'                => EstadoProcesoRendicionGasto::STATUS_INGRESADA,
                             'p_rendicion_gasto_id'  => $proceso_rendicion_gasto->id,
                             'role_id'               => $firma_disponible->is_firma ? $firma_disponible->firma->role_id : null,
-                            'posicion_firma'        => $firma_disponible->is_firma ? $firma_disponible->firma->posicion_firma : null
+                            'posicion_firma'        => $firma_disponible->is_firma ? $firma_disponible->firma->posicion_firma : null,
+                            'is_subrogante'         => $firma_disponible->is_subrogante
                         ];
                         $status = EstadoProcesoRendicionGasto::create($estado);
                     }
@@ -445,7 +446,8 @@ class RendicionController extends Controller
                         'status'                => EstadoProcesoRendicionGasto::STATUS_MODIFICADA,
                         'p_rendicion_gasto_id'  => $proceso_rendicion_gasto->id,
                         'role_id'               => $firma_disponible->is_firma ? $firma_disponible->firma->role_id : null,
-                        'posicion_firma'        => $firma_disponible->is_firma ? $firma_disponible->firma->posicion_firma : null
+                        'posicion_firma'        => $firma_disponible->is_firma ? $firma_disponible->firma->posicion_firma : null,
+                        'is_subrogante'         => $firma_disponible->is_subrogante
                     ];
                     $status = EstadoProcesoRendicionGasto::create($estado);
                 }
@@ -498,7 +500,8 @@ class RendicionController extends Controller
                 'status'                => EstadoProcesoRendicionGasto::STATUS_ANULADO,
                 'p_rendicion_gasto_id'  => $proceso_rendicion_gasto->id,
                 'role_id'               => $firma_disponible->is_firma ? $firma_disponible->firma->role_id : null,
-                'posicion_firma'        => $firma_disponible->is_firma ? $firma_disponible->firma->posicion_firma : null
+                'posicion_firma'        => $firma_disponible->is_firma ? $firma_disponible->firma->posicion_firma : null,
+                'is_subrogante'         => $firma_disponible->is_subrogante
             ];
             $status = EstadoProcesoRendicionGasto::create($estado);
 
@@ -549,7 +552,8 @@ class RendicionController extends Controller
                 'observacion'           => $request->observacion,
                 'p_rendicion_gasto_id'  => $proceso_rendicion_gasto->id,
                 'role_id'               => $firma_disponible->is_firma ? $firma_disponible->firma->role_id : null,
-                'posicion_firma'        => $firma_disponible->is_firma ? $firma_disponible->firma->posicion_firma : null
+                'posicion_firma'        => $firma_disponible->is_firma ? $firma_disponible->firma->posicion_firma : null,
+                'is_subrogante'         => $firma_disponible->is_subrogante
             ];
             $status_r = EstadoProcesoRendicionGasto::create($estado);
 

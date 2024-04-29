@@ -213,9 +213,21 @@ class SolicitudPolicy
             return false;
         }
 
+        if ($solicitud->user_id === $user->id) {
+            return true;
+        }
+
+        return false;
+    }
+
+    public function anularAdmin(User $user, Solicitud $solicitud)
+    {
+        if ($solicitud->status === Solicitud::STATUS_ANULADO) {
+            return false;
+        }
         $firma = $this->isFirmaDisponibleActionPolicy($solicitud, 'solicitud.firma.anular');
 
-        if ($firma->is_firma || $user->hasRole('SUPER ADMINISTRADOR')) {
+        if ($firma->is_firma) {
             return true;
         }
 

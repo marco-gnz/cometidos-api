@@ -34,7 +34,7 @@ class SolicitudesController extends Controller
     {
         try {
             $auth = Auth::user();
-            $solicitudes = Solicitud::where('user_id', $auth->id)->orderBy('fecha_inicio', 'DESC')->get();
+            $solicitudes = Solicitud::where('user_id', $auth->id)->orderBy('codigo', 'DESC')->get();
 
             return response()->json(
                 array(
@@ -58,19 +58,17 @@ class SolicitudesController extends Controller
             if ($solicitud) {
                 $observacion        = $request->observacion;
                 $status             = EstadoSolicitud::STATUS_ANULADO;
-                $firma_disponible   = $this->isFirmaDisponibleActionPolicy($solicitud, 'solicitud.firma.anular');
+                $firma_disponible   = $solicitud->firmantes()->where('posicion_firma', 0)->where('user_id', auth()->user()->id)->first();
                 $firma_query        = null;
-                if ($firma_disponible->id_firma) {
-                    $firma_search = SolicitudFirmante::where('id', $firma_disponible->id_firma)->first();
-                }
 
                 $estados[] = [
                     'status'                    => $status,
-                    'posicion_firma_s'          => $firma_search ? $firma_search->posicion_firma : null,
+                    'posicion_firma_s'          => $firma_disponible ? $firma_disponible->posicion_firma : null,
                     'solicitud_id'              => $solicitud->id,
-                    'posicion_firma'            => $firma_search ? $firma_search->posicion_firma : null,
-                    's_firmante_id'             => $firma_search ? $firma_search->id : null,
-                    'observacion'               => $observacion
+                    'posicion_firma'            => $firma_disponible ? $firma_disponible->posicion_firma : null,
+                    's_firmante_id'             => $firma_disponible ? $firma_disponible->id : null,
+                    'observacion'               => $observacion,
+                    'user_id'                   => auth()->user()->id
                 ];
                 $create_status  = $solicitud->addEstados($estados);
                 $solicitud      = $solicitud->fresh();

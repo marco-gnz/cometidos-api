@@ -451,6 +451,11 @@ class Solicitud extends Model
         return Gate::allows('anular', $this);
     }
 
+    public function authorizedToAnularAdmin()
+    {
+        return Gate::allows('anularAdmin', $this);
+    }
+
     public function authorizedToReasignarEmergency()
     {
         return Gate::allows('reasignaremergency', $this);
@@ -703,9 +708,10 @@ class Solicitud extends Model
         if ($last_status_aprobado) {
             $firma = $this->estados()->where('s_role_id', 3)->where('status', EstadoSolicitud::STATUS_APROBADO)->where('created_at', '<=', $last_status_aprobado->created_at)->orderBy('id', 'DESC')->first();
             if ($firma) {
-                $nombres    = $firma->funcionario->abreNombres();
-                $fecha      = Carbon::parse($firma->created_at)->format('d-m-y H:i:s');
-                $new_firma  = "$nombres $fecha";
+                $nombres        = $firma->funcionario->abreNombres();
+                $fecha          = Carbon::parse($firma->created_at)->format('d-m-y H:i:s');
+                $is_subrogante  = $firma->is_subrogante ? "(S)" : "";
+                $new_firma      = "$nombres $fecha $is_subrogante";
                 return $new_firma;
             }
             return null;
@@ -720,9 +726,10 @@ class Solicitud extends Model
         if ($last_status_aprobado) {
             $firma = $this->estados()->where('s_role_id', 4)->where('status', EstadoSolicitud::STATUS_APROBADO)->where('created_at', '<=', $last_status_aprobado->created_at)->orderBy('id', 'DESC')->first();
             if ($firma) {
-                $nombres    = $firma->funcionario->abreNombres();
-                $fecha      = Carbon::parse($firma->created_at)->format('d-m-y H:i:s');
-                $new_firma  = "$nombres $fecha";
+                $nombres        = $firma->funcionario->abreNombres();
+                $fecha          = Carbon::parse($firma->created_at)->format('d-m-y H:i:s');
+                $is_subrogante  = $firma->is_subrogante ? "(S)" : "";
+                $new_firma      = "$nombres $fecha $is_subrogante";
                 return $new_firma;
             }
             return null;
@@ -736,9 +743,10 @@ class Solicitud extends Model
         if ($last_status_aprobado) {
             $firma = $this->estados()->where('s_role_id', 5)->where('status', EstadoSolicitud::STATUS_APROBADO)->where('created_at', '<=', $last_status_aprobado->created_at)->orderBy('id', 'DESC')->first();
             if ($firma) {
-                $nombres    = $firma->funcionario->abreNombres();
-                $fecha      = Carbon::parse($firma->created_at)->format('d-m-y H:i:s');
-                $new_firma  = "$nombres $fecha";
+                $nombres        = $firma->funcionario->abreNombres();
+                $fecha          = Carbon::parse($firma->created_at)->format('d-m-y H:i:s');
+                $is_subrogante  = $firma->is_subrogante ? "(S)" : "";
+                $new_firma      = "$nombres $fecha $is_subrogante";
                 return $new_firma;
             }
             return null;

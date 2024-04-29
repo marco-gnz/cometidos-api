@@ -29,6 +29,8 @@ class CreateUsersTable extends Migration
             $table->string('password');
             $table->string('telefono', 12)->nullable();
             $table->string('anexo', 12)->nullable();
+            $table->boolean('is_firmante')->default(0);
+            $table->boolean('is_subrogante')->default(0);
 
             $table->unsignedBigInteger('ley_id')->nullable();
             $table->foreign('ley_id')->references('id')->on('leys');

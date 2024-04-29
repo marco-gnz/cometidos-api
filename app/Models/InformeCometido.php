@@ -148,9 +148,10 @@ class InformeCometido extends Model
     {
         $firma = $this->estados()->where('status', EstadoInformeCometido::STATUS_APROBADO)->where('role_id', 4)->first();
         if ($firma) {
-            $nombres    = $firma->userBy->abreNombres();
-            $fecha      = Carbon::parse($firma->fecha_by_user)->format('d-m-y H:i:s');
-            $new_firma  = "$nombres $fecha";
+            $nombres        = $firma->userBy->abreNombres();
+            $fecha          = Carbon::parse($firma->fecha_by_user)->format('d-m-y H:i:s');
+            $is_subrogante  = $firma->is_subrogante ? "(S)" : "";
+            $new_firma      = "$nombres $fecha $is_subrogante";
             return $new_firma;
         }
         return null;

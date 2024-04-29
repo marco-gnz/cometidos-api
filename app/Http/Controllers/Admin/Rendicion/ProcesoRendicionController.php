@@ -98,7 +98,8 @@ class ProcesoRendicionController extends Controller
                             'status'                => EstadoProcesoRendicionGasto::STATUS_VERIFICADO,
                             'p_rendicion_gasto_id'  => $rendicion->procesoRendicionGasto->id,
                             'role_id'               => $firma_disponible->is_firma ? $firma_disponible->firma->role_id : null,
-                            'posicion_firma'        => $firma_disponible->is_firma ? $firma_disponible->firma->posicion_firma : null
+                            'posicion_firma'        => $firma_disponible->is_firma ? $firma_disponible->firma->posicion_firma : null,
+                            'is_subrogante'         => $firma_disponible->is_subrogante
                         ];
                         $status_r = EstadoProcesoRendicionGasto::create($estado);
                     } else {
@@ -109,7 +110,8 @@ class ProcesoRendicionController extends Controller
                                 'status'                => EstadoProcesoRendicionGasto::STATUS_EN_PROCESO,
                                 'p_rendicion_gasto_id'  => $rendicion->procesoRendicionGasto->id,
                                 'role_id'               => $firma_disponible->is_firma ? $firma_disponible->firma->role_id : null,
-                                'posicion_firma'        => $firma_disponible->is_firma ? $firma_disponible->firma->posicion_firma : null
+                                'posicion_firma'        => $firma_disponible->is_firma ? $firma_disponible->firma->posicion_firma : null,
+                                'is_subrogante'         => $firma_disponible->is_subrogante
                             ];
                             $status_r = EstadoProcesoRendicionGasto::create($estado);
                         }

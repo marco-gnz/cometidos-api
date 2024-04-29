@@ -20,6 +20,7 @@ class CreateEstadoProcesoRendicionGastosTable extends Migration
             $table->integer('posicion_firma')->nullable();
             $table->text('observacion')->nullable();
             $table->string('ip_address')->nullable();
+            $table->boolean('is_subrogante')->default(0);
 
             $table->foreign('p_rendicion_gasto_id')->references('id')->on('proceso_rendicion_gastos')->onDelete('cascade');
             $table->unsignedBigInteger('p_rendicion_gasto_id')->nullable();

@@ -25,9 +25,10 @@ trait FirmaDisponibleTrait
 
     private function obtenerPrimerFirmanteIsPermission($solicitud, $id_permission)
     {
-        $is_subrogante = false;
-        $is_firma = false;
-        $auth = auth()->user();
+        $is_subrogante          = false;
+        $is_firma               = false;
+        $auth                   = auth()->user();
+        $id_user_ejecuted_firma = null;
 
         $query = $solicitud->firmantes()
             ->where('status', true)
@@ -39,6 +40,10 @@ trait FirmaDisponibleTrait
         });
 
         $primerFirmante = $query->first();
+
+        if ($primerFirmante) {
+            $id_user_ejecuted_firma = $primerFirmante->user_id;
+        }
 
         if (!$primerFirmante) {
             $fecha_by_solicitud = Carbon::parse($solicitud->fecha_by_user)->format('Y-m-d');
@@ -64,21 +69,21 @@ trait FirmaDisponibleTrait
                 })
                 ->first();
             if ($primerFirmante) {
+                $id_user_ejecuted_firma = auth()->user()->id;
                 $is_subrogante = true;
             }
         }
 
 
         $data = (object) [
-            'firma'                     => $primerFirmante,
-            'is_subrogante'              => $is_subrogante,
-            'is_firma' => $primerFirmante ? true : false
+            'firma'             => $primerFirmante,
+            'is_subrogante'     => $is_subrogante,
+            'is_firma'          => $primerFirmante ? true : false,
+            'id_user_ejecuted_firma'    => $id_user_ejecuted_firma
         ];
 
         return $data;
     }
-
-
 
     private function obtenerPrimerFirmanteHabilitado($solicitud, $id_permission)
     {
@@ -260,6 +265,22 @@ trait FirmaDisponibleTrait
         return $solicitud->firmantes()->where('role_id', 1)->first();
     }
 
+    public function isFirmaDisponibleActionAnular($solicitud, $name_permission)
+    {
+        $id_permission = $this->idPermission($name_permission);
+        if ($id_permission === null) {
+            return (object) [
+                'type'                      => 'warning',
+                'is_firma'                  => false,
+                'if_buttom'                 => false,
+                'posicion_firma_solicitud'  => null,
+                'posicion_firma'            => null,
+                'firma'                     => null,
+                'title'                     => 'Firma no disponible',
+                'message'                   => 'Firma no disponible'
+            ];
+        }
+    }
     public function isFirmaDisponibleAction($solicitud, $name_permission)
     {
         if ($name_permission === null) {
@@ -315,6 +336,20 @@ trait FirmaDisponibleTrait
                 'title'     => 'Firma no disponible',
                 'message'   => 'Firma no disponible'
             ];
+
+            return (object) [
+                'type'      => 'warning',
+                'is_firma'  => false,
+                'firma'     => null,
+                'is_subrogante' => false,
+                'if_buttom'     =>  false,
+                'id_firma'      => null,
+                'id_user_ejecuted_firma'   => null,
+                'posicion_firma_solicitud'  => null,
+                'posicion_firma'            => null,
+                'title'     => 'Firma disponible',
+                'message'   => 'Firma disponible'
+            ];
         }
 
         $first_firma_habilitada_solicitud = $this->obtenerPrimerFirmanteIsPermission($solicitud, $id_permission);
@@ -324,6 +359,11 @@ trait FirmaDisponibleTrait
             'is_firma'  => $first_firma_habilitada_solicitud->is_firma,
             'firma'     => $first_firma_habilitada_solicitud->firma,
             'is_subrogante' => $first_firma_habilitada_solicitud->is_subrogante,
+            'if_buttom'     => $first_firma_habilitada_solicitud->is_firma ? true : false,
+            'id_firma'      => $first_firma_habilitada_solicitud->is_firma ? $first_firma_habilitada_solicitud->firma->id : null,
+            'id_user_ejecuted_firma'   => $first_firma_habilitada_solicitud->is_firma ? $first_firma_habilitada_solicitud->id_user_ejecuted_firma : null,
+            'posicion_firma_solicitud'  => $solicitud->posicion_firma_actual,
+            'posicion_firma'            => $first_firma_habilitada_solicitud->is_firma ? $first_firma_habilitada_solicitud->firma->posicion_firma : null,
             'title'     => 'Firma disponible',
             'message'   => 'Firma disponible'
         ];

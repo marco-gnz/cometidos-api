@@ -71,7 +71,7 @@ class ListSolicitudCompleteAdminResource extends JsonResource
             'documentos'                => $this->exportarDocumentos(),
             'not_actividad'             => $this->isNotActividad(),
             'authorized_to_firma'       => $this->authorizedToFirma(),
-            'authorized_to_anular'      => $this->authorizedToAnular(),
+            'authorized_to_anular'      => $this->authorizedToAnularAdmin(),
             'authorized_to_reasignar_emergency'     => $this->authorizedToReasignarEmergency(),
             'is_grupo'                              => $this->isGrupo(),
             'authorized_to_sincronizar_grupo'       => $this->authorizedToSincronizarGrupo(),
