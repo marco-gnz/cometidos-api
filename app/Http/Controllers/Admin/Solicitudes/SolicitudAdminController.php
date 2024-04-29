@@ -744,6 +744,67 @@ class SolicitudAdminController extends Controller
         ];
     }
 
+    public function previewAjuste(Request $request)
+    {
+        try {
+            $solicitud_calculo = SoliucitudCalculo::where('uuid', $request->calculo_uuid)->firstOrFail();
+            $tipo_ajuste = (int)$request->tipo_ajuste;
+            switch ($tipo_ajuste) {
+                case 0:
+                    #ajuste días
+                    $dias_40_new        = (int)$request->n_dias_40;
+                    $dias_100_new       = (int)$request->n_dias_100;
+
+                    $monto_dias_40_new  = $solicitud_calculo->valor_dia_40 * $dias_40_new;
+                    $monto_dias_100_new = $solicitud_calculo->valor_dia_100 * $dias_100_new;
+                    $monto_total_new    = $monto_dias_40_new + $monto_dias_100_new;
+                    $data = (object) [
+                        'dias_40_calculo'       => $solicitud_calculo->n_dias_40,
+                        'dias_100_calculo'      => $solicitud_calculo->n_dias_100,
+                        'monto_40_calculo'      => "$" . number_format($solicitud_calculo->monto_40, 0, ',', '.'),
+                        'monto_100_calculo'     => "$" . number_format($solicitud_calculo->monto_100, 0, ',', '.'),
+
+                        'dias_40_new'           => $dias_40_new,
+                        'dias_100_new'          => $dias_100_new,
+                        'monto_dias_40_new'     => "$" . number_format($monto_dias_40_new, 0, ',', '.'),
+                        'monto_dias_100_new'    => "$" . number_format($monto_dias_100_new, 0, ',', '.'),
+
+                        'monto_total'           => "$" . number_format($solicitud_calculo->monto_total, 0, ',', '.'),
+                        'monto_total_new'       => "$" . number_format($solicitud_calculo->monto_total + $monto_total_new, 0, ',', '.')
+                    ];
+                    break;
+
+                default:
+                    $monto_40_new       = (int)$request->monto_40;
+                    $monto_100_new      = (int)$request->monto_100;
+                    $sum_40_100         = $monto_40_new + $monto_100_new;
+
+                    $data = (object) [
+                        'monto_40_calculo'      => "$" . number_format($solicitud_calculo->monto_40, 0, ',', '.'),
+                        'monto_100_calculo'     => "$" . number_format($solicitud_calculo->monto_100, 0, ',', '.'),
+
+                        'monto_40_new'          => "$" . number_format($monto_40_new, 0, ',', '.'),
+                        'monto_100_new'         => "$" . number_format($monto_100_new, 0, ',', '.'),
+
+                        'monto_total'           => "$" . number_format($solicitud_calculo->monto_total, 0, ',', '.'),
+                        'monto_total_new'       => "$" . number_format($solicitud_calculo->monto_total + $sum_40_100, 0, ',', '.')
+                    ];
+                    break;
+            }
+
+            return response()->json(
+                array(
+                    'status'        => 'success',
+                    'title'         => null,
+                    'message'       => null,
+                    'data'          => $data,
+                )
+            );
+        } catch (\Exception $error) {
+            return $error->getMessage();
+        }
+    }
+
     public function storeAjuste(StoreAjusteRequest $request)
     {
         try {
@@ -953,12 +1014,12 @@ class SolicitudAdminController extends Controller
 
             $estados[] = [
                 'status'                    => EstadoSolicitud::STATUS_ANULADO,
-                'posicion_firma_s'          => $firma_disponible ? $firma_disponible->posicion_firma : null,
+                'posicion_firma_s'          => $firma_disponible->is_firma ? $firma_disponible->posicion_firma : null,
                 'solicitud_id'              => $solicitud->id,
-                'posicion_firma'            => $firma_disponible ? $firma_disponible->posicion_firma : null,
-                's_firmante_id'             => $firma_disponible ? $firma_disponible->id : null,
-                'user_id'                   => $firma_disponible ? $firma_disponible->id_user_ejecuted_firma : null,
-                'is_subrogante'             => $firma_disponible ? $firma_disponible->is_subrogante : false,
+                'posicion_firma'            => $firma_disponible->is_firma ? $firma_disponible->posicion_firma : null,
+                's_firmante_id'             => $firma_disponible->is_firma ? $firma_disponible->id_firma : null,
+                'user_id'                   => $firma_disponible->is_firma ? $firma_disponible->id_user_ejecuted_firma : null,
+                'is_subrogante'             => $firma_disponible->is_firma ? $firma_disponible->is_subrogante : false,
                 'observacion'               => $observacion
             ];
             return $estados;
@@ -1030,26 +1091,16 @@ class SolicitudAdminController extends Controller
     {
         try {
             $solicitud = Solicitud::where('uuid', $request->solicitud_uuid)->firstOrFail();
-
             if (($solicitud) && ($solicitud->status === Solicitud::STATUS_ANULADO)) {
                 return $this->errorResponse("No es posible ejecutar firma. Solicitud anulada.", 422);
             }
 
             $status             = (int)$request->status;
             if ($status === EstadoSolicitud::STATUS_ANULADO) {
-                $firma_disponible   = $this->isFirmaDisponibleAction($solicitud, 'solicitud.firma.anular');
+                $firma_disponible   = $this->isFirmaDisponibleActionPolicy($solicitud, 'solicitud.firma.anular');
             } else {
                 $firma_disponible   = $this->obtenerFirmaDisponible($solicitud, 'solicitud.firma.validar');
             }
-
-            if (($solicitud) && (!$firma_disponible->is_firma)) {
-                return $this->errorResponse("No es posible ejecutar firma. Sin firma disponible.", 422);
-            }
-
-            /* $firma_query = null;
-            if ($firma_disponible->id_firma) {
-                $firma_query = SolicitudFirmante::where('id', $firma_disponible->id_firma)->first();
-            } */
 
             $firma_reasignada = null;
             if ($status === EstadoSolicitud::STATUS_PENDIENTE || $status === EstadoSolicitud::STATUS_RECHAZADO) {
@@ -1064,6 +1115,7 @@ class SolicitudAdminController extends Controller
                     break;
 
                 case 4:
+                    $this->authorize('anularAdmin', $solicitud);
                     $estados         = $this->anularSolicitud($solicitud, $firma_disponible, $request->observacion);
                     $create_status   = $solicitud->addEstados($estados);
                     break;
