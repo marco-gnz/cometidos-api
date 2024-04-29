@@ -3,6 +3,7 @@
 use App\Http\Controllers\Admin\Ausentismo\AusentismoController;
 use App\Http\Controllers\Admin\Grupos\GrupoFirmaController;
 use App\Http\Controllers\Admin\Mantenedores\MantenedorController;
+use App\Http\Controllers\Admin\Reasignacion\ReasignacionController;
 use App\Http\Controllers\Admin\Rendicion\ProcesoRendicionController;
 use App\Http\Controllers\Admin\Solicitudes\SolicitudAdminController;
 use App\Http\Controllers\Auth\NewPasswordController;
@@ -96,6 +97,10 @@ Route::group(
         Route::get('/admin/ausentismo/tota-solicitudes', [AusentismoController::class, 'getSolicitudesDate']);
         Route::post('/admin/ausentismo/store', [AusentismoController::class, 'storeAusentismo']);
         Route::delete('/admin/ausentismo/{uuid}', [AusentismoController::class, 'deleteAusentismo']);
+
+        Route::post('/admin/reasignacion/store', [ReasignacionController::class, 'storeReasignacion']);
+        Route::get('/admin/reasignacion/list', [ReasignacionController::class, 'listReasignaciones']);
+        Route::delete('/admin/reasignacion/{uuid}', [ReasignacionController::class, 'deleteReasignacion']);
     }
 );
 

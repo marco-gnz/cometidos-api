@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Admin\Ausentismo;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Ausentismo\StoreAdminAusentismoRequest;
+use App\Http\Resources\Solicitud\ListSolicitudReasignarResource;
 use App\Http\Resources\User\Ausentismo\ListAusentismoResource;
 use App\Models\Ausentismo;
 use App\Models\Solicitud;
@@ -38,7 +39,7 @@ class AusentismoController extends Controller
                     $q->where('user_id', $firmante->id)
                         ->where('status', true)
                         ->where('is_executed', false);
-                })->count();
+                })->get();
 
             $count_solicitudes_posterior = Solicitud::where('fecha_by_user', '>', $fecha_termino)
                 ->whereHas('firmantes', function ($q) use ($firmante) {
@@ -49,15 +50,16 @@ class AusentismoController extends Controller
 
             $totales = (object)[
                 'count_solicitudes_anterior'    => $count_solicitudes_anterior,
-                'count_solicitudes_rango'       => $count_solicitudes_rango,
-                'count_solicitudes_posterior'   => $count_solicitudes_posterior
+                'count_solicitudes_rango'       => count($count_solicitudes_rango),
+                'count_solicitudes_posterior'   => $count_solicitudes_posterior,
+                'solicitudes_a_reasignar'       => ListSolicitudReasignarResource::collection($count_solicitudes_rango)
             ];
 
             return response()->json([
-                'status'        => 'success',
-                'title'         => null,
-                'message'       => null,
-                'totalesDate'   => $totales
+                'status'                => 'success',
+                'title'                 => null,
+                'message'               => null,
+                'totalesDate'           => $totales
             ]);
         } catch (\Exception $error) {
             return response()->json($error->getMessage());
