@@ -345,6 +345,11 @@ class Solicitud extends Model
         return $this->hasMany(SolicitudFirmante::class);
     }
 
+    public function reasignaciones()
+    {
+        return $this->belongsToMany(Reasignacion::class);
+    }
+
     public function informes()
     {
         return $this->hasMany(InformeCometido::class);

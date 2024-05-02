@@ -47,15 +47,19 @@ trait FirmaDisponibleTrait
 
         if (!$primerFirmante) {
             $fecha_by_solicitud = Carbon::parse($solicitud->fecha_by_user)->format('Y-m-d');
-
             $primerFirmante = $solicitud->firmantes()
-                ->where('status', true)
                 ->whereJsonContains('permissions_id', $id_permission)
-                ->orderBy('posicion_firma', 'ASC')
-                ->whereHas('funcionario.ausentismos.subrogantes', function ($q) use ($auth, $fecha_by_solicitud) {
-                    $q->where('users.id', $auth->id)
-                        ->where(function ($query) use ($fecha_by_solicitud) {
-                            $query->where(function ($query) use ($fecha_by_solicitud) {
+                ->where(function ($q) use ($auth, $fecha_by_solicitud) {
+                    $q->whereHas('funcionario.reasignacionAusencias', function ($q) use ($auth, $fecha_by_solicitud) {
+                        $q->where('user_subrogante_id', $auth->id);
+                    });
+                })
+                ->orWhere(function ($q) use ($auth, $fecha_by_solicitud) {
+                    $q->whereHas('funcionario.ausentismos', function ($q) use ($auth, $fecha_by_solicitud) {
+                        $q->whereHas('subrogantes', function ($q) use ($auth, $fecha_by_solicitud) {
+                            $q->where('users.id', $auth->id);
+                        })->where(function ($q)  use ($fecha_by_solicitud) {
+                            $q->where(function ($query) use ($fecha_by_solicitud) {
                                 $query->where('fecha_inicio', '<=', $fecha_by_solicitud)
                                     ->where('fecha_termino', '>=', $fecha_by_solicitud);
                             })->orWhere(function ($query) use ($fecha_by_solicitud) {
@@ -66,19 +70,22 @@ trait FirmaDisponibleTrait
                                     ->where('fecha_termino', '<=', $fecha_by_solicitud);
                             });
                         });
+                    });
                 })
+                ->where('solicitud_id', $solicitud->id)
+                ->orderBy('posicion_firma', 'ASC')
                 ->first();
+
             if ($primerFirmante) {
                 $id_user_ejecuted_firma = auth()->user()->id;
                 $is_subrogante = true;
             }
         }
 
-
         $data = (object) [
-            'firma'             => $primerFirmante,
-            'is_subrogante'     => $is_subrogante,
-            'is_firma'          => $primerFirmante ? true : false,
+            'firma'                     => $primerFirmante,
+            'is_subrogante'             => $is_subrogante,
+            'is_firma'                  => $primerFirmante ? true : false,
             'id_user_ejecuted_firma'    => $id_user_ejecuted_firma
         ];
 
@@ -115,7 +122,6 @@ trait FirmaDisponibleTrait
         $is_subrogancia         = false;
 
         if ($solicitud->status === Solicitud::STATUS_PROCESADO && $solicitud->authorizedToReasignarEmergency()) {
-            Log::info('firma super-admin');
             $name_user  = $auth->abreNombres();
             $title      = "{$name_user}, registras firma disponible de emergencia.";
             $type       = 'warning';
@@ -133,7 +139,6 @@ trait FirmaDisponibleTrait
 
                 //es firma de usuario auth
                 if ($first_firma_auth) {
-                    Log::info('existe firma AUTH');
                     $is_firma                           = true;
                     $if_buttom                          = true;
                     $id_firma                           = $first_firma_auth->id;
@@ -168,34 +173,39 @@ trait FirmaDisponibleTrait
                         }
                     }
                 } else {
-                    $first_firma_position = $solicitud->firmantes()
-                        ->where('id', $first_firma_habilitada_solicitud->id)
-                        ->first();
-                    if ($first_firma_position) {
-                        Log::info($first_firma_position->funcionario->abreNombres());
-                    }
-
                     $fecha_by_solicitud = Carbon::parse($solicitud->fecha_by_user)->format('Y-m-d');
-                    $existe_subrogancia = $first_firma_position->funcionario->ausentismos()
-                        ->where(function ($query) use ($fecha_by_solicitud) {
-                            $query->where(function ($query) use ($fecha_by_solicitud) {
-                                $query->where('fecha_inicio', '<=', $fecha_by_solicitud)
-                                    ->where('fecha_termino', '>=', $fecha_by_solicitud);
-                            })->orWhere(function ($query) use ($fecha_by_solicitud) {
-                                $query->where('fecha_inicio', '<=', $fecha_by_solicitud)
-                                    ->where('fecha_termino', '>=', $fecha_by_solicitud);
-                            })->orWhere(function ($query) use ($fecha_by_solicitud) {
-                                $query->where('fecha_inicio', '>=', $fecha_by_solicitud)
-                                    ->where('fecha_termino', '<=', $fecha_by_solicitud);
+                    $first_firma_position = $solicitud->firmantes()
+                        ->where(function ($q) use ($first_firma_habilitada_solicitud) {
+                            $q->where('id', $first_firma_habilitada_solicitud->id)
+                                ->where('is_executed', false);
+                        })
+                        ->where(function ($q) use ($auth, $fecha_by_solicitud) {
+                            $q->whereHas('funcionario.reasignacionAusencias', function ($q) use ($auth, $fecha_by_solicitud) {
+                                $q->where('user_subrogante_id', $auth->id);
                             });
                         })
-                        ->whereHas('subrogantes', function ($q) use ($auth) {
-                            $q->where('users.id', $auth->id);
+                        ->orWhere(function ($q) use ($auth, $fecha_by_solicitud) {
+                            $q->whereHas('funcionario.ausentismos', function ($q) use ($auth, $fecha_by_solicitud) {
+                                $q->whereHas('subrogantes', function ($q) use ($auth, $fecha_by_solicitud) {
+                                    $q->where('users.id', $auth->id);
+                                })->where(function ($q)  use ($fecha_by_solicitud) {
+                                    $q->where(function ($query) use ($fecha_by_solicitud) {
+                                        $query->where('fecha_inicio', '<=', $fecha_by_solicitud)
+                                            ->where('fecha_termino', '>=', $fecha_by_solicitud);
+                                    })->orWhere(function ($query) use ($fecha_by_solicitud) {
+                                        $query->where('fecha_inicio', '<=', $fecha_by_solicitud)
+                                            ->where('fecha_termino', '>=', $fecha_by_solicitud);
+                                    })->orWhere(function ($query) use ($fecha_by_solicitud) {
+                                        $query->where('fecha_inicio', '>=', $fecha_by_solicitud)
+                                            ->where('fecha_termino', '<=', $fecha_by_solicitud);
+                                    });
+                                });
+                            });
                         })
+                        ->where('solicitud_id', $solicitud->id)
                         ->first();
 
-                    if ($existe_subrogancia) {
-                        Log::info('existe firma SUBROGANCIA');
+                    if ($first_firma_position) {
                         $name_user                          = $auth->abreNombres();
                         $if_buttom                          = true;
                         $get_last_calculo                   = $solicitud->getLastCalculo();
@@ -313,14 +323,14 @@ trait FirmaDisponibleTrait
         $first_firma_habilitada_solicitud = $this->obtenerPrimerFirmanteHabilitado($solicitud, $id_permission);
 
         return (object) [
-            'type'      => 'success',
-            'is_firma'  => $first_firma_habilitada_solicitud ? true : false,
-            'if_buttom' => $first_firma_habilitada_solicitud ? true : false,
-            'firma'     => $first_firma_habilitada_solicitud,
-            'posicion_firma'    => null,
+            'type'                      => 'success',
+            'is_firma'                  => $first_firma_habilitada_solicitud ? true : false,
+            'if_buttom'                 => $first_firma_habilitada_solicitud ? true : false,
+            'firma'                     => $first_firma_habilitada_solicitud,
+            'posicion_firma'            => null,
             'posicion_firma_solicitud'  => $first_firma_habilitada_solicitud ? $first_firma_habilitada_solicitud->posicion_firma : null,
-            'title'     => 'Firma disponible',
-            'message'   => 'Firma disponible'
+            'title'                     => 'Firma disponible',
+            'message'                   => 'Firma disponible'
         ];
     }
 
@@ -355,17 +365,17 @@ trait FirmaDisponibleTrait
         $first_firma_habilitada_solicitud = $this->obtenerPrimerFirmanteIsPermission($solicitud, $id_permission);
 
         return (object) [
-            'type'      => 'success',
-            'is_firma'  => $first_firma_habilitada_solicitud->is_firma,
-            'firma'     => $first_firma_habilitada_solicitud->firma,
-            'is_subrogante' => $first_firma_habilitada_solicitud->is_subrogante,
-            'if_buttom'     => $first_firma_habilitada_solicitud->is_firma ? true : false,
-            'id_firma'      => $first_firma_habilitada_solicitud->is_firma ? $first_firma_habilitada_solicitud->firma->id : null,
-            'id_user_ejecuted_firma'   => $first_firma_habilitada_solicitud->is_firma ? $first_firma_habilitada_solicitud->id_user_ejecuted_firma : null,
+            'type'                      => 'success',
+            'is_firma'                  => $first_firma_habilitada_solicitud->is_firma,
+            'firma'                     => $first_firma_habilitada_solicitud->firma,
+            'is_subrogante'             => $first_firma_habilitada_solicitud->is_subrogante,
+            'if_buttom'                 => $first_firma_habilitada_solicitud->is_firma ? true : false,
+            'id_firma'                  => $first_firma_habilitada_solicitud->is_firma ? $first_firma_habilitada_solicitud->firma->id : null,
+            'id_user_ejecuted_firma'    => $first_firma_habilitada_solicitud->is_firma ? $first_firma_habilitada_solicitud->id_user_ejecuted_firma : null,
             'posicion_firma_solicitud'  => $solicitud->posicion_firma_actual,
             'posicion_firma'            => $first_firma_habilitada_solicitud->is_firma ? $first_firma_habilitada_solicitud->firma->posicion_firma : null,
-            'title'     => 'Firma disponible',
-            'message'   => 'Firma disponible'
+            'title'                     => 'Firma disponible',
+            'message'                   => 'Firma disponible'
         ];
     }
 }

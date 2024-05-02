@@ -59,14 +59,14 @@ class SolicitudAdminController extends Controller
             $resultSolicitud = $params['result'];
             $auth = auth()->user();
 
-            $query = Solicitud::query();
+            $query          = Solicitud::query();
 
             if ($resultSolicitud === 'noverify') {
-                $this->filterNoVerify($query, $auth);
+                $this->filterNoVerify($query, $auth, $ids_solicitudes);
             } elseif ($resultSolicitud === 'verify') {
-                $this->filterVerify($query, $auth);
+                $this->filterVerify($query, $auth, $ids_solicitudes);
             } elseif ($resultSolicitud === 'all') {
-                $this->filterAll($query, $auth);
+                $this->filterAll($query, $auth, $ids_solicitudes);
             }
 
             $solicitudes = $query->orderByDesc('fecha_inicio')->get();
@@ -99,6 +99,15 @@ class SolicitudAdminController extends Controller
                     })->whereRaw("DATE(solicituds.fecha_by_user) >= ausentismos.fecha_inicio")
                         ->whereRaw("DATE(solicituds.fecha_by_user) <= ausentismos.fecha_termino");
                 });
+        })->orWhere(function ($q) use ($auth) {
+            $q->whereHas('firmantes', function ($q) use ($auth) {
+                $q->where('is_executed', false)
+                    ->whereHas('funcionario.reasignacionAusencias', function ($q) use ($auth) {
+                        $q->where('user_subrogante_id', $auth->id);
+                    });
+            })->whereHas('reasignaciones', function ($q) use ($auth) {
+                $q->where('user_subrogante_id', $auth->id);
+            });
         });
     }
 
@@ -118,6 +127,15 @@ class SolicitudAdminController extends Controller
                     })->whereRaw("DATE(solicituds.fecha_by_user) >= ausentismos.fecha_inicio")
                         ->whereRaw("DATE(solicituds.fecha_by_user) <= ausentismos.fecha_termino");
                 });
+        })->orWhere(function ($q) use ($auth) {
+            $q->whereHas('firmantes', function ($q) use ($auth) {
+                $q->where('is_executed', true)
+                    ->whereHas('funcionario.reasignacionAusencias', function ($q) use ($auth) {
+                        $q->where('user_subrogante_id', $auth->id);
+                    });
+            })->whereHas('reasignaciones', function ($q) use ($auth) {
+                $q->where('user_subrogante_id', $auth->id);
+            });
         });
     }
 
@@ -134,6 +152,8 @@ class SolicitudAdminController extends Controller
                 $q->where('users.id', $auth->id);
             })->whereRaw("DATE(solicituds.fecha_by_user) >= ausentismos.fecha_inicio")
                 ->whereRaw("DATE(solicituds.fecha_by_user) <= ausentismos.fecha_termino");
+        })->orWhereHas('reasignaciones', function ($q) use ($auth) {
+            $q->where('user_subrogante_id', $auth->id);
         });
     }
 
@@ -941,12 +961,12 @@ class SolicitudAdminController extends Controller
                         ->orWhere('role_id', 1)
                         ->where('posicion_firma', '<', $firma_disponible->posicion_firma)
                         ->orderBy('posicion_firma', 'ASC')
-                        ->get()->unique('user_id');
+                        ->get()->unique('role_id');
                 }
             }
 
             if ($status === EstadoSolicitud::STATUS_ANULADO) {
-                $firma_disponible       = $this->isFirmaDisponibleAction($solicitud, 'solicitud.firma.anular');
+                $firma_disponible       = $this->isFirmaDisponibleActionPolicy($solicitud, 'solicitud.firma.anular');
             }
             return response()->json(
                 array(

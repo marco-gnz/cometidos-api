@@ -3,6 +3,7 @@
 namespace App\Http\Resources\Grupo;
 
 use App\Models\Ausentismo;
+use Carbon\Carbon;
 use Illuminate\Http\Resources\Json\JsonResource;
 
 class ListFirmantesResource extends JsonResource
@@ -15,7 +16,17 @@ class ListFirmantesResource extends JsonResource
      */
     public function toArray($request)
     {
-        $total_ausentismos_hoy = Ausentismo::where('user_ausente_id', $this->funcionario->id)->first();
+        $solicitud_created      = Carbon::parse($this->solicitud->fecha_by_user)->format('Y-m-d');
+        $total_ausentismos_hoy  = $this->funcionario->ausentismos()
+            ->where(function ($q) use ($solicitud_created) {
+                $q->where('fecha_inicio', '>=', $solicitud_created)
+                    ->where('fecha_termino', '<=', $solicitud_created);
+            })
+            ->first();
+
+        $reasignacion = $this->funcionario->reasignacionAusencias()
+            ->whereHas('solicitudes')
+            ->first();
 
         return [
             'uuid'                  => $this->uuid,
@@ -26,6 +37,7 @@ class ListFirmantesResource extends JsonResource
             'perfil'                => $this->perfil ? $this->perfil->name : null,
             'status'                => $this->status ? true : false,
             'total_ausentismos_hoy' => $total_ausentismos_hoy ? 'Si' : 'No',
+            'reasignacion'          => $reasignacion ? 'Si' : 'No',
             'is_reasignado'         => $this->is_reasignado,
             'is_firma'              => $this->solicitud ? ($this->posicion_firma === $this->solicitud->posicion_firma_actual ? true : false) : false,
             'authorized_to_update'  => $this->authorizedToUpdate(),

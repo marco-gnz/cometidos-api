@@ -38,7 +38,7 @@ class AusentismoController extends Controller
                 ->whereHas('firmantes', function ($q) use ($firmante) {
                     $q->where('user_id', $firmante->id)
                         ->where('status', true)
-                        ->where('is_executed', false);
+                        ->whereIn('is_executed', [true, false]);
                 })->get();
 
             $count_solicitudes_posterior = Solicitud::where('fecha_by_user', '>', $fecha_termino)
