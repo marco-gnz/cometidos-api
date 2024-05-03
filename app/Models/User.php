@@ -125,6 +125,16 @@ class User extends Authenticatable
         return $this->hasMany(SolicitudFirmante::class);
     }
 
+    public function reasignacionAusencias()
+    {
+        return $this->hasMany(Reasignacion::class, 'user_ausente_id');
+    }
+
+    public function reasignacionAsignadas()
+    {
+        return $this->hasMany(Reasignacion::class, 'user_subrogante_id');
+    }
+
     public function solicitudes()
     {
         return $this->hasMany(Solicitud::class);

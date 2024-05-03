@@ -29,8 +29,10 @@ class MantenedorController extends Controller
     {
         try {
             $estados = EstadoSolicitud::RECHAZO_STATUS;
-
-            return response()->json($estados);
+            return response()->json([
+                'status' => 'success',
+                'data' => $estados,
+            ]);
         } catch (\Exception $error) {
             return response()->json($error->getMessage());
         }

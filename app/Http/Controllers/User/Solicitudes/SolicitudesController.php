@@ -94,109 +94,43 @@ class SolicitudesController extends Controller
     {
         try {
             $solicitud = Solicitud::where('uuid', $uuid)->withCount('documentos')->firstOrFail();
+            $navStatus = $this->navStatusSolicitud($solicitud);
+            $responseData = [
+                'status'    => 'success',
+                'title'     => null,
+                'message'   => null,
+                'data'      => DatosSolicitudResource::make($solicitud),
+                'nav'       => $navStatus,
+            ];
 
             switch ($nav) {
                 case 'datos':
-                    return response()->json(
-                        array(
-                            'status'        => 'success',
-                            'title'         => null,
-                            'message'       => null,
-                            'data'          => DatosSolicitudResource::make($solicitud),
-                            'nav'           => $this->navStatusSolicitud($solicitud)
-                        )
-                    );
                     break;
-
                 case 'informes':
-                    $informes = $solicitud->informes()->orderBy('id', 'DESC')->get();
-
-                    return response()->json(
-                        array(
-                            'status'        => 'success',
-                            'title'         => null,
-                            'message'       => null,
-                            'data'          => DatosSolicitudResource::make($solicitud),
-                            'informes'      => ListInformeCometidoAdminResource::collection($informes),
-                            'nav'           => $this->navStatusSolicitud($solicitud)
-                        )
-                    );
+                    $responseData['informes'] = ListInformeCometidoAdminResource::collection($solicitud->informes()->orderBy('id', 'DESC')->get());
                     break;
-
                 case 'calculo':
-                    $calculo = $solicitud->getLastCalculo();
-
-                    return response()->json(
-                        array(
-                            'status'        => 'success',
-                            'title'         => null,
-                            'message'       => null,
-                            'data'          => DatosSolicitudResource::make($solicitud),
-                            'calculo'       => $calculo ? ListCalculoResoruce::make($calculo) : null,
-                            'nav'           => $this->navStatusSolicitud($solicitud)
-                        )
-                    );
+                    $calculo                    = $solicitud->getLastCalculo();
+                    $responseData['calculo']    = $calculo ? ListCalculoResoruce::make($calculo) : null;
                     break;
-
                 case 'rendiciones':
-                    $rendiciones = $solicitud->procesoRendicionGastos()->orderBy('id', 'DESC')->get();
-                    return response()->json(
-                        array(
-                            'status'        => 'success',
-                            'title'         => null,
-                            'message'       => null,
-                            'data'          => DatosSolicitudResource::make($solicitud),
-                            'rendiciones'   => ProcesoRendicionGastoDetalleResource::collection($rendiciones),
-                            'nav'           => $this->navStatusSolicitud($solicitud)
-                        )
-                    );
+                    $responseData['rendiciones'] = ProcesoRendicionGastoDetalleResource::collection($solicitud->procesoRendicionGastos()->orderBy('id', 'DESC')->get());
                     break;
-
                 case 'archivos':
-                    $documentos = $solicitud->documentos()->get();
-
-                    return response()->json(
-                        array(
-                            'status'        => 'success',
-                            'title'         => null,
-                            'message'       => null,
-                            'data'          => DatosSolicitudResource::make($solicitud),
-                            'archivos'      => ListSolicitudDocumentosResource::collection($documentos),
-                            'nav'           => $this->navStatusSolicitud($solicitud)
-                        )
-                    );
+                    $responseData['documentos'] = ListSolicitudDocumentosResource::collection($solicitud->documentos()->get());
                     break;
-
                 case 'convenio':
-                    $convenio  = $solicitud->convenio;
-                    return response()->json(
-                        array(
-                            'status'        => 'success',
-                            'title'         => null,
-                            'message'       => null,
-                            'data'          => DatosSolicitudResource::make($solicitud),
-                            'convenio'      => $convenio ? ListConvenioResource::make($convenio) : null,
-                            'nav'           => $this->navStatusSolicitud($solicitud)
-                        )
-                    );
+                    $responseData['convenio']   = $solicitud->convenio ? ListConvenioResource::make($solicitud->convenio) : null;
                     break;
-
                 case 'seguimiento':
-                    $estados = $solicitud->estados()->get();
-                    return response()->json(
-                        array(
-                            'status'        => 'success',
-                            'title'         => null,
-                            'message'       => null,
-                            'data'          => DatosSolicitudResource::make($solicitud),
-                            'estados'       => ListSolicitudStatusResource::collection($estados),
-                            'nav'           => $this->navStatusSolicitud($solicitud)
-                        )
-                    );
+                    $responseData['estados'] = ListSolicitudStatusResource::collection($solicitud->estados()->get());
                     break;
+                default:
+                    return response()->json(['error' => 'Parámetro no encontrado'], 400);
             }
+            return response()->json($responseData);
         } catch (\Exception $error) {
-            return $error->getMessage();
+            return response()->json(['error' => $error->getMessage()], 500);
         }
     }
 }

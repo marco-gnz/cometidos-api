@@ -62,11 +62,11 @@ class SolicitudAdminController extends Controller
             $query          = Solicitud::query();
 
             if ($resultSolicitud === 'noverify') {
-                $this->filterNoVerify($query, $auth, $ids_solicitudes);
+                $this->filterNoVerify($query, $auth);
             } elseif ($resultSolicitud === 'verify') {
-                $this->filterVerify($query, $auth, $ids_solicitudes);
+                $this->filterVerify($query, $auth);
             } elseif ($resultSolicitud === 'all') {
-                $this->filterAll($query, $auth, $ids_solicitudes);
+                $this->filterAll($query, $auth);
             }
 
             $solicitudes = $query->orderByDesc('fecha_inicio')->get();
@@ -254,130 +254,51 @@ class SolicitudAdminController extends Controller
     public function findSolicitud($uuid, $nav)
     {
         try {
-            $solicitud                      = Solicitud::where('uuid', $uuid)->withCount('documentos')->firstOrFail();
-            $navStatus                      = $this->navStatusSolicitud($solicitud);
+            $solicitud = Solicitud::where('uuid', $uuid)->withCount('documentos')->firstOrFail();
+            $navStatus = $this->navStatusSolicitud($solicitud);
+            $responseData = [
+                'status'    => 'success',
+                'title'     => null,
+                'message'   => null,
+                'data'      => ListSolicitudCompleteAdminResource::make($solicitud),
+                'nav'   => $navStatus,
+            ];
 
             switch ($nav) {
                 case 'datos':
-                    return response()->json(
-                        array(
-                            'status'        => 'success',
-                            'title'         => null,
-                            'message'       => null,
-                            'data'          => ListSolicitudCompleteAdminResource::make($solicitud),
-                            'nav'           => $navStatus
-                        )
-                    );
                     break;
-
                 case 'firmantes':
-                    $firmantes = $solicitud->firmantes()->get();
-                    return response()->json(
-                        array(
-                            'status'        => 'success',
-                            'title'         => null,
-                            'message'       => null,
-                            'data'          => ListSolicitudCompleteAdminResource::make($solicitud),
-                            'firmantes'     => ListFirmantesResource::collection($firmantes),
-                            'nav'           => $navStatus,
-                        )
-                    );
+                    $responseData['firmantes'] = ListFirmantesResource::collection($solicitud->firmantes()->get());
                     break;
-
                 case 'calculo':
-                    $calculo = $solicitud->getLastCalculo();
-
-                    return response()->json(
-                        array(
-                            'status'        => 'success',
-                            'title'         => null,
-                            'message'       => null,
-                            'data'          => ListSolicitudCompleteAdminResource::make($solicitud),
-                            'calculo'       => $calculo ? ListCalculoResoruce::make($calculo) : null,
-                            'nav'           => $navStatus
-                        )
-                    );
-
+                    $calculo                    = $solicitud->getLastCalculo();
+                    $responseData['calculo']    = $calculo ? ListCalculoResoruce::make($calculo) : null;
                     break;
-
                 case 'convenio':
-                    $convenio  = $solicitud->convenio;
-                    $convenios = $this->getConvenios($solicitud);
-
-                    return response()->json(
-                        array(
-                            'status'        => 'success',
-                            'title'         => null,
-                            'message'       => null,
-                            'data'          => ListSolicitudCompleteAdminResource::make($solicitud),
-                            'convenio'      => $convenio ? ListConvenioResource::make($convenio) : null,
-                            'nav'           => $navStatus,
-                            'convenios'     => $convenios ? ListConvenioResource::collection($convenios) : null
-                        )
-                    );
-
+                    $responseData['convenio']   = $solicitud->convenio ? ListConvenioResource::make($solicitud->convenio) : null;
+                    $responseData['convenios']  = $this->getConvenios($solicitud) ? ListConvenioResource::collection($this->getConvenios($solicitud)) : null;
                     break;
-
                 case 'rendiciones':
-                    $rendiciones = $solicitud->procesoRendicionGastos()->orderBy('id', 'DESC')->get();
-                    return response()->json(
-                        array(
-                            'status'        => 'success',
-                            'title'         => null,
-                            'message'       => null,
-                            'data'          => ListSolicitudCompleteAdminResource::make($solicitud),
-                            'rendiciones'   => ProcesoRendicionGastoDetalleResource::collection($rendiciones),
-                            'nav'           => $navStatus,
-                        )
-                    );
+                    $responseData['rendiciones'] = ProcesoRendicionGastoDetalleResource::collection($solicitud->procesoRendicionGastos()->orderBy('id', 'DESC')->get());
                     break;
-
                 case 'archivos':
-                    $documentos = $solicitud->documentos()->get();
-                    return response()->json(
-                        array(
-                            'status'        => 'success',
-                            'title'         => null,
-                            'message'       => null,
-                            'data'          => ListSolicitudCompleteAdminResource::make($solicitud),
-                            'documentos'    => ListSolicitudDocumentosResource::collection($documentos),
-                            'nav'           => $navStatus,
-                        )
-                    );
+                    $responseData['documentos'] = ListSolicitudDocumentosResource::collection($solicitud->documentos()->get());
                     break;
-
                 case 'informes':
-                    $informes = $solicitud->informes()->orderBy('id', 'DESC')->get();
-                    return response()->json(
-                        array(
-                            'status'        => 'success',
-                            'title'         => null,
-                            'message'       => null,
-                            'data'          => ListSolicitudCompleteAdminResource::make($solicitud),
-                            'informes'      => ListInformeCometidoAdminResource::collection($informes),
-                            'nav'           => $navStatus,
-                        )
-                    );
+                    $responseData['informes'] = ListInformeCometidoAdminResource::collection($solicitud->informes()->orderBy('id', 'DESC')->get());
                     break;
-
                 case 'seguimiento':
-                    $estados = $solicitud->estados()->get();
-                    return response()->json(
-                        array(
-                            'status'        => 'success',
-                            'title'         => null,
-                            'message'       => null,
-                            'data'          => ListSolicitudCompleteAdminResource::make($solicitud),
-                            'estados'       => ListSolicitudStatusResource::collection($estados),
-                            'nav'           => $navStatus,
-                        )
-                    );
+                    $responseData['estados'] = ListSolicitudStatusResource::collection($solicitud->estados()->get());
                     break;
+                default:
+                    return response()->json(['error' => 'Parámetro no encontrado'], 400);
             }
+            return response()->json($responseData);
         } catch (\Exception $error) {
-            return $error->getMessage();
+            return response()->json(['error' => $error->getMessage()], 500);
         }
     }
+
 
     public function updateStatusFirmante($uuid)
     {
