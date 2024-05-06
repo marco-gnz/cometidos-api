@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Admin\Ausentismo\AusentismoController;
+use App\Http\Controllers\Admin\Conceptos\ConceptosController;
 use App\Http\Controllers\Admin\Grupos\GrupoFirmaController;
 use App\Http\Controllers\Admin\Mantenedores\MantenedorController;
 use App\Http\Controllers\Admin\Reasignacion\ReasignacionController;
@@ -101,6 +102,12 @@ Route::group(
         Route::post('/admin/reasignacion/store', [ReasignacionController::class, 'storeReasignacion']);
         Route::get('/admin/reasignacion/list', [ReasignacionController::class, 'listReasignaciones']);
         Route::delete('/admin/reasignacion/{uuid}', [ReasignacionController::class, 'deleteReasignacion']);
+
+        Route::post('/admin/concepto/store-user', [ConceptosController::class, 'storeUser']);
+        Route::post('/admin/concepto/get-users', [ConceptosController::class, 'getUsersConcepto']);
+        Route::get('/admin/concepto/list', [ConceptosController::class, 'listConceptos']);
+        Route::post('/admin/concepto/change-position', [ConceptosController::class, 'changePosition']);
+        Route::post('/admin/concepto/delete-user', [ConceptosController::class, 'deleteUser']);
     }
 );
 
