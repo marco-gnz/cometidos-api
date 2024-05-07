@@ -268,7 +268,7 @@ class SolicitudAdminController extends Controller
                 case 'datos':
                     break;
                 case 'firmantes':
-                    $responseData['firmantes'] = ListFirmantesResource::collection($solicitud->firmantes()->get());
+                    $responseData['firmantes'] = ListFirmantesResource::collection($solicitud->firmantes()->orderBy('posicion_firma', 'ASC')->get());
                     break;
                 case 'calculo':
                     $calculo                    = $solicitud->getLastCalculo();

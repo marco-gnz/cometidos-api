@@ -14,6 +14,7 @@ use App\Http\Resources\Solicitud\ListInformeCometidoAdminResource;
 use App\Http\Resources\Solicitud\ListSolicitudCompleteAdminResource;
 use App\Http\Resources\Solicitud\UpdateSolicitudResource;
 use App\Models\CicloFirma;
+use App\Models\ConceptoEstablecimiento;
 use App\Models\Convenio;
 use App\Models\Documento;
 use App\Models\EstadoInformeCometido;
@@ -32,6 +33,7 @@ use Illuminate\Support\Facades\Validator;
 use Spatie\Permission\Models\Role;
 use App\Traits\FirmaDisponibleTrait;
 use App\Traits\StatusSolicitudTrait;
+use Illuminate\Support\Collection;
 
 class SolicitudController extends Controller
 {
@@ -177,8 +179,9 @@ class SolicitudController extends Controller
                 $solicitud->addEstados($estados);
 
                 if ($solicitud->grupo) {
-                    $firmantes = $solicitud->grupo->firmantes()->where('status', true)->get();
+                    $firmantes = $solicitud->grupo->firmantes()->where('status', true)->orderBy('posicion_firma', 'ASC')->get();
                     if ($firmantes) {
+                        $posicion_firma = 1;
                         foreach ($firmantes as $firmante) {
                             $status = true;
                             if ($firmante->role_id === 6 || $firmante->role_id === 7) {
@@ -188,15 +191,52 @@ class SolicitudController extends Controller
                                 }
                             }
                             $firmantes_solicitud[] = [
-                                'posicion_firma'    => $firmante->posicion_firma,
+                                'posicion_firma'    => $posicion_firma++,
                                 'status'            => $firmante->status,
                                 'solicitud_id'      => $solicitud->id,
                                 'grupo_id'          => $firmante->grupo_id,
                                 'user_id'           => $firmante->user_id,
                                 'role_id'           => $firmante->role_id,
                                 'status'            => $status,
-                                'permissions_id'    => $this->getPermissions($firmante, $solicitud)
+                                'permissions_id'    => $this->getPermissions($firmante->role_id, $solicitud)
                             ];
+                        }
+
+                        if ($solicitud->tipo_comision_id === 5) {
+                            $conceptoEstablecimiento = ConceptoEstablecimiento::where('establecimiento_id', $solicitud->establecimiento_id)
+                                ->whereHas('concepto', function ($q) {
+                                    $q->where('nombre', 'CAPACITACIÓN FINANCIAMIENTO CENTRALIZADO');
+                                })->first();
+                            if ($conceptoEstablecimiento) {
+                                $fecha_by_solicitud = Carbon::parse($solicitud->fecha_by_user)->format('Y-m-d');
+                                $first_user = $conceptoEstablecimiento->funcionarios()
+                                    ->first();
+
+                                if ($first_user) {
+                                    $posicion_actual    = 1;
+                                    $nuevos_firmantes   = [];
+                                    foreach ($firmantes_solicitud as $firmante) {
+                                        $nuevos_firmantes[] = $firmante;
+                                        if ($firmante['role_id'] === 3) {
+                                            // Crear el nuevo firmante de capacitación
+                                            $firmante_capacitacion = [
+                                                'posicion_firma'    => $firmante['posicion_firma'] + 1,
+                                                'solicitud_id'      => $solicitud->id,
+                                                'grupo_id'          => $solicitud->grupo_id,
+                                                'user_id'           => $first_user->id,
+                                                'role_id'           => 10,
+                                                'status'            => true,
+                                                'permissions_id'    => $this->getPermissions(10, $solicitud)
+                                            ];
+                                            $nuevos_firmantes[] = $firmante_capacitacion;
+                                            $posicion_actual++;
+                                        }
+                                        $nuevos_firmantes[count($nuevos_firmantes) - 1]['posicion_firma'] = $posicion_actual;
+                                        $posicion_actual++;
+                                    }
+                                    $firmantes_solicitud = $nuevos_firmantes;
+                                }
+                            }
                         }
                         $solicitud->addFirmantes($firmantes_solicitud);
                     }
@@ -271,10 +311,10 @@ class SolicitudController extends Controller
         }
     }
 
-    private function getPermissions($firmante, $solicitud)
+    private function getPermissions($role_id, $solicitud)
     {
         $ciclo_firma = CicloFirma::where('establecimiento_id', $solicitud->establecimiento_id)
-            ->where('role_id', $firmante->role_id)
+            ->where('role_id', $role_id)
             ->first();
 
         if (!$ciclo_firma) {
@@ -578,6 +618,66 @@ class SolicitudController extends Controller
                         ]);
                     }
                 }
+
+                if ($solicitud->tipo_comision_id !== 5) {
+                    $firmantes_capacitacion = $solicitud->firmantes()->where('role_id', 10)->where('status', true)->get();
+
+                    if (count($firmantes_capacitacion) > 0) {
+                        $firmantes_capacitacion->toQuery()->update(['status' => false]);
+                    }
+                }
+
+                if ($solicitud->tipo_comision_id === 5) {
+                    $firmantes_capacitacion_ok = $solicitud->firmantes()->where('role_id', 10)->where('status', false)->get();
+                    $firmantes_capacitacion = $solicitud->firmantes()->where('role_id', 10)->get();
+
+                    if (count($firmantes_capacitacion_ok)  > 0) {
+                        $firmantes_capacitacion_ok->toQuery()->update(['status' => true]);
+                    } else if (count($firmantes_capacitacion) === 0) {
+                        $conceptoEstablecimiento = ConceptoEstablecimiento::where('establecimiento_id', $solicitud->establecimiento_id)
+                            ->whereHas('concepto', function ($q) {
+                                $q->where('nombre', 'CAPACITACIÓN FINANCIAMIENTO CENTRALIZADO');
+                            })->first();
+                        if ($conceptoEstablecimiento) {
+                            $fecha_by_solicitud = Carbon::parse($solicitud->fecha_by_user)->format('Y-m-d');
+                            $first_user = $conceptoEstablecimiento->funcionarios()
+                                ->first();
+                            if ($first_user) {
+                                $nuevos_firmantes = [];
+                                $firmantes_actual          = $solicitud->firmantes()->get();
+                                foreach ($firmantes_actual as $firmante) {
+                                    if ($firmante->role_id === 3) {
+                                        $firmante_capacitacion = [
+                                            'posicion_firma'    => $firmante['posicion_firma'] + 1,
+                                            'solicitud_id'      => $solicitud->id,
+                                            'grupo_id'          => $solicitud->grupo_id,
+                                            'user_id'           => $first_user->id,
+                                            'role_id'           => 10,
+                                            'status'            => true,
+                                            'permissions_id'    => $this->getPermissions(10, $solicitud)
+                                        ];
+                                        $nuevos_firmantes[] = $firmante_capacitacion;
+                                    }
+                                }
+                                $solicitud->addFirmantes($nuevos_firmantes);
+                                $solicitud          = $solicitud->fresh();
+                                $firmantes          = $solicitud->firmantes()->orderBy('posicion_firma')->get();
+                                $posicionesUnicas   = [];
+
+                                foreach ($firmantes as $firmante) {
+                                    if (in_array($firmante->posicion_firma, $posicionesUnicas)) {
+                                        $nuevaPosicion = end($posicionesUnicas) + 1;
+                                        $firmante->update(['posicion_firma' => $nuevaPosicion]);
+                                        $posicionesUnicas[] = $nuevaPosicion;
+                                    } else {
+                                        $posicionesUnicas[] = $firmante->posicion_firma;
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+
                 if ($request->archivos) {
                     foreach ($request->archivos as $file) {
                         $fecha_solicitud    = Carbon::parse($solicitud->fecha_inicio);
@@ -634,16 +734,17 @@ class SolicitudController extends Controller
 
                 $solicitud = $solicitud->fresh();
 
-                $firma = $solicitud->firmantes()->where('posicion_firma', 0)->first();
+                $firma_disponible       = $this->obtenerFirmaDisponible($solicitud, 'solicitud.datos.editar-solicitud');
+                /* $firma = $solicitud->firmantes()->where('posicion_firma', 0)->first(); */
                 $estados[] = [
                     'status'                    => EstadoSolicitud::STATUS_MODIFICADA,
-                    'posicion_firma_s'          => $firma ? $firma->posicion_firma : 0,
+                    'posicion_firma_s'          => $firma_disponible ? $firma_disponible->posicion_firma : 0,
                     'history_solicitud_old'     => json_encode($history_solicitud_old),
                     'history_solicitud_new'     => json_encode($solicitud->only($form)),
                     'solicitud_id'              => $solicitud->id,
-                    'user_id'                   => $firma ? $firma->user_id : null,
-                    's_role_id'                 => $firma ? $firma->role_id : null,
-                    's_firmante_id'             => $firma ? $firma->id : null,
+                    'user_id'                   => $firma_disponible ? $firma_disponible->user_id : null,
+                    's_role_id'                 => $firma_disponible ? $firma_disponible->role_id : null,
+                    's_firmante_id'             => $firma_disponible ? $firma_disponible->id : null,
                 ];
 
                 $create_status  = $solicitud->addEstados($estados);
@@ -658,6 +759,7 @@ class SolicitudController extends Controller
                 );
             }
         } catch (\Exception $error) {
+            Log::info($error->getMessage());
             return response()->json(['error' => $error->getMessage()], 500);
         }
     }

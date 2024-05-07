@@ -137,6 +137,16 @@ class ConceptosController extends Controller
             $funcionario = $conceptoEstablecimiento->funcionarios->first();
             if ($funcionario) {
                 $conceptoEstablecimiento->funcionarios()->detach($funcionario->id);
+                $conceptoEstablecimiento = $conceptoEstablecimiento->fresh();
+
+                $funcionarios = $conceptoEstablecimiento->funcionarios()->get();
+                if (count($funcionarios) > 0) {
+                    foreach ($funcionarios as $key => $funcionario) {
+                        $funcionario->pivot->posicion = $key + 1;
+                        $funcionario->pivot->save();
+                    }
+                }
+
 
                 return response()->json([
                     'status'    => 'success',
