@@ -108,7 +108,7 @@ trait FirmaDisponibleTrait
         return $query->first();
     }
 
-    public function obtenerFirmaDisponible($solicitud, $name_permission)
+    public function obtenerFirmaDisponible($solicitud, $name_permission, $status = null)
     {
         $auth                   = Auth::user();
         $title                  = null;
@@ -149,7 +149,7 @@ trait FirmaDisponibleTrait
                     $get_last_calculo                   = $solicitud->getLastCalculo();
                     $total_informes_aprobados           = $solicitud->informes()->where('last_status', EstadoInformeCometido::STATUS_APROBADO)->count();
 
-                    if (in_array($id_permission_valorizacion_crear, $first_firma_auth->permissions_id) && !$get_last_calculo) {
+                    if (in_array($id_permission_valorizacion_crear, $first_firma_auth->permissions_id) && !$get_last_calculo && isset($status) && $status === EstadoSolicitud::STATUS_APROBADO) {
                         $is_firma   = false;
                         $type       = 'warning';
                         $title      = "{$name_user}, si registras firma disponible, pero existen tareas por ejecutar.";
@@ -210,7 +210,7 @@ trait FirmaDisponibleTrait
                         $if_buttom                          = true;
                         $get_last_calculo                   = $solicitud->getLastCalculo();
                         $id_permission_valorizacion_crear   = $this->idPermission('solicitud.valorizacion.crear');
-                        if (in_array($id_permission_valorizacion_crear, $first_firma_position->permissions_id) && !$get_last_calculo) {
+                        if (in_array($id_permission_valorizacion_crear, $first_firma_position->permissions_id) && !$get_last_calculo && isset($status) && $status === EstadoSolicitud::STATUS_APROBADO) {
                             $is_firma   = false;
                             $type       = 'warning';
                             $title      = "{$name_user}, si registras firma disponible, pero existen tareas por ejecutar.";

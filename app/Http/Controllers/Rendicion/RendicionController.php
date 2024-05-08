@@ -109,7 +109,7 @@ class RendicionController extends Controller
                 )
             );
         } catch (\Exception $error) {
-            return response()->json($error->getMessage());
+            return response()->json(['error' => $error->getMessage()], 500);
         }
     }
 
@@ -117,6 +117,7 @@ class RendicionController extends Controller
     {
         try {
             $rendicion = ProcesoRendicionGasto::where('uuid', $uuid)->firstOrFail();
+            $this->authorize('update', $rendicion);
             return response()->json(
                 array(
                     'status'        => 'success',

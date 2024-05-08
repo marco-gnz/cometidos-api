@@ -69,7 +69,7 @@ class ProcesoRendicionController extends Controller
                 )
             );
         } catch (\Exception $error) {
-            return response()->json($error->getMessage());
+            return response()->json(['error' => $error->getMessage()], 500);
         }
     }
 

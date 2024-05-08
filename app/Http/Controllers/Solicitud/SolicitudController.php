@@ -161,6 +161,7 @@ class SolicitudController extends Controller
                     'grupo_id'          => null,
                     'user_id'           => $solicitud->user_id,
                     'role_id'           => $solicitante ? $solicitante->id : null,
+                    'permissions_id'        => $this->getPermissions($solicitante->id, $solicitud)
                 ];
 
                 $solicitud->addFirmantes($first_firmante);
@@ -734,19 +735,20 @@ class SolicitudController extends Controller
 
                 $solicitud = $solicitud->fresh();
 
-                $firma_disponible       = $this->obtenerFirmaDisponible($solicitud, 'solicitud.datos.editar-solicitud');
-                /* $firma = $solicitud->firmantes()->where('posicion_firma', 0)->first(); */
+                $firma_disponible = $this->isFirmaDisponibleActionPolicy($solicitud, 'solicitud.datos.editar-solicitud');
                 $estados[] = [
                     'status'                    => EstadoSolicitud::STATUS_MODIFICADA,
-                    'posicion_firma_s'          => $firma_disponible ? $firma_disponible->posicion_firma : 0,
+                    'is_reasignado'             => false,
+                    'posicion_firma_s'          => $firma_disponible ? $firma_disponible->posicion_firma : null,
                     'history_solicitud_old'     => json_encode($history_solicitud_old),
                     'history_solicitud_new'     => json_encode($solicitud->only($form)),
                     'solicitud_id'              => $solicitud->id,
-                    'user_id'                   => $firma_disponible ? $firma_disponible->user_id : null,
-                    's_role_id'                 => $firma_disponible ? $firma_disponible->role_id : null,
-                    's_firmante_id'             => $firma_disponible ? $firma_disponible->id : null,
+                    'posicion_firma'            => $firma_disponible ? $firma_disponible->posicion_firma : null,
+                    's_firmante_id'             => $firma_disponible ? $firma_disponible->id_firma : null,
+                    'user_id'                   => $firma_disponible ? $firma_disponible->id_user_ejecuted_firma : null,
+                    'is_subrogante'             => $firma_disponible ? $firma_disponible->is_subrogante : false
                 ];
-
+                Log::info($estados);
                 $create_status  = $solicitud->addEstados($estados);
 
                 return response()->json(

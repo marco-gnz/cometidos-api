@@ -856,7 +856,7 @@ class SolicitudAdminController extends Controller
         try {
             $status                 = (int)$request->status;
             $solicitud              = Solicitud::where('uuid', $request->solicitud_uuid)->firstOrFail();
-            $firma_disponible       = $this->obtenerFirmaDisponible($solicitud, 'solicitud.firma.validar');
+            $firma_disponible       = $this->obtenerFirmaDisponible($solicitud, 'solicitud.firma.validar', $status);
             $firmantes_disponible   = [];
             if ($status === EstadoSolicitud::STATUS_RECHAZADO) {
                 if ($firma_disponible->is_firma) {
