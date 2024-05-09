@@ -58,8 +58,22 @@ class SolicitudAdminController extends Controller
 
             $resultSolicitud = $params['result'];
             $auth = auth()->user();
-
-            $query          = Solicitud::query();
+            $query          = Solicitud::searchInput($request->input)
+                ->periodoSolicitud($request->periodo_cometido)
+                ->periodoIngreso($request->periodo_ingreso)
+                ->periodoInformeCometido($request->periodo_informe_cometido)
+                ->derechoViatico($request->is_derecho_viatico)
+                ->valorizacion($request->is_valorizacion)
+                ->rendicion($request->is_rendicion)
+                ->informesCometido($request->is_informe_cometido)
+                ->archivos($request->is_files)
+                ->motivo($request->motivos_id)
+                ->lugar($request->lugares_id)
+                ->pais($request->paises_id)
+                ->medioTransporte($request->medios_transporte)
+                ->tipoComision($request->tipo_comision_id)
+                ->jornada($request->jornadas_id)
+                ->estado($request->estados_id);
 
             if ($resultSolicitud === 'noverify') {
                 $this->filterNoVerify($query, $auth);
@@ -69,10 +83,18 @@ class SolicitudAdminController extends Controller
                 $this->filterAll($query, $auth);
             }
 
-            $solicitudes = $query->orderByDesc('fecha_inicio')->get();
+            $solicitudes = $query->orderByDesc('fecha_inicio')->paginate(50);
 
             return response()->json([
                 'status' => 'success',
+                'pagination' => [
+                    'total'         => $solicitudes->total(),
+                    'current_page'  => $solicitudes->currentPage(),
+                    'per_page'      => $solicitudes->perPage(),
+                    'last_page'     => $solicitudes->lastPage(),
+                    'from'          => $solicitudes->firstItem(),
+                    'to'            => $solicitudes->lastPage()
+                ],
                 'data' => ListSolicitudAdminResource::collection($solicitudes),
             ]);
         } catch (\Exception $error) {

@@ -30,17 +30,31 @@ class SolicitudesController extends Controller
         $this->middleware(['auth:sanctum']);
     }
 
-    public function listSolicitudes()
+    public function listSolicitudes(Request $request)
     {
         try {
             $auth = Auth::user();
-            $solicitudes = Solicitud::where('user_id', $auth->id)->orderBy('codigo', 'DESC')->get();
+            $solicitudes = Solicitud::where('user_id', $auth->id)
+                ->searchInput($request->input)
+                ->periodoSolicitud($request->periodo_cometido)
+                ->periodoIngreso($request->periodo_ingreso)
+                ->estado($request->estados_id)
+                ->orderBy('fecha_by_user', 'DESC')
+                ->paginate(20);
 
             return response()->json(
                 array(
                     'status'        => 'success',
                     'title'         => null,
                     'message'       => null,
+                    'pagination' => [
+                        'total'         => $solicitudes->total(),
+                        'current_page'  => $solicitudes->currentPage(),
+                        'per_page'      => $solicitudes->perPage(),
+                        'last_page'     => $solicitudes->lastPage(),
+                        'from'          => $solicitudes->firstItem(),
+                        'to'            => $solicitudes->lastPage()
+                    ],
                     'data'          => ListSolicitudResource::collection($solicitudes)
                 )
             );

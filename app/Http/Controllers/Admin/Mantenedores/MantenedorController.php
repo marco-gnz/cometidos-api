@@ -38,6 +38,16 @@ class MantenedorController extends Controller
         }
     }
 
+    public function getStatusCometido()
+    {
+        try {
+            $estados = Solicitud::STATUS_COMETIDO;
+            return response()->json($estados);
+        } catch (\Exception $error) {
+            return response()->json($error->getMessage());
+        }
+    }
+
     public function getMotivos()
     {
         try {

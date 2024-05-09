@@ -65,6 +65,7 @@ Route::group(
         Route::get('/admin/mantenedores/firmantes', [MantenedorController::class, 'getFirmantes']);
         Route::get('/admin/mantenedores/user/{id}', [MantenedorController::class, 'getUser']);
         Route::get('/admin/mantenedores/estados-rechazo', [MantenedorController::class, 'getStatusRechazo']);
+        Route::get('/admin/mantenedores/estados-cometido', [MantenedorController::class, 'getStatusCometido']);
         Route::get('/admin/mantenedores/tipo-comisiones', [MantenedorController::class, 'getTipoComisiones']);
         Route::get('/admin/mantenedores/jornadas-cometido', [MantenedorController::class, 'getJornadasCometido']);
         Route::get('/admin/mantenedores/paises', [MantenedorController::class, 'getPaises']);

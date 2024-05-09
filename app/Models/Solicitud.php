@@ -72,6 +72,12 @@ class Solicitud extends Model
         self::STATUS_ANULADO            => 'Solicitud de cometido anulada',
     ];
 
+    public const STATUS_COMETIDO = [
+        ['id' => self::STATUS_EN_PROCESO, 'nombre' => self::STATUS_NOM[self::STATUS_EN_PROCESO]],
+        ['id' => self::STATUS_PROCESADO, 'nombre' => self::STATUS_NOM[self::STATUS_PROCESADO]],
+        ['id' => self::STATUS_ANULADO, 'nombre' => self::STATUS_NOM[self::STATUS_ANULADO]],
+    ];
+
     protected $fillable = [
         'uuid',
         'codigo',
@@ -861,5 +867,173 @@ class Solicitud extends Model
             ];
         }
         return $menu;
+    }
+
+    public function scopeSearchInput($query, $params)
+    {
+        if ($params)
+            return $query->where('codigo', 'like', '%' . $params . '%')
+                ->orWhere('actividad_realizada', 'like', '%' . $params . '%')
+                ->orWhere('vistos', 'like', '%' . $params . '%')
+                ->orWhere('observacion_gastos', 'like', '%' . $params . '%')
+                ->orWhere(function ($query) use ($params) {
+                    $query->whereHas('funcionario', function ($query) use ($params) {
+                        $query->where('rut_completo', 'like', '%' . $params . '%')
+                            ->orWhere('rut', 'like', '%' . $params . '%')
+                            ->orWhere('nombres', 'like', '%' . $params . '%')
+                            ->orWhere('apellidos', 'like', '%' . $params . '%')
+                            ->orWhere('nombre_completo', 'like', '%' . $params . '%')
+                            ->orWhere('email', 'like', '%' . $params . '%');
+                    });
+                })->orWhere(function ($query) use ($params) {
+                    $query->whereHas('firmantes.funcionario', function ($query) use ($params) {
+                        $query->where('rut_completo', 'like', '%' . $params . '%')
+                            ->orWhere('rut', 'like', '%' . $params . '%')
+                            ->orWhere('nombres', 'like', '%' . $params . '%')
+                            ->orWhere('apellidos', 'like', '%' . $params . '%')
+                            ->orWhere('nombre_completo', 'like', '%' . $params . '%')
+                            ->orWhere('email', 'like', '%' . $params . '%');
+                    });
+                })->orWhere(function ($query) use ($params) {
+                    $query->whereHas('estados', function ($query) use ($params) {
+                        $query->where('observacion', 'like', '%' . $params . '%');
+                    });
+                });
+    }
+
+    public function scopePeriodoSolicitud($query, $params)
+    {
+        if ($params) {
+            return $query->whereBetween('fecha_inicio', array($params[0], $params[1]));
+        }
+    }
+
+    public function scopePeriodoIngreso($query, $params)
+    {
+        if ($params) {
+            $inicio     = Carbon::parse($params[0])->startOfDay();
+            $termino    = Carbon::parse($params[1])->endOfDay();
+
+            return $query->whereBetween('fecha_by_user', array($inicio, $termino));
+        }
+    }
+
+    public function scopePeriodoInformeCometido($query, $params)
+    {
+        if ($params)
+            return $query->whereHas('informes', function ($q) use ($params) {
+                $q->whereBetween('fecha_inicio', array($params[0], $params[1]));
+            });
+    }
+
+    public function scopeDerechoViatico($query, $params)
+    {
+        if ($params) {
+            return $query->whereIn('derecho_pago', $params);
+        }
+    }
+
+    public function scopeValorizacion($query, $params)
+    {
+        if ($params) {
+            if (in_array(0, $params) && in_array(1, $params)) {
+                return $query;
+            } elseif (in_array(0, $params)) {
+                return $query->whereDoesntHave('calculos');
+            } elseif (in_array(1, $params)) {
+                return $query->whereHas('calculos');
+            }
+        }
+    }
+
+    public function scopeRendicion($query, $params)
+    {
+        if ($params) {
+            if (in_array(0, $params) && in_array(1, $params)) {
+                return $query;
+            } elseif (in_array(0, $params)) {
+                return $query->whereDoesntHave('procesoRendicionGastos');
+            } elseif (in_array(1, $params)) {
+                return $query->whereHas('procesoRendicionGastos');
+            }
+        }
+    }
+
+    public function scopeInformesCometido($query, $params)
+    {
+        if ($params) {
+            if (in_array(0, $params) && in_array(1, $params)) {
+                return $query;
+            } elseif (in_array(0, $params)) {
+                return $query->whereDoesntHave('informes');
+            } elseif (in_array(1, $params)) {
+                return $query->whereHas('informes');
+            }
+        }
+    }
+
+    public function scopeArchivos($query, $params)
+    {
+        if ($params) {
+            if (in_array(0, $params) && in_array(1, $params)) {
+                return $query;
+            } elseif (in_array(0, $params)) {
+                return $query->whereDoesntHave('documentos');
+            } elseif (in_array(1, $params)) {
+                return $query->whereHas('documentos');
+            }
+        }
+    }
+
+    public function scopeMotivo($query, $params)
+    {
+        if ($params)
+            return $query->whereHas('motivos', function ($q) use ($params) {
+                $q->whereIn('motivos.id', $params);
+            });
+    }
+
+    public function scopeLugar($query, $params)
+    {
+        if ($params)
+            return $query->whereHas('lugares', function ($q) use ($params) {
+                $q->whereIn('lugars.id', $params);
+            });
+    }
+
+    public function scopePais($query, $params)
+    {
+        if ($params)
+            return $query->whereHas('paises', function ($q) use ($params) {
+                $q->whereIn('countries.id', $params);
+            });
+    }
+
+    public function scopeMedioTransporte($query, $params)
+    {
+        if ($params)
+            return $query->whereHas('transportes', function ($q) use ($params) {
+                $q->whereIn('transportes.id', $params);
+            });
+    }
+
+    public function scopeTipoComision($query, $params)
+    {
+        if ($params)
+            return $query->whereHas('tipoComision', function ($q) use ($params) {
+                $q->whereIn('id', $params);
+            });
+    }
+
+    public function scopeJornada($query, $params)
+    {
+        if ($params)
+            return $query->whereIn('jornada', $params);
+    }
+
+    public function scopeEstado($query, $params)
+    {
+        if ($params)
+            return $query->whereIn('status', $params);
     }
 }
