@@ -27,6 +27,14 @@ class CreateGruposTable extends Migration
             $table->foreign('establecimiento_id')->references('id')->on('establecimientos');
             $table->unsignedBigInteger('establecimiento_id')->nullable();
 
+            $table->unsignedBigInteger('user_id_by')->nullable();
+            $table->foreign('user_id_by')->references('id')->on('users');
+            $table->dateTime('fecha_by_user', 0)->nullable();
+
+            $table->unsignedBigInteger('user_id_update')->nullable();
+            $table->foreign('user_id_update')->references('id')->on('users');
+            $table->dateTime('fecha_by_user_update', 0)->nullable();
+
             $table->timestamps();
         });
     }

@@ -3,10 +3,14 @@
 namespace App\Http\Controllers\Admin\Grupos;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Grupo\StoreFirmanteRequest;
 use App\Http\Requests\Grupo\StoreGrupoRequest;
 use App\Http\Resources\Grupo\ListGrupoResource;
+use App\Models\Firmante;
 use App\Models\Grupo;
+use App\Models\User;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 
 class GrupoFirmaController extends Controller
 {
@@ -15,16 +19,30 @@ class GrupoFirmaController extends Controller
         $this->middleware(['auth:sanctum']);
     }
 
-    public function listGruposFirma()
+    public function listGruposFirma(Request $request)
     {
         try {
-            $grupos = Grupo::orderBy('id', 'ASC')->get();
+            $grupos = Grupo::searchInput($request->input)
+                ->searchEstablecimiento($request->establecimientos_id)
+                ->searchDepto($request->deptos_id)
+                ->searchSubdepto($request->subdeptos_id)
+                ->searchPerfil($request->perfiles_id)
+                ->orderBy('id', 'DESC')
+                ->paginate(50);
 
             return response()->json(
                 array(
                     'status'        => 'success',
                     'title'         => null,
                     'message'       => null,
+                    'pagination' => [
+                        'total'         => $grupos->total(),
+                        'current_page'  => $grupos->currentPage(),
+                        'per_page'      => $grupos->perPage(),
+                        'last_page'     => $grupos->lastPage(),
+                        'from'          => $grupos->firstItem(),
+                        'to'            => $grupos->lastPage()
+                    ],
                     'data'          => ListGrupoResource::collection($grupos)
                 )
             );
@@ -47,7 +65,115 @@ class GrupoFirmaController extends Controller
                 )
             );
         } catch (\Exception $error) {
-            return $error->getMessage();
+            return response()->json(['error' => $error->getMessage()], 500);
+        }
+    }
+
+    public function changePosition(Request $request)
+    {
+        try {
+            $firma = Firmante::where('uuid', $request->firmante_uuid)->firstOrFail();
+            if ($firma) {
+                $posicion_actual        = $firma->posicion_firma;
+                $nuevo_valor_posicion   = ($request->up_down == 'sum') ? ($posicion_actual + 1) : ($posicion_actual - 1);
+                $nuevo_valor_posicion   = max(1, $nuevo_valor_posicion);
+
+                $firmaAfectada = $firma->grupo->firmantes()->where('posicion_firma', $nuevo_valor_posicion)->first();
+                if ($firmaAfectada) {
+                    if ($request->up_down == 'sum') {
+                        $firmaAfectada->update([
+                            'posicion_firma'    => $firmaAfectada->posicion_firma - 1
+                        ]);
+                    } else {
+                        $firmaAfectada->update([
+                            'posicion_firma'    => $firmaAfectada->posicion_firma + 1
+                        ]);
+                    }
+                }
+                $update = $firma->update([
+                    'posicion_firma'    => $nuevo_valor_posicion
+                ]);
+                if ($update) {
+                    $grupo = $firma->grupo->fresh();
+                    return response()->json(
+                        array(
+                            'status'        => 'success',
+                            'title'         => 'Posición modificada con éxito',
+                            'message'       => null,
+                            'data'          => ListGrupoResource::make($grupo)
+                        )
+                    );
+                }
+            }
+        } catch (\Exception $error) {
+            return response()->json(['error' => $error->getMessage()], 500);
+        }
+    }
+    public function storeFirmanteGrupo(StoreFirmanteRequest $request)
+    {
+        try {
+            $grupo              = Grupo::where('uuid', $request->grupo_uuid)->firstOrFail();
+            $funcinario         = User::find($request->funcionario_id);
+            $perfil_id          = $request->perfil_id;
+            $total_firmantes    = $grupo->firmantes()->count();
+
+            $firmantes[] = [
+                'posicion_firma'    => $total_firmantes + 1,
+                'user_id'           => $funcinario->id,
+                'role_id'           => $perfil_id
+            ];
+
+            $grupo->addFirmantes($firmantes);
+
+            $grupo = $grupo->fresh();
+
+            return response()->json([
+                'status'    => 'success',
+                'title'     => 'Firmante agregado con éxito',
+                'data'      => ListGrupoResource::make($grupo)
+            ]);
+        } catch (\Exception $error) {
+            return response()->json(['error' => $error->getMessage()], 500);
+        }
+    }
+
+    public function getUsersNotGrupo(Request $request)
+    {
+        try {
+            $grupo = Grupo::where('uuid', $request->grupo_uuid)->firstOrFail();
+
+            $firmantes = $grupo->firmantes()->get();
+            return response()->json([
+                'status'    => 'success',
+                'title'     => 'Firmante eliminado con éxito',
+                'data'      => ListGrupoResource::make($grupo)
+            ]);
+        } catch (\Exception $error) {
+            return response()->json(['error' => $error->getMessage()], 500);
+        }
+    }
+
+    public function deleteFirmante($uuid)
+    {
+        try {
+            $firma = Firmante::where('uuid', $uuid)->firstOrFail();
+            $grupo = $firma->grupo;
+
+            $firma->delete();
+
+            $firmantes = $grupo->firmantes()->orderBy('posicion_firma')->get();
+            $firmantes->each(function ($firmante, $index) {
+                $firmante->update(['posicion_firma' => $index + 1]);
+            });
+
+            $grupo = $grupo->fresh();
+            return response()->json([
+                'status'    => 'success',
+                'title'     => 'Firmante eliminado con éxito',
+                'data'      => ListGrupoResource::make($grupo)
+            ]);
+        } catch (\Exception $error) {
+            return response()->json(['error' => $error->getMessage()], 500);
         }
     }
 

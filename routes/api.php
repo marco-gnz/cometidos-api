@@ -70,8 +70,11 @@ Route::group(
         Route::get('/admin/mantenedores/paises', [MantenedorController::class, 'getPaises']);
 
         Route::post('/admin/grupos', [GrupoFirmaController::class, 'storeGrupo']);
+        Route::post('/admin/grupos/change-positions', [GrupoFirmaController::class, 'changePosition']);
         Route::get('/admin/grupos', [GrupoFirmaController::class, 'listGruposFirma']);
         Route::get('/admin/grupos/{uuid}', [GrupoFirmaController::class, 'findGrupoFirma']);
+        Route::delete('/admin/grupos/delete-firma/{uuid}', [GrupoFirmaController::class, 'deleteFirmante']);
+        Route::post('/admin/grupos/store-firmante', [GrupoFirmaController::class, 'storeFirmanteGrupo']);
 
         Route::get('/admin/solicitudes', [SolicitudAdminController::class, 'listSolicitudes']);
         Route::get('/admin/solicitudes/{uuid}/{nav}', [SolicitudAdminController::class, 'findSolicitud']);

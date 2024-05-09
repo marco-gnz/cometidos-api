@@ -2,6 +2,7 @@
 
 namespace App\Http\Resources\Grupo;
 
+use Carbon\Carbon;
 use Illuminate\Http\Resources\Json\JsonResource;
 
 class ListGrupoResource extends JsonResource
@@ -20,7 +21,9 @@ class ListGrupoResource extends JsonResource
             'departamento'      => $this->departamento ? $this->departamento->nombre : null,
             'subdepartamento'   => $this->subdepartamento ? $this->subdepartamento->nombre : null,
             'total_firmantes'   => count($this->firmantes),
-            'firmantes'         => $this->firmantes ? ListFirmantesGrupoResource::collection($this->firmantes) : null
+            'firmantes'         => $this->firmantes ? ListFirmantesGrupoResource::collection($this->firmantes) : null,
+            'user_by'           => $this->userBy ? $this->userBy->abreNombres() : null,
+            'created_at'        => $this->created_at ? Carbon::parse($this->created_at)->format('d-m-Y H:i:s') : null
         ];
     }
 }

@@ -167,7 +167,8 @@ class MantenedorController extends Controller
     public function getRoles()
     {
         try {
-            $roles = Role::orderBy('name', 'ASC')->get();
+            $name_roles = ['SOLICITANTE', 'SUPER ADMINISTRADOR', 'ABASTECIMIENTO', 'CAPACITACION'];
+            $roles = Role::whereNotIn('name', $name_roles)->orderBy('name', 'ASC')->get();
 
             return response()->json($roles);
         } catch (\Exception $error) {

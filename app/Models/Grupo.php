@@ -19,13 +19,24 @@ class Grupo extends Model
         'uuid',
         'establecimiento_id',
         'departamento_id',
-        'sub_departamento_id'
+        'sub_departamento_id',
+        'user_id_by',
+        'fecha_by_user',
+        'user_id_update',
+        'fecha_by_user_update',
     ];
 
     protected static function booted()
     {
         static::creating(function ($grupo) {
             $grupo->uuid                    = Str::uuid();
+            $grupo->user_id_by              = Auth::user()->id;
+            $grupo->fecha_by_user           = now();
+        });
+
+        static::updating(function ($grupo) {
+            $grupo->user_id_update              = Auth::user()->id;
+            $grupo->fecha_by_user_update        = now();
         });
     }
 
@@ -52,5 +63,57 @@ class Grupo extends Model
     public function subdepartamento()
     {
         return $this->belongsTo(SubDepartamento::class, 'sub_departamento_id');
+    }
+
+    public function userBy()
+    {
+        return $this->belongsTo(User::class, 'user_id_by');
+    }
+
+    public function scopeSearchEstablecimiento($query, $params)
+    {
+        if ($params)
+            return $query->whereHas('establecimiento', function ($q) use ($params) {
+                $q->whereIn('id', $params);
+            });
+    }
+
+    public function scopeSearchDepto($query, $params)
+    {
+        if ($params)
+            return $query->whereHas('departamento', function ($q) use ($params) {
+                $q->whereIn('id', $params);
+            });
+    }
+
+    public function scopeSearchSubdepto($query, $params)
+    {
+        if ($params)
+            return $query->whereHas('subdepartamento', function ($q) use ($params) {
+                $q->whereIn('id', $params);
+            });
+    }
+
+    public function scopeSearchPerfil($query, $params)
+    {
+        if ($params)
+            return $query->whereHas('firmantes.perfil', function ($q) use ($params) {
+                $q->whereIn('id', $params);
+            });
+    }
+
+    public function scopeSearchInput($query, $params)
+    {
+        if ($params)
+            return $query->where(function ($query) use ($params) {
+                $query->whereHas('firmantes.funcionario', function ($query) use ($params) {
+                    $query->where('rut_completo', 'like', '%' . $params . '%')
+                        ->orWhere('rut', 'like', '%' . $params . '%')
+                        ->orWhere('nombres', 'like', '%' . $params . '%')
+                        ->orWhere('apellidos', 'like', '%' . $params . '%')
+                        ->orWhere('nombre_completo', 'like', '%' . $params . '%')
+                        ->orWhere('email', 'like', '%' . $params . '%');
+                });
+            });
     }
 }

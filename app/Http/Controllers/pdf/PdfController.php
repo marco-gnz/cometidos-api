@@ -17,9 +17,12 @@ use Illuminate\Support\Facades\Storage;
 use Dompdf\Options;
 use Dompdf\Dompdf;
 use Illuminate\Support\Facades\View;
+use App\Traits\StatusSolicitudTrait;
 
 class PdfController extends Controller
 {
+    use StatusSolicitudTrait;
+
     private function paginatePdf($pdf)
     {
         $pdf->output();
@@ -201,9 +204,8 @@ class PdfController extends Controller
 
             $ultimoCalculo = $solicitud->getLastCalculo();
 
+            $solicitud->{'navStatus'}    = $this->navStatusSolicitud($solicitud);
             $solicitud->{'ultimoCalculo'} = $ultimoCalculo;
-
-
 
             $pdf = \PDF::loadView(
                 'pdf.resolucion',

@@ -20,6 +20,7 @@ class ListFirmantesGrupoResource extends JsonResource
             'nombres'               => $this->funcionario->nombre_completo ? $this->funcionario->nombre_completo : null,
             'email'                 => $this->funcionario->email ? $this->funcionario->email : null,
             'posicion_firma'        => $this->posicion_firma,
+            'perfil_id'             => $this->perfil ? $this->perfil->id : null,
             'perfil'                => $this->perfil ? $this->perfil->name : null,
             'status'                => $this->status ? true : false,
             'is_reasignado'         => $this->is_reasignado,

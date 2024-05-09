@@ -97,6 +97,12 @@
             padding: 5px;
         }
 
+        .column-2 {
+            float: left;
+            width: 100%;
+            padding: 5px;
+        }
+
         .row-1 {
             margin-left: -5px;
             margin-right: -5px;
@@ -463,43 +469,6 @@
                             </tfoot>
                         </table>
                     @endif
-                    {{-- <div class="row">
-                        <div class="column">
-                            <h4>Ajustes aplicados</h4>
-                            @if ($solicitud->ultimoCalculo && $solicitud->ultimoCalculo->ajustes)
-                                <table class="table-1">
-                                    <thead>
-                                        <th></th>
-                                        <th>40 %</th>
-                                        <th>100 %</th>
-                                    </thead>
-                                    <tbody>
-                                        <tr>
-                                            <td><strong>Ajuste en días</strong></td>
-                                            <td>{{ $solicitud->ultimoCalculo->valorizacionAjuste40()->total_monto }}
-                                            </td>
-                                            <td>{{ $solicitud->ultimoCalculo->valorizacionAjuste100()->total_monto }}
-                                            </td>
-                                        </tr>
-                                        <tr>
-                                            <td><strong>Ajuste en montos</strong></td>
-                                            <td>{{ $solicitud->ultimoCalculo->valorizacionAjusteMonto40()->total_monto }}
-                                            </td>
-                                            <td>{{ $solicitud->ultimoCalculo->valorizacionAjusteMonto100()->total_monto }}
-                                            </td>
-                                        </tr>
-                                    </tbody>
-                                    <tfoot>
-                                        <td colspan="1"><strong>TOTAL</strong></td>
-                                        <td><strong>{{ $solicitud->ultimoCalculo->valorizacionTotalAjusteMonto()->total_40 }}</strong>
-                                        </td>
-                                        <td><strong>{{ $solicitud->ultimoCalculo->valorizacionTotalAjusteMonto()->total_100 }}</strong>
-                                        </td>
-                                    </tfoot>
-                                </table>
-                            @endif
-                        </div>
-                    </div> --}}
                 </div>
                 <div class="column">
                     <h4>Rendiciones de gastos aprobadas Depto. Finanzas</h4>
@@ -520,26 +489,28 @@
         </div>
         <div class="seccion">
             <div class="row">
-                <div class="column-firma">
-                    <div class="firma-container">
-                        <p>{{ $solicitud->firmaJefatura() ? $solicitud->firmaJefatura() : 'SIN FIRMA' }}</p>
-                        <hr>
-                        <h5>JEFATURA DIRECTA</h5>
-                    </div>
-                </div>
-                <div class="column-firma">
-                    <div class="firma-container">
-                        <p>{{ $solicitud->firmaSubDirector() ? $solicitud->firmaSubDirector() : 'SIN FIRMA' }}</p>
-                        <hr>
-                        <h5>SUBDIRECTOR/A DEL ÁREA</h5>
-                    </div>
-                </div>
-                <div class="column-firma">
-                    <div class="firma-container">
-                        <p>{{ $solicitud->firmaJefePersonal() ? $solicitud->firmaJefePersonal() : 'SIN FIRMA' }}</p>
-                        <hr>
-                        <h5>JEFATURA SECCIÓN PERSONAL Y REGISTRO</h5>
-                    </div>
+                <div class="column-2">
+                    <h4>Verificaciones</h4>
+                    <table class="table-1">
+                        <thead>
+                            <th>N°</th>
+                            <th>Nombres</th>
+                            <th>Tipo</th>
+                            <th>Estado</th>
+                            <th>Fecha</th>
+                        </thead>
+                        <tbody>
+                            @foreach ($solicitud->navStatus as $nav)
+                                <tr>
+                                    <td>{{ $nav->posicion_firma }}</td>
+                                    <td>{{ $nav->nombres_firmante }} {{ $nav->is_subrogancia ? '(S)' : '' }}</td>
+                                    <td>{{ $nav->perfil }}</td>
+                                    <td>{{ $nav->status_nom }}</td>
+                                    <td>{{ $nav->status_date }}</td>
+                                </tr>
+                            @endforeach
+                        </tbody>
+                    </table>
                 </div>
             </div>
         </div>
