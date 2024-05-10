@@ -74,6 +74,7 @@ Route::group(
         Route::post('/admin/grupos/change-positions', [GrupoFirmaController::class, 'changePosition']);
         Route::get('/admin/grupos', [GrupoFirmaController::class, 'listGruposFirma']);
         Route::get('/admin/grupos/{uuid}', [GrupoFirmaController::class, 'findGrupoFirma']);
+        Route::delete('/admin/grupos/delete/{uuid}', [GrupoFirmaController::class, 'deleteGrupo']);
         Route::delete('/admin/grupos/delete-firma/{uuid}', [GrupoFirmaController::class, 'deleteFirmante']);
         Route::post('/admin/grupos/store-firmante', [GrupoFirmaController::class, 'storeFirmanteGrupo']);
 

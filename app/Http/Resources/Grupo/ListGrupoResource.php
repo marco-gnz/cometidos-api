@@ -23,7 +23,8 @@ class ListGrupoResource extends JsonResource
             'total_firmantes'   => count($this->firmantes),
             'firmantes'         => $this->firmantes ? ListFirmantesGrupoResource::collection($this->firmantes) : null,
             'user_by'           => $this->userBy ? $this->userBy->abreNombres() : null,
-            'created_at'        => $this->created_at ? Carbon::parse($this->created_at)->format('d-m-Y H:i:s') : null
+            'created_at'        => $this->created_at ? Carbon::parse($this->created_at)->format('d-m-Y H:i:s') : null,
+            'delete_grupo'      => $this->solicitudes()->count() > 0 ? true : false
         ];
     }
 }

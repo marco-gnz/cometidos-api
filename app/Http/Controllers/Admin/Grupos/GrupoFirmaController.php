@@ -69,6 +69,32 @@ class GrupoFirmaController extends Controller
         }
     }
 
+    public function deleteGrupo($uuid)
+    {
+        try {
+            $grupo = Grupo::where('uuid', $uuid)->firstOrFail();
+            $total_solicitudes = $grupo->solicitudes()->count();
+            if ($total_solicitudes > 0) {
+                return response()->json(['error' => 'No es posible eliminar grupo.'], 500);
+            }
+
+            $delete = $grupo->delete();
+
+            if ($delete) {
+                return response()->json(
+                    array(
+                        'status'        => 'success',
+                        'title'         => "Grupo eliminado con éxito.",
+                        'message'       => null,
+                        'data'          => null
+                    )
+                );
+            }
+        } catch (\Exception $error) {
+            return response()->json(['error' => $error->getMessage()], 500);
+        }
+    }
+
     public function changePosition(Request $request)
     {
         try {

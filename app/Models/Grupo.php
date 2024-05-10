@@ -45,6 +45,11 @@ class Grupo extends Model
         return $this->hasMany(Firmante::class)->orderBy('posicion_firma', 'ASC');
     }
 
+    public function solicitudes()
+    {
+        return $this->hasMany(Solicitud::class);
+    }
+
     public function addFirmantes(array $firmantes)
     {
         return $this->firmantes()->createMany($firmantes);
