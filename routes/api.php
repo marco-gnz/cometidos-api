@@ -74,6 +74,7 @@ Route::group(
         Route::get('/admin/mantenedores/jornadas-cometido', [MantenedorController::class, 'getJornadasCometido']);
         Route::get('/admin/mantenedores/paises', [MantenedorController::class, 'getPaises']);
         Route::get('/admin/mantenedores/conceptos-pres', [MantenedorController::class, 'getConceptos']);
+        Route::get('/admin/mantenedores/datos-bancarios', [MantenedorController::class, 'getDatosBancarios']);
 
         Route::get('/admin/mantenedores/estamentos', [MantenedorController::class, 'getEstamentos']);
         Route::get('/admin/mantenedores/cargos', [MantenedorController::class, 'getCargos']);
@@ -89,10 +90,12 @@ Route::group(
         Route::post('/admin/grupos/store-firmante', [GrupoFirmaController::class, 'storeFirmanteGrupo']);
 
         Route::get('/admin/users', [UserController::class, 'listUsers']);
+        Route::post('/admin/users/store', [UserController::class, 'storeUser']);
         Route::get('/admin/users/{uuid}', [UserController::class, 'getUser']);
         Route::get('/admin/users/update/{uuid}', [UserController::class, 'getUserUpdate']);
         Route::put('/admin/users/update/{uuid}', [UserController::class, 'userUpdate']);
         Route::put('/admin/users/cuenta-bancaria/status/{uuid}', [UserController::class, 'updateStatusCuentaBancaria']);
+        Route::post('/admin/users/cuenta-bancaria/store', [UserController::class, 'storeCuentaBancaria']);
         Route::put('/admin/users/status/{uuid}', [UserController::class, 'updateStatusUser']);
         Route::put('/admin/users/status-permiso', [UserController::class, 'updatePermisoPrincipalUser']);
 

@@ -3,6 +3,8 @@
 namespace App\Http\Controllers\Admin\Users;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\User\StoreCuentaBancariaRequest;
+use App\Http\Requests\User\StoreUserRequest;
 use App\Http\Requests\User\UpdateUserRequest;
 use App\Http\Resources\Admin\ListUsersResource;
 use App\Http\Resources\Admin\UserResource;
@@ -10,6 +12,7 @@ use App\Http\Resources\Admin\UserUpdateResource;
 use App\Models\CuentaBancaria;
 use App\Models\User;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
 class UserController extends Controller
 {
@@ -87,6 +90,44 @@ class UserController extends Controller
         }
     }
 
+    public function storeUser(StoreUserRequest $request)
+    {
+        try {
+            $form = [
+                'rut',
+                'dv',
+                'nombres',
+                'apellidos',
+                'email',
+                'establecimiento_id',
+                'departamento_id',
+                'sub_departamento_id',
+                'estamento_id',
+                'cargo_id',
+                'calidad_id',
+                'hora_id',
+                'ley_id',
+                'grado_id'
+            ];
+
+            $user = User::create($request->only($form));
+
+            if ($user) {
+                $user = $user->fresh();
+                return response()->json(
+                    array(
+                        'status'        => 'success',
+                        'title'         => "Funcionario ingresado con éxito.",
+                        'message'       => null,
+                        'data'          => ListUsersResource::make($user)
+                    )
+                );
+            }
+        } catch (\Exception $error) {
+            return response()->json(['error' => $error->getMessage()], 500);
+        }
+    }
+
     public function userUpdate($uuid, UpdateUserRequest $request)
     {
         try {
@@ -110,14 +151,16 @@ class UserController extends Controller
             ];
             $update = $user->update($request->only($form));
 
-            return response()->json(
-                array(
-                    'status'        => 'success',
-                    'title'         => "Funcionario modificado con éxito.",
-                    'message'       => null,
-                    'data'          => ListUsersResource::make($user)
-                )
-            );
+            if ($update) {
+                return response()->json(
+                    array(
+                        'status'        => 'success',
+                        'title'         => "Funcionario modificado con éxito.",
+                        'message'       => null,
+                        'data'          => ListUsersResource::make($user)
+                    )
+                );
+            }
         } catch (\Exception $error) {
             return response()->json(['error' => $error->getMessage()], 500);
         }
@@ -155,7 +198,8 @@ class UserController extends Controller
             $permisos = [
                 'solicitud' => 'is_solicitud',
                 'informe'   => 'is_informe',
-                'rendicion' => 'is_rendicion'
+                'rendicion' => 'is_rendicion',
+                'suborante' => 'is_subrogante'
             ];
 
             // Verificar si el permiso es válido
@@ -211,6 +255,49 @@ class UserController extends Controller
                     );
                 }
             }
+        } catch (\Exception $error) {
+            return response()->json(['error' => $error->getMessage()], 500);
+        }
+    }
+
+    public function storeCuentaBancaria(StoreCuentaBancariaRequest $request)
+    {
+        try {
+            $user = User::where('uuid', $request->user_uuid)->firstOrFail();
+
+            $cuentas_total = $user->cuentas()->where('status', true)->count();
+            $status = true;
+
+            if ($request->tipo_cuenta === CuentaBancaria::TYPE_ACCOUNT_6) {
+                $cuentas_cash = $user->cuentas()
+                    ->where('tipo_cuenta', CuentaBancaria::TYPE_ACCOUNT_6)
+                    ->count();
+
+                if ($cuentas_cash > 0) {
+                    return response()->json([
+                        'errors' => ['tipo_cuenta' => [CuentaBancaria::TYPE_ACCOUNT_NOM[$request->tipo_cuenta] . " ya existe."]]
+                    ], 422);
+                }
+            }
+            if ($cuentas_total > 0) {
+                $status = false;
+            }
+            $cuentas[] = [
+                'tipo_cuenta'   => $request->tipo_cuenta,
+                'n_cuenta'      => $request->n_cuenta,
+                'banco_id'      => $request->banco_id,
+                'status'        => $status
+            ];
+            $user->addCuentas($cuentas);
+            $user = $user->fresh();
+            return response()->json(
+                array(
+                    'status'        => 'success',
+                    'title'         => "Cuenta bancaria ingresada con éxito.",
+                    'message'       => null,
+                    'data'          => UserResource::make($user)
+                )
+            );
         } catch (\Exception $error) {
             return response()->json(['error' => $error->getMessage()], 500);
         }

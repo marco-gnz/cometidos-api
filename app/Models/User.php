@@ -171,6 +171,11 @@ class User extends Authenticatable
         return $this->hasMany(CuentaBancaria::class);
     }
 
+    public function addCuentas(array $cuentas)
+    {
+        return $this->cuentas()->createMany($cuentas);
+    }
+
     public function addHistorys(array $historys)
     {
         return $this->historys()->createMany($historys);

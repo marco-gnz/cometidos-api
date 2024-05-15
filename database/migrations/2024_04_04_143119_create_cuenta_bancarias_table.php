@@ -17,7 +17,7 @@ class CreateCuentaBancariasTable extends Migration
             $table->bigIncrements('id');
             $table->uuid('uuid')->unique()->nullable();
             $table->unsignedSmallInteger('tipo_cuenta')->nullable();
-            $table->string('n_cuenta')->unique();
+            $table->string('n_cuenta')->nullable()->unique();
             $table->boolean('status')->default(1);
 
             $table->foreign('banco_id')->references('id')->on('bancos');

@@ -18,6 +18,7 @@ class CuentaBancaria extends Model
     public const TYPE_ACCOUNT_3 = 3;
     public const TYPE_ACCOUNT_4 = 4;
     public const TYPE_ACCOUNT_5 = 5;
+    public const TYPE_ACCOUNT_6 = 6;
 
     public const TYPE_ACCOUNT_NOM = [
         self::TYPE_ACCOUNT_1 => 'Cuenta Vista',
@@ -25,6 +26,16 @@ class CuentaBancaria extends Model
         self::TYPE_ACCOUNT_3 => 'Cuenta Corriente',
         self::TYPE_ACCOUNT_4 => 'Cuenta RUT',
         self::TYPE_ACCOUNT_5 => 'Chquera Electronica',
+        self::TYPE_ACCOUNT_6 => 'Cash',
+    ];
+
+    public const TYPES_ACCOUNT = [
+        ['id' => self::TYPE_ACCOUNT_1, 'nombre' => self::TYPE_ACCOUNT_NOM[self::TYPE_ACCOUNT_1]],
+        ['id' => self::TYPE_ACCOUNT_2, 'nombre' => self::TYPE_ACCOUNT_NOM[self::TYPE_ACCOUNT_2]],
+        ['id' => self::TYPE_ACCOUNT_3, 'nombre' => self::TYPE_ACCOUNT_NOM[self::TYPE_ACCOUNT_3]],
+        ['id' => self::TYPE_ACCOUNT_4, 'nombre' => self::TYPE_ACCOUNT_NOM[self::TYPE_ACCOUNT_4]],
+        ['id' => self::TYPE_ACCOUNT_5, 'nombre' => self::TYPE_ACCOUNT_NOM[self::TYPE_ACCOUNT_5]],
+        ['id' => self::TYPE_ACCOUNT_6, 'nombre' => self::TYPE_ACCOUNT_NOM[self::TYPE_ACCOUNT_6]]
     ];
 
     protected $fillable = [

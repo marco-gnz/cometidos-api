@@ -17,6 +17,7 @@ class UserResource extends JsonResource
     {
         return [
             'uuid'              => $this->uuid,
+            'rut_unique'        => $this->rut,
             'rut'               => $this->rut_completo,
             'nombres'           => $this->nombres,
             'apellidos'         => $this->apellidos,
@@ -26,6 +27,7 @@ class UserResource extends JsonResource
             'is_solicitud'      => $this->is_solicitud ? true : false,
             'is_informe'        => $this->is_informe ? true : false,
             'is_rendicion'      => $this->is_rendicion ? true : false,
+            'is_subrogante'     => $this->is_subrogante ? true : false,
 
             'establecimiento'   => $this->establecimiento ? $this->establecimiento->sigla : null,
             'estamento'         => $this->estamento ? $this->estamento->nombre : null,

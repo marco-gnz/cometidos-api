@@ -4,10 +4,12 @@ namespace App\Http\Controllers\Admin\Mantenedores;
 
 use App\Http\Controllers\Controller;
 use App\Models\ActividadGasto;
+use App\Models\Banco;
 use App\Models\Calidad;
 use App\Models\Cargo;
 use App\Models\Concepto;
 use App\Models\Country;
+use App\Models\CuentaBancaria;
 use App\Models\Departamento;
 use App\Models\Establecimiento;
 use App\Models\EstadoProcesoRendicionGasto;
@@ -277,6 +279,23 @@ class MantenedorController extends Controller
             $actividades = ActividadGasto::orderBy('nombre', 'ASC')->get();
 
             return response()->json($actividades);
+        } catch (\Exception $error) {
+            return response()->json($error->getMessage());
+        }
+    }
+
+    public function getDatosBancarios()
+    {
+        try {
+            $tipos_cuenta = CuentaBancaria::TYPES_ACCOUNT;
+            $bancos = Banco::orderBy('nombre', 'ASC')->get();
+
+            $data = (object) [
+                'tipos_cuenta'  => $tipos_cuenta,
+                'bancos'        => $bancos
+            ];
+
+            return response()->json($data);
         } catch (\Exception $error) {
             return response()->json($error->getMessage());
         }
