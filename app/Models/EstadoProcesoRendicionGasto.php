@@ -37,6 +37,17 @@ class EstadoProcesoRendicionGasto extends Model
         self::STATUS_ANULADO        => 'ANULADO',
     ];
 
+    public const STATUS_PROCESO = [
+        ['id' => self::STATUS_INGRESADA, 'nombre' => self::STATUS_NOM[self::STATUS_INGRESADA]],
+        ['id' => self::STATUS_MODIFICADA, 'nombre' => self::STATUS_NOM[self::STATUS_MODIFICADA]],
+        ['id' => self::STATUS_APROBADO_JD, 'nombre' => self::STATUS_NOM[self::STATUS_APROBADO_JD]],
+        ['id' => self::STATUS_EN_PROCESO, 'nombre' => self::STATUS_NOM[self::STATUS_EN_PROCESO]],
+        ['id' => self::STATUS_VERIFICADO, 'nombre' => self::STATUS_NOM[self::STATUS_VERIFICADO]],
+        ['id' => self::STATUS_APROBADO_N, 'nombre' => self::STATUS_NOM[self::STATUS_APROBADO_N]],
+        ['id' => self::STATUS_APROBADO_S, 'nombre' => self::STATUS_NOM[self::STATUS_APROBADO_S]],
+        ['id' => self::STATUS_ANULADO, 'nombre' => self::STATUS_NOM[self::STATUS_ANULADO]]
+    ];
+
     public $timestamps = false;
 
     protected $fillable = [

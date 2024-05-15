@@ -139,8 +139,8 @@ class SolicitudPolicy
             ->where('fecha_termino', '<', $now)
             ->whereDoesntHave('informes')
             ->count();
-
-        if ($total_por_ingresar_informes > $total_informes_pendientes) {
+        $is_solicitud = $user->is_solicitud ? true : false;
+        if ($total_por_ingresar_informes > $total_informes_pendientes || !$user->is_solicitud) {
             return false;
         }
         return true;

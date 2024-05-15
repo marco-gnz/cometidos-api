@@ -7,6 +7,7 @@ use App\Http\Controllers\Admin\Mantenedores\MantenedorController;
 use App\Http\Controllers\Admin\Reasignacion\ReasignacionController;
 use App\Http\Controllers\Admin\Rendicion\ProcesoRendicionController;
 use App\Http\Controllers\Admin\Solicitudes\SolicitudAdminController;
+use App\Http\Controllers\Admin\Users\UserController;
 use App\Http\Controllers\Auth\NewPasswordController;
 use App\Http\Controllers\File\FileController;
 use App\Http\Controllers\Rendicion\RendicionController;
@@ -54,6 +55,8 @@ Route::group(
         'middleware'    => 'auth:sanctum'
     ],
     function () {
+        Route::get('/admin/mantenedores/leys', [MantenedorController::class, 'getLeys']);
+        Route::get('/admin/mantenedores/grados', [MantenedorController::class, 'getGrados']);
         Route::get('/admin/mantenedores/motivos', [MantenedorController::class, 'getMotivos']);
         Route::get('/admin/mantenedores/lugares', [MantenedorController::class, 'getLugares']);
         Route::get('/admin/mantenedores/transportes', [MantenedorController::class, 'getTransporte']);
@@ -66,9 +69,16 @@ Route::group(
         Route::get('/admin/mantenedores/user/{id}', [MantenedorController::class, 'getUser']);
         Route::get('/admin/mantenedores/estados-rechazo', [MantenedorController::class, 'getStatusRechazo']);
         Route::get('/admin/mantenedores/estados-cometido', [MantenedorController::class, 'getStatusCometido']);
+        Route::get('/admin/mantenedores/estados-rendicion', [MantenedorController::class, 'getStatusRendicion']);
         Route::get('/admin/mantenedores/tipo-comisiones', [MantenedorController::class, 'getTipoComisiones']);
         Route::get('/admin/mantenedores/jornadas-cometido', [MantenedorController::class, 'getJornadasCometido']);
         Route::get('/admin/mantenedores/paises', [MantenedorController::class, 'getPaises']);
+        Route::get('/admin/mantenedores/conceptos-pres', [MantenedorController::class, 'getConceptos']);
+
+        Route::get('/admin/mantenedores/estamentos', [MantenedorController::class, 'getEstamentos']);
+        Route::get('/admin/mantenedores/cargos', [MantenedorController::class, 'getCargos']);
+        Route::get('/admin/mantenedores/calidad', [MantenedorController::class, 'getCalidad']);
+        Route::get('/admin/mantenedores/horas', [MantenedorController::class, 'getHoras']);
 
         Route::post('/admin/grupos', [GrupoFirmaController::class, 'storeGrupo']);
         Route::post('/admin/grupos/change-positions', [GrupoFirmaController::class, 'changePosition']);
@@ -77,6 +87,14 @@ Route::group(
         Route::delete('/admin/grupos/delete/{uuid}', [GrupoFirmaController::class, 'deleteGrupo']);
         Route::delete('/admin/grupos/delete-firma/{uuid}', [GrupoFirmaController::class, 'deleteFirmante']);
         Route::post('/admin/grupos/store-firmante', [GrupoFirmaController::class, 'storeFirmanteGrupo']);
+
+        Route::get('/admin/users', [UserController::class, 'listUsers']);
+        Route::get('/admin/users/{uuid}', [UserController::class, 'getUser']);
+        Route::get('/admin/users/update/{uuid}', [UserController::class, 'getUserUpdate']);
+        Route::put('/admin/users/update/{uuid}', [UserController::class, 'userUpdate']);
+        Route::put('/admin/users/cuenta-bancaria/status/{uuid}', [UserController::class, 'updateStatusCuentaBancaria']);
+        Route::put('/admin/users/status/{uuid}', [UserController::class, 'updateStatusUser']);
+        Route::put('/admin/users/status-permiso', [UserController::class, 'updatePermisoPrincipalUser']);
 
         Route::get('/admin/solicitudes', [SolicitudAdminController::class, 'listSolicitudes']);
         Route::get('/admin/solicitudes/{uuid}/{nav}', [SolicitudAdminController::class, 'findSolicitud']);

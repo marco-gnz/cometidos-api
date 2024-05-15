@@ -280,7 +280,7 @@
                     <tr>
                         <td>{{ $proceso_rendicion_gasto->cuentaBancaria ? $proceso_rendicion_gasto->cuentaBancaria->n_cuenta : '--' }}
                         </td>
-                        <td>{{ $proceso_rendicion_gasto->cuentaBancaria ? App\Models\CuentaBancaria::TYPE_ACCOUNT_NOM[$proceso_rendicion_gasto->cuentaBancaria->tipo_cuenta] : '--' }}
+                        <td>{{ $proceso_rendicion_gasto->cuentaBancaria && $proceso_rendicion_gasto->cuentaBancaria->tipo_cuenta !== null ? App\Models\CuentaBancaria::TYPE_ACCOUNT_NOM[$proceso_rendicion_gasto->cuentaBancaria->tipo_cuenta] : '--' }}
                         </td>
                         <td>{{ $proceso_rendicion_gasto->cuentaBancaria ? $proceso_rendicion_gasto->cuentaBancaria->banco->nombre : '--' }}
                         </td>

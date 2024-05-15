@@ -2,6 +2,8 @@
 
 namespace App\Models;
 
+use App\Policies\InformeCometidoPolicy;
+use App\Policies\ProcesoRendicionGastoPolicy;
 use App\Policies\SolicitudPolicy;
 use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -43,7 +45,11 @@ class User extends Authenticatable
         'hora_id',
         'calidad_id',
         'is_firmante',
-        'is_subrogante'
+        'is_subrogante',
+
+        'is_solicitud',
+        'is_informe',
+        'is_rendicion',
     ];
 
     /**
@@ -72,6 +78,11 @@ class User extends Authenticatable
             $usuario->rut_completo          = $usuario->rut . '-' . $usuario->dv;
             $usuario->nombre_completo       = $usuario->nombres . ' ' . $usuario->apellidos;
             $usuario->password              = bcrypt($usuario->rut);
+        });
+
+        static::updating(function ($usuario) {
+            $usuario->rut_completo          = $usuario->rut . '-' . $usuario->dv;
+            $usuario->nombre_completo       = $usuario->nombres . ' ' . $usuario->apellidos;
         });
     }
 
@@ -191,10 +202,54 @@ class User extends Authenticatable
                 ->orWhere('email', 'like', '%' . $input . '%');
     }
 
+    public function scopeEstablecimiento($query, $params)
+    {
+        if ($params)
+            return $query->whereHas('establecimiento', function ($q) use ($params) {
+                $q->whereIn('id', $params);
+            });
+    }
+
+    public function scopeDepto($query, $params)
+    {
+        if ($params)
+            return $query->whereHas('departamento', function ($q) use ($params) {
+                $q->whereIn('id', $params);
+            });
+    }
+
+    public function scopeGrado($query, $params)
+    {
+        if ($params)
+            return $query->whereHas('grado', function ($q) use ($params) {
+                $q->whereIn('id', $params);
+            });
+    }
+
+    public function scopeLey($query, $params)
+    {
+        if ($params)
+            return $query->whereHas('ley', function ($q) use ($params) {
+                $q->whereIn('id', $params);
+            });
+    }
+
     public function authorizedToCreateSolicitud()
     {
         $policy = resolve(SolicitudPolicy::class);
         return $policy->create(auth()->user());
+    }
+
+    public function authorizedToCreateRendicion()
+    {
+        $policy = resolve(ProcesoRendicionGastoPolicy::class);
+        return $policy->create(auth()->user());
+    }
+
+    public function authorizedToCreateInforme()
+    {
+        $policy = resolve(InformeCometidoPolicy::class);
+        return $policy->createother(auth()->user());
     }
 
     public function abreNombres()

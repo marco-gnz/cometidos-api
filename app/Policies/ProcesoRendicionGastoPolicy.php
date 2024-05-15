@@ -45,7 +45,11 @@ class ProcesoRendicionGastoPolicy
      */
     public function create(User $user)
     {
-        //
+        if (!$user->is_rendicion) {
+            return false;
+        }
+
+        return true;
     }
 
     /**

@@ -118,7 +118,7 @@ class PdfController extends Controller
                 return response()->view('errors.401');
             }
 
-            if (($proceso_rendicion_gasto) && ($proceso_rendicion_gasto->status === EstadoProcesoRendicionGasto::STATUS_ANULADO)) {
+            if (($proceso_rendicion_gasto) && ($proceso_rendicion_gasto->status !== EstadoProcesoRendicionGasto::STATUS_APROBADO_N && $proceso_rendicion_gasto->status !== EstadoProcesoRendicionGasto::STATUS_APROBADO_S)) {
                 return response()->view('errors.401');
             }
 

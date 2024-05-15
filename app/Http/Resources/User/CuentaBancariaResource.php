@@ -21,7 +21,7 @@ class CuentaBancariaResource extends JsonResource
             'status'        => $this->status ? true : false,
             'status_name'   => $this->status ? 'Habilitada' : 'No habilitada',
             'n_cuenta'      => $this->n_cuenta ? $this->n_cuenta : null,
-            'tipo_cuenta'   => CuentaBancaria::TYPE_ACCOUNT_NOM[$this->tipo_cuenta],
+            'tipo_cuenta'   => $this->tipo_cuenta !== null ? CuentaBancaria::TYPE_ACCOUNT_NOM[$this->tipo_cuenta] : 'SIN_TIPO_DE_CUENTA',
             'banco'         => $this->banco ? $this->banco->nombre : null,
             'created_at'    => Carbon::parse($this->fecha_by_user)->format('d-m-Y H:i:s')
         ];

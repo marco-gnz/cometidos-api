@@ -32,6 +32,10 @@ class CreateUsersTable extends Migration
             $table->boolean('is_firmante')->default(0);
             $table->boolean('is_subrogante')->default(0);
 
+            $table->boolean('is_solicitud')->default(1);
+            $table->boolean('is_informe')->default(1);
+            $table->boolean('is_rendicion')->default(1);
+
             $table->unsignedBigInteger('ley_id')->nullable();
             $table->foreign('ley_id')->references('id')->on('leys');
 

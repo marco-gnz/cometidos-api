@@ -50,7 +50,7 @@ class RendicionController extends Controller
             if ($auth) {
                 $query = Solicitud::where('user_id', auth()->user()->id)
                     ->where('status', '!=', Solicitud::STATUS_ANULADO)
-                    ->where('derecho_pago', true)
+                    ->whereIn('derecho_pago', [true, false])
                     ->whereYear('fecha_inicio', $request->year);
 
                 if ($request->month) {
@@ -73,21 +73,34 @@ class RendicionController extends Controller
         }
     }
 
-    public function getProcesoRendiciones()
+    public function getProcesoRendiciones(Request $request)
     {
         try {
             $auth           = Auth::user();
             if ($auth) {
-                $solicitudes = ProcesoRendicionGasto::/* whereHas('solicitud', function ($q) use ($auth) {
+                $proceso_rendiciones = ProcesoRendicionGasto::whereHas('solicitud', function ($q) use ($auth) {
                     $q->where('user_id', $auth->id);
-                })-> */orderBy('id', 'DESC')->get();
+                })
+                    ->searchInput($request->input)
+                    ->periodoIngresoProceso($request->periodo_ingreso_rendicion)
+                    ->estadoRendicion($request->estados_rendicion_id)
+                    ->orderBy('id', 'DESC')->paginate(20);
 
                 return response()->json(
                     array(
                         'status'        => 'success',
                         'title'         => null,
                         'message'       => null,
-                        'data'          => ProcesoRendicionGastoResource::collection($solicitudes)
+                        'pagination' => [
+                            'total'         => $proceso_rendiciones->total(),
+                            'total_desc'    => $proceso_rendiciones->total() > 1 ? "{$proceso_rendiciones->total()} resultados" : "{$proceso_rendiciones->total()} resultado",
+                            'current_page'  => $proceso_rendiciones->currentPage(),
+                            'per_page'      => $proceso_rendiciones->perPage(),
+                            'last_page'     => $proceso_rendiciones->lastPage(),
+                            'from'          => $proceso_rendiciones->firstItem(),
+                            'to'            => $proceso_rendiciones->lastPage()
+                        ],
+                        'data'          => ProcesoRendicionGastoResource::collection($proceso_rendiciones)
                     )
                 );
             }
@@ -534,9 +547,7 @@ class RendicionController extends Controller
                 $last_cuenta_bancaria = $proceso_rendicion_gasto->solicitud->funcionario->lastCuentaBancaria();
                 if (!$last_cuenta_bancaria) {
                     return response()->json([
-                        'errors' => [
-                            'e'  => $proceso_rendicion_gasto->solicitud->funcionario->abreNombres() . " no registra cuenta bancaria habilitada."
-                        ]
+                        'errors' =>  $proceso_rendicion_gasto->solicitud->funcionario->abreNombres() . " no registra cuenta bancaria habilitada o algún medio de pago."
                     ], 422);
                 }
 

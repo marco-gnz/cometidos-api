@@ -55,7 +55,7 @@ class InformeCometidoPolicy
                 $fecha_termino_solicitud    = Carbon::parse($fecha);
                 $now                        = Carbon::now();
 
-                if ($fecha_termino_solicitud->lte($now)) {
+                if ($fecha_termino_solicitud->lte($now) && $user->is_informe) {
                     return true;
                 } else {
                     return false;
@@ -64,6 +64,15 @@ class InformeCometidoPolicy
         }
 
         return false;
+    }
+
+    public function createother(User $user)
+    {
+        if (!$user->is_informe) {
+            return false;
+        }
+
+        return true;
     }
 
     public function aprobar(User $user, InformeCometido $informeCometido)

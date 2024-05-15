@@ -37,6 +37,7 @@ class GrupoFirmaController extends Controller
                     'message'       => null,
                     'pagination' => [
                         'total'         => $grupos->total(),
+                        'total_desc'    => $grupos->total() > 1 ? "{$grupos->total()} resultados" : "{$grupos->total()} resultado",
                         'current_page'  => $grupos->currentPage(),
                         'per_page'      => $grupos->perPage(),
                         'last_page'     => $grupos->lastPage(),

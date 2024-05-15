@@ -143,6 +143,9 @@ class Solicitud extends Model
         $grupo = Grupo::where('establecimiento_id', $solicitud->funcionario->establecimiento_id)
             ->where('departamento_id', $solicitud->funcionario->departamento_id)
             ->where('sub_departamento_id', $solicitud->funcionario->sub_departamento_id)
+            ->whereHas('firmantes', function ($q) {
+                $q->where('status', true);
+            })
             ->first();
 
         return $grupo;
@@ -178,9 +181,9 @@ class Solicitud extends Model
             $grupo                          = self::grupoDepto($solicitud);
             $solicitud->correlativo         = self::generarCorrelativo($solicitud);
             $solicitud->codigo              = self::generarCodigo($solicitud);
-            $solicitud->departamento_id     = $grupo ? $grupo->departamento_id : null;
-            $solicitud->sub_departamento_id = $grupo ? $grupo->sub_departamento_id : null;
-            $solicitud->establecimiento_id  = $grupo ? $grupo->establecimiento_id : null;
+            $solicitud->departamento_id     = $solicitud->funcionario->departamento_id;
+            $solicitud->sub_departamento_id = $solicitud->funcionario->sub_departamento_id;
+            $solicitud->establecimiento_id  = $solicitud->funcionario->establecimiento_id;
             $solicitud->grupo_id            = $grupo ? $grupo->id : null;
             $solicitud->ley_id              = $solicitud->funcionario ? $solicitud->funcionario->ley_id : null;
             $solicitud->grado_id            = $solicitud->funcionario ? $solicitud->funcionario->grado_id : null;

@@ -131,7 +131,7 @@ class SolicitudesController extends Controller
                     $responseData['rendiciones'] = ProcesoRendicionGastoDetalleResource::collection($solicitud->procesoRendicionGastos()->orderBy('id', 'DESC')->get());
                     break;
                 case 'archivos':
-                    $responseData['documentos'] = ListSolicitudDocumentosResource::collection($solicitud->documentos()->get());
+                    $responseData['archivos'] = ListSolicitudDocumentosResource::collection($solicitud->documentos()->get());
                     break;
                 case 'convenio':
                     $responseData['convenio']   = $solicitud->convenio ? ListConvenioResource::make($solicitud->convenio) : null;

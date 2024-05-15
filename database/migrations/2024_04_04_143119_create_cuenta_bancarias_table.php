@@ -16,7 +16,7 @@ class CreateCuentaBancariasTable extends Migration
         Schema::create('cuenta_bancarias', function (Blueprint $table) {
             $table->bigIncrements('id');
             $table->uuid('uuid')->unique()->nullable();
-            $table->unsignedSmallInteger('tipo_cuenta')->default(0);
+            $table->unsignedSmallInteger('tipo_cuenta')->nullable();
             $table->string('n_cuenta')->unique();
             $table->boolean('status')->default(1);
 

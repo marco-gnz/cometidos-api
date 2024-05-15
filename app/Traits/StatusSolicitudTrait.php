@@ -2,6 +2,7 @@
 
 namespace App\Traits;
 
+use App\Models\CicloFirma;
 use App\Models\EstadoSolicitud;
 use App\Models\Solicitud;
 use Carbon\Carbon;
@@ -107,5 +108,18 @@ trait StatusSolicitudTrait
             $reasginar  = $last_estado ? (($auth->id !== $firmante->user_id) && ($firmante->status) && ($last_estado->posicion_firma <= $solicitud->posicion_firma_actual && !$firmante->is_reasignado) ? true : false) : false;
             return $reasginar;
         }
+    }
+
+    private function getPermissions($role_id, $solicitud)
+    {
+        $ciclo_firma = CicloFirma::where('establecimiento_id', $solicitud->establecimiento_id)
+            ->where('role_id', $role_id)
+            ->first();
+
+        if (!$ciclo_firma) {
+            return null;
+        }
+
+        return $ciclo_firma->permissions()->pluck('permission_id')->toArray();
     }
 }

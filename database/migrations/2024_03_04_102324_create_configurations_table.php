@@ -18,6 +18,10 @@ class CreateConfigurationsTable extends Migration
             $table->string('clave')->unique();
             $table->text('valor');
             $table->string('tipo')->nullable();
+
+            $table->foreign('establecimiento_id')->references('id')->on('establecimientos');
+            $table->unsignedBigInteger('establecimiento_id')->nullable();
+
             $table->timestamps();
         });
     }

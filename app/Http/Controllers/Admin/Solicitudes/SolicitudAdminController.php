@@ -39,6 +39,7 @@ use Illuminate\Support\Facades\Log;
 use SebastianBergmann\Type\FalseType;
 use Spatie\Permission\Models\Role;
 use App\Traits\StatusSolicitudTrait;
+use Illuminate\Support\Facades\DB;
 
 class SolicitudAdminController extends Controller
 {
@@ -163,32 +164,40 @@ class SolicitudAdminController extends Controller
 
     private function filterAll($query, $auth)
     {
-        $query->whereHas('firmantes', function ($q) use ($auth) {
-            $q->where('status', true)
-                ->where('role_id', '!=', 1);
-            if (!$auth->hasRole('SUPER ADMINISTRADOR')) {
-                $q->where('user_id', $auth->id);
-            }
-        })->orWhereHas('firmantes.funcionario.ausentismos', function ($q) use ($auth) {
-            $q->whereHas('subrogantes', function ($q) use ($auth) {
-                $q->where('users.id', $auth->id);
-            })->whereRaw("DATE(solicituds.fecha_by_user) >= ausentismos.fecha_inicio")
-                ->whereRaw("DATE(solicituds.fecha_by_user) <= ausentismos.fecha_termino");
-        })->orWhereHas('reasignaciones', function ($q) use ($auth) {
-            $q->where('user_subrogante_id', $auth->id);
-        });
+        if ($auth->hasRole('SUPER ADMINISTRADOR')) {
+            $query;
+        } else {
+            $query->whereHas('firmantes', function ($q) use ($auth) {
+                $q->where('status', true)
+                    ->where('role_id', '!=', 1);
+                if (!$auth->hasRole('SUPER ADMINISTRADOR')) {
+                    $q->where('user_id', $auth->id);
+                }
+            })->orWhereHas('firmantes.funcionario.ausentismos', function ($q) use ($auth) {
+                $q->whereHas('subrogantes', function ($q) use ($auth) {
+                    $q->where('users.id', $auth->id);
+                })->whereRaw("DATE(solicituds.fecha_by_user) >= ausentismos.fecha_inicio")
+                    ->whereRaw("DATE(solicituds.fecha_by_user) <= ausentismos.fecha_termino");
+            })->orWhereHas('reasignaciones', function ($q) use ($auth) {
+                $q->where('user_subrogante_id', $auth->id);
+            });
+        }
     }
 
 
     public function syncGrupoSolicitud(Request $request)
     {
         try {
+            DB::beginTransaction();
             $solicitud = Solicitud::where('uuid', $request->solicitud_uuid)->firstOrFail();
             $this->authorize('sincronizargrupo', $solicitud);
 
-            $grupo = Grupo::where('establecimiento_id', $solicitud->funcionario->establecimiento_id)
-                ->where('departamento_id', $solicitud->funcionario->departamento_id)
-                ->where('sub_departamento_id', $solicitud->funcionario->sub_departamento_id)
+            $grupo = Grupo::where('establecimiento_id', $solicitud->establecimiento_id)
+                ->where('departamento_id', $solicitud->departamento_id)
+                ->where('sub_departamento_id', $solicitud->sub_departamento_id)
+                ->whereHas('firmantes', function ($q) {
+                    $q->where('status', true);
+                })
                 ->first();
 
             if (!$grupo) {
@@ -196,15 +205,14 @@ class SolicitudAdminController extends Controller
             }
 
             $solicitud->update([
-                'departamento_id'       => $grupo->departamento_id,
-                'sub_departamento_id'   => $grupo->sub_departamento_id,
-                'establecimiento_id'    => $grupo->establecimiento_id,
                 'grupo_id'              => $grupo->id,
             ]);
             $solicitud  = $solicitud->fresh();
 
             if ($solicitud->grupo) {
+                $firmantes_solicitud = [];
                 $firmantes = $solicitud->grupo->firmantes()->where('status', true)->get();
+                Log::info($firmantes);
                 if ($firmantes) {
                     foreach ($firmantes as $firmante) {
                         $status = true;
@@ -221,14 +229,16 @@ class SolicitudAdminController extends Controller
                             'grupo_id'          => $firmante->grupo_id,
                             'user_id'           => $firmante->user_id,
                             'role_id'           => $firmante->role_id,
-                            'status'            => $status
+                            'status'            => $status,
+                            'permissions_id'    => $this->getPermissions($firmante->role_id, $solicitud)
                         ];
                     }
+                    Log::info($firmantes_solicitud);
                     $solicitud->addFirmantes($firmantes_solicitud);
                 }
             }
             $navStatus  = $this->navStatusSolicitud($solicitud);
-
+            DB::commit();
             return response()->json(
                 array(
                     'status'        => 'success',
@@ -239,7 +249,8 @@ class SolicitudAdminController extends Controller
                 )
             );
         } catch (\Exception $error) {
-            return $error->getMessage();
+            DB::rollback();
+            return response()->json(['error' => $error->getMessage()], 500);
         }
     }
 

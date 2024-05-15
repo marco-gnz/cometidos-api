@@ -14,6 +14,10 @@ use App\Models\RendicionGasto;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use App\Traits\FirmaDisponibleTrait;
+use Illuminate\Http\Client\RequestException;
+use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Http;
 
 class ProcesoRendicionController extends Controller
 {
@@ -24,30 +28,64 @@ class ProcesoRendicionController extends Controller
         $this->middleware(['auth:sanctum']);
     }
 
-    public function getProcesoRendiciones()
+    public function getProcesoRendiciones(Request $request)
     {
         try {
             $auth = auth()->user();
-            $proceso_rendiciones = ProcesoRendicionGasto::whereHas('solicitud.firmantes', function ($q) use ($auth) {
-                if (!$auth->hasRole('SUPER ADMINISTRADOR')) {
-                    $q->where('user_id', $auth->id);
-                }
-            })->orWhereHas('solicitud.firmantes', function ($q) use ($auth) {
-                $q->whereIn('is_executed', [true, false])
-                    ->whereHas('funcionario.ausentismos', function ($q) use ($auth) {
-                        $q->whereHas('subrogantes', function ($q) use ($auth) {
-                            $q->where('users.id', $auth->id);
-                        })->whereRaw("DATE(proceso_rendicion_gastos.fecha_by_user) >= ausentismos.fecha_inicio")
-                            ->whereRaw("DATE(proceso_rendicion_gastos.fecha_by_user) <= ausentismos.fecha_termino");
+            $proceso_rendiciones = ProcesoRendicionGasto::searchInput($request->input)
+                ->periodoSolicitud($request->periodo_cometido)
+                ->periodoIngresoSolicitud($request->periodo_ingreso_cometido)
+                ->periodoIngresoProceso($request->periodo_ingreso_rendicion)
+                ->periodoPagoRendicion($request->periodo_pago_rendicion)
+                ->derechoViatico($request->is_derecho_viatico)
+                ->archivos($request->is_files)
+                ->motivo($request->motivos_id)
+                ->lugar($request->lugares_id)
+                ->pais($request->paises_id)
+                ->tipoComision($request->tipo_comision_id)
+                ->jornada($request->jornadas_id)
+                ->estado($request->estados_id)
+                ->concepto($request->conceptos_id)
+                ->estadoRendicion($request->estados_rendicion_id)
+                ->whereHas('solicitud.firmantes', function ($q) use ($auth) {
+                    if (!$auth->hasRole('SUPER ADMINISTRADOR')) {
+                        $q->where('user_id', $auth->id);
+                    }
+                })->orWhereHas('solicitud.firmantes', function ($q) use ($auth) {
+                    $q->whereIn('is_executed', [true, false])
+                        ->whereHas('funcionario.ausentismos', function ($q) use ($auth) {
+                            $q->whereHas('subrogantes', function ($q) use ($auth) {
+                                $q->where('users.id', $auth->id);
+                            })->whereRaw("DATE(proceso_rendicion_gastos.fecha_by_user) >= ausentismos.fecha_inicio")
+                                ->whereRaw("DATE(proceso_rendicion_gastos.fecha_by_user) <= ausentismos.fecha_termino");
+                        });
+                })->orWhere(function ($q) use ($auth) {
+                    $q->whereHas('solicitud.firmantes', function ($q) use ($auth) {
+                        $q->where('is_executed', true)
+                            ->whereHas('funcionario.reasignacionAusencias', function ($q) use ($auth) {
+                                $q->where('user_subrogante_id', $auth->id);
+                            });
+                    })->whereHas('solicitud.reasignaciones', function ($q) use ($auth) {
+                        $q->where('user_subrogante_id', $auth->id);
                     });
-            })
-                ->orderBy('id', 'DESC')->get();
+                })
+                ->orderBy('fecha_by_user', 'DESC')
+                ->paginate(50);
 
             return response()->json(
                 array(
                     'status'        => 'success',
                     'title'         => null,
                     'message'       => null,
+                    'pagination' => [
+                        'total'         => $proceso_rendiciones->total(),
+                        'total_desc'    => $proceso_rendiciones->total() > 1 ? "{$proceso_rendiciones->total()} resultados" : "{$proceso_rendiciones->total()} resultado",
+                        'current_page'  => $proceso_rendiciones->currentPage(),
+                        'per_page'      => $proceso_rendiciones->perPage(),
+                        'last_page'     => $proceso_rendiciones->lastPage(),
+                        'from'          => $proceso_rendiciones->firstItem(),
+                        'to'            => $proceso_rendiciones->lastPage()
+                    ],
                     'data'          => ProcesoRendicionGastoResource::collection($proceso_rendiciones)
                 )
             );
@@ -142,14 +180,66 @@ class ProcesoRendicionController extends Controller
         }
     }
 
+    public function feriadosFecha($fecha)
+    {
+        $fecha      = Carbon::parse($fecha);
+        $anio       = $fecha->format('Y');
+        $cacheKey   = "feriados_{$anio}";
+        $feriados   = Cache::get($cacheKey);
+        if ($feriados !== null) {
+            return $feriados;
+        }
+
+        try {
+            $url        = "https://apis.digital.gob.cl/fl/feriados/{$anio}";
+            $response   = Http::get($url);
+            if ($response->successful()) {
+                $apiResponse = $response->body();
+                $feriados = json_decode($apiResponse, true, 512, JSON_UNESCAPED_UNICODE);
+
+                if (is_array($feriados)) {
+                    $fechas = collect($feriados)->pluck('fecha')->toArray();
+                    Cache::put($cacheKey, $fechas, now()->addDays(31));
+                    return $fechas;
+                }
+            }
+            return [];
+        } catch (\Exception $exception) {
+            Log::error("Error al procesar la solicitud de feriados: {$exception->getMessage()}");
+            $feriados = Cache::get($cacheKey);
+            return $feriados !== null ? $feriados : [];
+        }
+    }
+
     public function updatePago(Request $request)
     {
         try {
             $proceso_rendicion_gasto = ProcesoRendicionGasto::where('uuid', $request->uuid)->firstOrFail();
 
             if ($proceso_rendicion_gasto) {
+                $fecha_pago = null;
+                $dias_habiles_pago = $request->dias_habiles_pago != null ? (int)$request->dias_habiles_pago : NULL;
+                if ($dias_habiles_pago !== NULL) {
+                    $estado_ok = $proceso_rendicion_gasto->estados()->whereIn('status', [EstadoProcesoRendicionGasto::STATUS_APROBADO_N, EstadoProcesoRendicionGasto::STATUS_APROBADO_S])->orderBy('id', 'DESC')->first();
+                    if ($estado_ok) {
+                        $inicio             = Carbon::parse($estado_ok->fecha_by_user)->addDay(1);
+                        $fecha_final        = $inicio->copy();
+                        $diasAgregados      = 0;
+                        $feriados_anio      = $this->feriadosFecha($inicio);
+
+                        while ($diasAgregados < $dias_habiles_pago) {
+                            $fecha_final->addDay();
+
+                            if ($fecha_final->isWeekday() && !in_array($fecha_final->format('Y-m-d'), $feriados_anio)) {
+                                $diasAgregados++;
+                            }
+                        }
+                        $fecha_pago = $fecha_final;
+                    }
+                }
                 $update = $proceso_rendicion_gasto->update([
-                    'dias_habiles_pago'    => $request->dias_habiles_pago != null ? (int)$request->dias_habiles_pago : NULL
+                    'dias_habiles_pago'     => $dias_habiles_pago,
+                    'fecha_pago'            => $fecha_pago
                 ]);
 
                 if ($update) {

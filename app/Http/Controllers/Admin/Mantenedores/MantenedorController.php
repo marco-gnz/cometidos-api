@@ -4,12 +4,21 @@ namespace App\Http\Controllers\Admin\Mantenedores;
 
 use App\Http\Controllers\Controller;
 use App\Models\ActividadGasto;
+use App\Models\Calidad;
+use App\Models\Cargo;
+use App\Models\Concepto;
 use App\Models\Country;
 use App\Models\Departamento;
 use App\Models\Establecimiento;
+use App\Models\EstadoProcesoRendicionGasto;
 use App\Models\EstadoSolicitud;
+use App\Models\Estamento;
+use App\Models\Grado;
+use App\Models\Hora;
+use App\Models\Ley;
 use App\Models\Lugar;
 use App\Models\Motivo;
+use App\Models\ProcesoRendicionGasto;
 use App\Models\Solicitud;
 use App\Models\SubDepartamento;
 use App\Models\TipoComision;
@@ -29,10 +38,7 @@ class MantenedorController extends Controller
     {
         try {
             $estados = EstadoSolicitud::RECHAZO_STATUS;
-            return response()->json([
-                'status' => 'success',
-                'data' => $estados,
-            ]);
+            return response()->json($estados);
         } catch (\Exception $error) {
             return response()->json($error->getMessage());
         }
@@ -48,12 +54,44 @@ class MantenedorController extends Controller
         }
     }
 
+    public function getStatusRendicion()
+    {
+        try {
+            $estados = EstadoProcesoRendicionGasto::STATUS_PROCESO;
+            return response()->json($estados);
+        } catch (\Exception $error) {
+            return response()->json($error->getMessage());
+        }
+    }
+
     public function getMotivos()
     {
         try {
             $motivos = Motivo::orderBy('nombre', 'ASC')->get();
 
             return response()->json($motivos);
+        } catch (\Exception $error) {
+            return response()->json($error->getMessage());
+        }
+    }
+
+    public function getLeys()
+    {
+        try {
+            $leys = Ley::orderBy('nombre', 'ASC')->get();
+
+            return response()->json($leys);
+        } catch (\Exception $error) {
+            return response()->json($error->getMessage());
+        }
+    }
+
+    public function getGrados()
+    {
+        try {
+            $grados = Grado::orderBy('nombre', 'DESC')->get();
+
+            return response()->json($grados);
         } catch (\Exception $error) {
             return response()->json($error->getMessage());
         }
@@ -228,6 +266,61 @@ class MantenedorController extends Controller
             $paises = Country::orderBy('nombre', 'ASC')->get();
 
             return response()->json($paises);
+        } catch (\Exception $error) {
+            return response()->json($error->getMessage());
+        }
+    }
+
+    public function getConceptos()
+    {
+        try {
+            $actividades = ActividadGasto::orderBy('nombre', 'ASC')->get();
+
+            return response()->json($actividades);
+        } catch (\Exception $error) {
+            return response()->json($error->getMessage());
+        }
+    }
+
+    public function getEstamentos()
+    {
+        try {
+            $estamentos = Estamento::orderBy('nombre', 'ASC')->get();
+
+            return response()->json($estamentos);
+        } catch (\Exception $error) {
+            return response()->json($error->getMessage());
+        }
+    }
+
+    public function getCargos()
+    {
+        try {
+            $cargos = Cargo::orderBy('nombre', 'ASC')->get();
+
+            return response()->json($cargos);
+        } catch (\Exception $error) {
+            return response()->json($error->getMessage());
+        }
+    }
+
+    public function getCalidad()
+    {
+        try {
+            $calidads = Calidad::orderBy('nombre', 'ASC')->get();
+
+            return response()->json($calidads);
+        } catch (\Exception $error) {
+            return response()->json($error->getMessage());
+        }
+    }
+
+    public function getHoras()
+    {
+        try {
+            $horas = Hora::orderBy('nombre', 'ASC')->get();
+
+            return response()->json($horas);
         } catch (\Exception $error) {
             return response()->json($error->getMessage());
         }

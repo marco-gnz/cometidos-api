@@ -312,7 +312,7 @@ class SolicitudController extends Controller
         }
     }
 
-    private function getPermissions($role_id, $solicitud)
+    /* private function getPermissions($role_id, $solicitud)
     {
         $ciclo_firma = CicloFirma::where('establecimiento_id', $solicitud->establecimiento_id)
             ->where('role_id', $role_id)
@@ -323,7 +323,7 @@ class SolicitudController extends Controller
         }
 
         return $ciclo_firma->permissions()->pluck('permission_id')->toArray();
-    }
+    } */
 
     private function solicitudInformeEstados($solicitud)
     {

@@ -20,6 +20,7 @@ class ProcesoRendicionGasto extends Model
         'n_rendicion',
         'n_folio',
         'dias_habiles_pago',
+        'fecha_pago',
         'status',
         'observacion',
         'solicitud_id',
@@ -236,8 +237,9 @@ class ProcesoRendicionGasto extends Model
     {
         $dias_habiles_pago_message = null;
         if ($this->dias_habiles_pago !== null) {
+            $fecha_pago = Carbon::parse($this->fecha_pago)->format('d-m-Y');
             $message_dias = $this->dias_habiles_pago > 1 ? 'días hábiles' : 'día hábil';
-            $dias_habiles_pago_message = "El pago se realizará dentro de {$this->dias_habiles_pago} {$message_dias} de ser aprobado por Depto Finanzas.";
+            $dias_habiles_pago_message = "El pago se realizará dentro de {$this->dias_habiles_pago} {$message_dias} de ser aprobado por Depto Finanzas. (Hasta el: $fecha_pago)";
         }
         return $dias_habiles_pago_message;
     }
@@ -265,5 +267,166 @@ class ProcesoRendicionGasto extends Model
             return $new_firma;
         }
         return null;
+    }
+
+    public function scopeSearchInput($query, $params)
+    {
+        if ($params)
+            return $query->where('n_folio', 'like', '%' . $params . '%')
+                ->orWhere('observacion', 'like', '%' . $params . '%')
+                ->orWhere('n_rendicion', 'like', '%' . $params . '%')
+                ->orWhere(function ($query) use ($params) {
+                    $query->whereHas('solicitud', function ($query) use ($params) {
+                        $query->where('codigo', 'like', '%' . $params . '%')
+                            ->orWhere('actividad_realizada', 'like', '%' . $params . '%')
+                            ->orWhere('vistos', 'like', '%' . $params . '%')
+                            ->orWhere('observacion_gastos', 'like', '%' . $params . '%');
+                    });
+                })
+                ->orWhere(function ($query) use ($params) {
+                    $query->whereHas('solicitud.funcionario', function ($query) use ($params) {
+                        $query->where('rut_completo', 'like', '%' . $params . '%')
+                            ->orWhere('rut', 'like', '%' . $params . '%')
+                            ->orWhere('nombres', 'like', '%' . $params . '%')
+                            ->orWhere('apellidos', 'like', '%' . $params . '%')
+                            ->orWhere('nombre_completo', 'like', '%' . $params . '%')
+                            ->orWhere('email', 'like', '%' . $params . '%');
+                    });
+                })->orWhere(function ($query) use ($params) {
+                    $query->whereHas('solicitud.firmantes.funcionario', function ($query) use ($params) {
+                        $query->where('rut_completo', 'like', '%' . $params . '%')
+                            ->orWhere('rut', 'like', '%' . $params . '%')
+                            ->orWhere('nombres', 'like', '%' . $params . '%')
+                            ->orWhere('apellidos', 'like', '%' . $params . '%')
+                            ->orWhere('nombre_completo', 'like', '%' . $params . '%')
+                            ->orWhere('email', 'like', '%' . $params . '%');
+                    });
+                })->orWhere(function ($query) use ($params) {
+                    $query->whereHas('estados', function ($query) use ($params) {
+                        $query->where('observacion', 'like', '%' . $params . '%');
+                    });
+                });
+    }
+
+    public function scopePeriodoSolicitud($query, $params)
+    {
+        if ($params) {
+            return $query->whereHas('solicitud', function ($q) use ($params) {
+                $q->whereBetween('fecha_inicio', array($params[0], $params[1]));
+            });
+        }
+    }
+
+    public function scopePeriodoPagoRendicion($query, $params)
+    {
+        if ($params) {
+            return $query;
+        }
+    }
+
+    public function scopePeriodoIngresoSolicitud($query, $params)
+    {
+        if ($params) {
+            return $query->whereHas('solicitud', function ($q) use ($params) {
+                $inicio     = Carbon::parse($params[0])->startOfDay();
+                $termino    = Carbon::parse($params[1])->endOfDay();
+                $q->whereBetween('fecha_by_user', array($inicio, $termino));
+            });
+        }
+    }
+
+    public function scopePeriodoIngresoProceso($query, $params)
+    {
+        if ($params) {
+            $inicio     = Carbon::parse($params[0])->startOfDay();
+            $termino    = Carbon::parse($params[1])->endOfDay();
+
+            return $query->whereBetween('fecha_by_user', array($inicio, $termino));
+        }
+    }
+
+    public function scopeDerechoViatico($query, $params)
+    {
+        if ($params) {
+            return $query->whereHas('solicitud', function ($q) use ($params) {
+                $query->whereIn('derecho_pago', $params);
+            });
+        }
+    }
+
+    public function scopeArchivos($query, $params)
+    {
+        if ($params) {
+            if (in_array(0, $params) && in_array(1, $params)) {
+                return $query;
+            } elseif (in_array(0, $params)) {
+                return $query->whereDoesntHave('documentos');
+            } elseif (in_array(1, $params)) {
+                return $query->whereHas('documentos');
+            }
+        }
+    }
+
+    public function scopeMotivo($query, $params)
+    {
+        if ($params)
+            return $query->whereHas('solicitud.motivos', function ($q) use ($params) {
+                $q->whereIn('motivos.id', $params);
+            });
+    }
+
+    public function scopeLugar($query, $params)
+    {
+        if ($params)
+            return $query->whereHas('solicitud.lugares', function ($q) use ($params) {
+                $q->whereIn('lugars.id', $params);
+            });
+    }
+
+    public function scopePais($query, $params)
+    {
+        if ($params)
+            return $query->whereHas('solicitud.paises', function ($q) use ($params) {
+                $q->whereIn('countries.id', $params);
+            });
+    }
+
+    public function scopeTipoComision($query, $params)
+    {
+        if ($params)
+            return $query->whereHas('solicitud.tipoComision', function ($q) use ($params) {
+                $q->whereIn('id', $params);
+            });
+    }
+
+    public function scopeJornada($query, $params)
+    {
+        if ($params)
+            return $query->whereHas('solicitud', function ($q) use ($params) {
+                $q->whereIn('jornada', $params);
+            });
+    }
+
+    public function scopeEstado($query, $params)
+    {
+        if ($params)
+            return $query->whereHas('solicitud', function ($q) use ($params) {
+                $q->whereIn('status', $params);
+            });
+    }
+
+    public function scopeConcepto($query, $params)
+    {
+        if ($params)
+            return $query->whereHas('rendiciones.actividad', function ($q) use ($params) {
+                $q->whereIn('id', $params)
+                    ->where('rinde_gasto', true);
+            });
+    }
+
+    public function scopeEstadoRendicion($query, $params)
+    {
+        if ($params)
+            return $query->whereIn('status', $params);
     }
 }
