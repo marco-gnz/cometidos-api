@@ -39,6 +39,8 @@ class ListInformeCometidoAdminResource extends JsonResource
             'estados'                   => $estados ? ListEstadoInformeCometidoAdminResource::collection($estados) : null,
             'authorized_to_aprobar'     => $this->authorizedToAprobar(),
             'authorized_to_rechazar'    => $this->authorizedToRechazar(),
+            'authorized_to_update'      => $this->authorizedToUpdate(),
+            'authorized_to_delete'      => $this->authorizedToDelete()
         ];
     }
 }

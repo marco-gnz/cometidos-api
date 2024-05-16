@@ -17,17 +17,20 @@ class EstadoInformeCometido extends Model
     public const STATUS_INGRESADA  = 0;
     public const STATUS_APROBADO   = 1;
     public const STATUS_RECHAZADO  = 2;
+    public const STATUS_MODIFICADO = 3;
 
     public const STATUS_NOM = [
         self::STATUS_INGRESADA  => 'INGRESADO',
         self::STATUS_APROBADO   => 'APROBADO',
-        self::STATUS_RECHAZADO  => 'RECHAZADO'
+        self::STATUS_RECHAZADO  => 'RECHAZADO',
+        self::STATUS_MODIFICADO  => 'MODIFICADO'
     ];
 
     public const STATUS_TYPE = [
         self::STATUS_INGRESADA  => 'info',
         self::STATUS_APROBADO   => 'success',
-        self::STATUS_RECHAZADO  => 'danger'
+        self::STATUS_RECHAZADO  => 'danger',
+        self::STATUS_MODIFICADO => 'info'
     ];
 
     public $timestamps = false;

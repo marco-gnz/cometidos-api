@@ -5,11 +5,13 @@ namespace App\Http\Controllers\Solicitud;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Informe\StatusInformeRequest;
 use App\Http\Requests\Informe\StoreInformeRequest;
+use App\Http\Requests\Informe\UpdateInformeRequest;
 use App\Http\Requests\Solicitud\StoreSolicitudRequest;
 use App\Http\Requests\Solicitud\UpdateSolicitudRequest;
 use App\Http\Requests\Solicitud\ValidateFileSolicitudRequest;
 use App\Http\Requests\Solicitud\ValidateInformeSolicitudRequest;
 use App\Http\Requests\Solicitud\ValidateInformeUpdateSolicitudRequest;
+use App\Http\Resources\Solicitud\InformeCometidoUpdateResource;
 use App\Http\Resources\Solicitud\ListInformeCometidoAdminResource;
 use App\Http\Resources\Solicitud\ListSolicitudCompleteAdminResource;
 use App\Http\Resources\Solicitud\UpdateSolicitudResource;
@@ -34,6 +36,7 @@ use Spatie\Permission\Models\Role;
 use App\Traits\FirmaDisponibleTrait;
 use App\Traits\StatusSolicitudTrait;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\DB;
 
 class SolicitudController extends Controller
 {
@@ -312,19 +315,6 @@ class SolicitudController extends Controller
         }
     }
 
-    /* private function getPermissions($role_id, $solicitud)
-    {
-        $ciclo_firma = CicloFirma::where('establecimiento_id', $solicitud->establecimiento_id)
-            ->where('role_id', $role_id)
-            ->first();
-
-        if (!$ciclo_firma) {
-            return null;
-        }
-
-        return $ciclo_firma->permissions()->pluck('permission_id')->toArray();
-    } */
-
     private function solicitudInformeEstados($solicitud)
     {
         $informes = $solicitud->informes()->whereIn('last_status', [EstadoInformeCometido::STATUS_INGRESADA, EstadoInformeCometido::STATUS_APROBADO])->count();
@@ -333,6 +323,51 @@ class SolicitudController extends Controller
             return false;
         }
         return true;
+    }
+
+    public function deleteInformeCometido($uuid)
+    {
+        try {
+            DB::beginTransaction();
+            $informe = InformeCometido::where('uuid', $uuid)->firstOrFail();
+            $this->authorize('delete', $informe);
+            $informe->transportes()->detach();
+            $delete = $informe->delete();
+
+            if ($delete) {
+                DB::commit();
+                return response()->json(
+                    array(
+                        'status'        => 'success',
+                        'title'         => "Informe de cometido eliminado con éxito.",
+                        'message'       => null,
+                        'data'          => null
+                    )
+                );
+            }
+        } catch (\Exception $error) {
+            DB::rollback();
+            return response()->json(['error' => $error->getMessage()], 500);
+        }
+    }
+
+    public function getInformeCometidoUpdate($uuid)
+    {
+        try {
+            $informe = InformeCometido::where('uuid', $uuid)->firstOrFail();
+            $this->authorize('update', $informe);
+
+            return response()->json(
+                array(
+                    'status'        => 'success',
+                    'title'         => null,
+                    'message'       => null,
+                    'data'          => InformeCometidoUpdateResource::make($informe)
+                )
+            );
+        } catch (\Exception $error) {
+            return response()->json(['error' => $error->getMessage()], 500);
+        }
     }
 
     public function storeInformeCometido(StoreInformeRequest $request)
@@ -368,17 +403,6 @@ class SolicitudController extends Controller
             $informeCometido->save();
 
             if ($informeCometido) {
-                $dentro_pais = (bool)$request->dentro_pais;
-
-                if (!$dentro_pais) {
-                    if ($request->lugares_cometido) {
-                        $informeCometido->lugares()->attach($request->lugares_cometido);
-                    }
-                } else {
-                    if ($request->paises_cometido) {
-                        $informeCometido->paises()->attach($request->paises_cometido);
-                    }
-                }
                 $utiliza_transporte = (bool)$request->utiliza_transporte;
                 if ($utiliza_transporte === true) {
                     if ($request->medio_transporte) {
@@ -404,6 +428,58 @@ class SolicitudController extends Controller
                 );
             }
         } catch (\Exception $error) {
+            return response()->json($error->getMessage());
+        }
+    }
+
+    public function updateInformeCometido($uuid, UpdateInformeRequest $request)
+    {
+        try {
+            DB::beginTransaction();
+            $informeCometido = InformeCometido::where('uuid', $uuid)->firstOrFail();
+            $this->authorize('update', $informeCometido);
+            $form = [
+                'fecha_inicio',
+                'fecha_termino',
+                'hora_llegada',
+                'hora_salida',
+                'utiliza_transporte',
+                'dentro_pais',
+                'medio_transporte',
+                'actividad_realizada'
+            ];
+
+            $update = $informeCometido->update($request->only($form));
+
+            $utiliza_transporte = (bool)$request->utiliza_transporte;
+            if ($utiliza_transporte === true) {
+                if ($request->medio_transporte) {
+                    $informeCometido->transportes()->sync($request->medio_transporte);
+                } else {
+                    $informeCometido->transportes()->detach();
+                }
+            } else {
+                $informeCometido->transportes()->detach();
+            }
+
+            $estados[] = [
+                'status'                    => EstadoInformeCometido::STATUS_MODIFICADO,
+                'informe_cometido_id'       => $informeCometido->id
+            ];
+
+            $create_status      = $informeCometido->addEstados($estados);
+            $informeCometido    = $informeCometido->fresh();
+            DB::commit();
+            return response()->json(
+                array(
+                    'status'        => 'success',
+                    'title'         => "Informe de cometido {$informeCometido->codigo} modificado con éxito.",
+                    'message'       => null,
+                    'data'          => null
+                )
+            );
+        } catch (\Exception $error) {
+            DB::rollback();
             return response()->json($error->getMessage());
         }
     }

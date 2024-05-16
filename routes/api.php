@@ -169,7 +169,10 @@ Route::group(
         Route::get('/rendicion/{uuid}', [RendicionController::class, 'getProcesoRendicion']);
         Route::get('/rendicion/update/{uuid}', [RendicionController::class, 'getProcesoRendicionUpdate']);
 
+        Route::get('/informe/update/{uuid}', [SolicitudController::class, 'getInformeCometidoUpdate']);
+        Route::put('/informe/update/{uuid}', [SolicitudController::class, 'updateInformeCometido']);
         Route::post('/informe/store', [SolicitudController::class, 'storeInformeCometido']);
+        Route::delete('/informe/delete/{uuid}', [SolicitudController::class, 'deleteInformeCometido']);
         Route::post('/informe/status', [SolicitudController::class, 'statusInformeCometido']);
 
         Route::get('/ausentismo/list', [AusentismosController::class, 'listAusentismos']);
