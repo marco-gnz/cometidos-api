@@ -156,7 +156,7 @@ class InformeCometido extends Model
 
     public function firmaJefatura()
     {
-        $firma = $this->estados()->where('status', EstadoInformeCometido::STATUS_APROBADO)->where('role_id', 4)->first();
+        $firma = $this->estados()->where('status', EstadoInformeCometido::STATUS_APROBADO)->where('role_id', 3)->first();
         if ($firma) {
             $nombres        = $firma->userBy->abreNombres();
             $fecha          = Carbon::parse($firma->fecha_by_user)->format('d-m-y H:i:s');

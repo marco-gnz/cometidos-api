@@ -2,6 +2,8 @@
 
 namespace App\Http\Controllers\Admin\Solicitudes;
 
+use App\Events\SolicitudChangeStatus;
+use App\Events\SolicitudReasignada;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Solicitud\Ajuste\StoreAjusteRequest;
 use App\Http\Requests\Solicitud\StatusSolicitudRequest;
@@ -22,6 +24,7 @@ use App\Http\Resources\Solicitud\PropuestaCalculoSolicitud;
 use App\Http\Resources\Solicitud\StatusSolicitudResource;
 use App\Http\Resources\User\InformeCometido\ListInformeCometidoResource;
 use App\Models\CalculoAjuste;
+use App\Models\Concepto;
 use App\Models\Convenio;
 use App\Models\Escala;
 use App\Models\EstadoCalculoAjuste;
@@ -1095,6 +1098,34 @@ class SolicitudAdminController extends Controller
                     break;
             }
             $solicitud = $solicitud->fresh();
+
+            $last_status = $solicitud->estados()->orderBy('id', 'DESC')->first();
+
+            if (($last_status) && (!$last_status->is_reasignado)) {
+                $ids_roles_aprobado = [2, 3, 7, 10];
+                $ids_roles_rechazado = [2, 3, 4, 5, 6, 7, 10];
+                if ($last_status->status === EstadoSolicitud::STATUS_APROBADO && in_array($last_status->s_role_id, $ids_roles_aprobado)) {
+                    $emails_copy = [];
+                    $is_avion = $solicitud->transportes()->where('solicitud_transporte.transporte_id', 1)->exists();
+                    if ($last_status->s_role_id === 3 && $is_avion) {
+                        $name     = 'ABASTECIMIENTO';
+                        $concepto = Concepto::where('nombre', $name)->first();
+                        if ($concepto) {
+                            $conceptoEstablecimiento = $concepto->conceptosEstablecimientos()
+                                ->where('establecimiento_id', $solicitud->establecimiento_id)
+                                ->first();
+
+                            $emails_copy = $conceptoEstablecimiento->funcionarios()->pluck('users.email')->toArray();
+                        }
+                    }
+                    SolicitudChangeStatus::dispatch($solicitud, $last_status, $emails_copy);
+                } else if ($last_status->status === EstadoSolicitud::STATUS_RECHAZADO && in_array($last_status->s_role_id, $ids_roles_rechazado)) {
+                    SolicitudChangeStatus::dispatch($solicitud, $last_status, $emails_copy);
+                }
+            } else if (($last_status) && ($last_status->is_reasignado)) {
+                SolicitudReasignada::dispatch($solicitud, $last_status);
+            }
+
             $navStatus = $this->navStatusSolicitud($solicitud);
             $title = "Solicitud {$solicitud->codigo} verificada con éxito.";
             $message = EstadoSolicitud::STATUS_NOM[$solicitud->last_status];

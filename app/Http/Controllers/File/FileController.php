@@ -36,7 +36,7 @@ class FileController extends Controller
         try {
             return true;
         } catch (\Exception $error) {
-            return response()->json($error->getMessage());
+            return response()->json(['error' => 'Error al cargar archivo.'], 500);
         }
     }
 

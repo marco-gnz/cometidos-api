@@ -194,8 +194,9 @@
                             <td>{{ $informe->solicitud->cargo->nombre }}</td>
                         </tr>
                         <tr>
-                            <th>GRADO:</th>
-                            <td>{{ $informe->solicitud->grado->nombre }}</td>
+                            <th>GRADO / HORAS:</th>
+                            <td>{{ $informe->solicitud->grado ? $informe->solicitud->grado->nombre : '' }} /
+                                {{ $informe->solicitud->hora ? $informe->solicitud->hora->nombre : '' }}</td>
                         </tr>
                         <tr>
                             <th>CALIDAD JURÍDICA:</th>
@@ -206,7 +207,7 @@
                             <td>{{ $informe->solicitud->establecimiento->nombre }}</td>
                         </tr>
                         <tr>
-                            <th>DEPTO:</th>
+                            <th>DEPTO / SECCION / UNIDAD:</th>
                             <td>{{ $informe->solicitud->departamento->nombre }}</td>
                         </tr>
                     </tbody>

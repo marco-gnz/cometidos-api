@@ -269,7 +269,7 @@
         </div>
         <div class="seccion">
             <h3 class="seccion-title">RESOLUCIÓN:</h3>
-            <p>ORDÉNESE el siguiente Cometido Funcional
+            <p>1.- ORDÉNESE el siguiente Cometido Funcional
                 <strong>{{ $solicitud->derecho_pago ? 'con derecho' : 'sin derecho' }}</strong> a
                 percibir viático, a funcionaria(o) que se indica:
             </p>

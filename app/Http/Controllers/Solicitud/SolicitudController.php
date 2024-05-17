@@ -2,6 +2,8 @@
 
 namespace App\Http\Controllers\Solicitud;
 
+use App\Events\SolicitudCreated;
+use App\Events\SolicitudUpdated;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Informe\StatusInformeRequest;
 use App\Http\Requests\Informe\StoreInformeRequest;
@@ -16,6 +18,7 @@ use App\Http\Resources\Solicitud\ListInformeCometidoAdminResource;
 use App\Http\Resources\Solicitud\ListSolicitudCompleteAdminResource;
 use App\Http\Resources\Solicitud\UpdateSolicitudResource;
 use App\Models\CicloFirma;
+use App\Models\Concepto;
 use App\Models\ConceptoEstablecimiento;
 use App\Models\Convenio;
 use App\Models\Documento;
@@ -299,6 +302,22 @@ class SolicitudController extends Controller
                     $uuid    = $solicitud->uuid;
                 } else {
                     $message = "¿Requiere ingresar una nueva solicitud de cometido?";
+                }
+
+                if ($solicitud) {
+                    $emails_copy = [];
+                    if ($solicitud->tipo_comision_id === 5) {
+                        $name = 'CAPACITACIÓN FINANCIAMIENTO CENTRALIZADO';
+                        $concepto = Concepto::where('nombre', $name)->first();
+                        if ($concepto) {
+                            $conceptoEstablecimiento = $concepto->conceptosEstablecimientos()
+                                ->where('establecimiento_id', $solicitud->establecimiento_id)
+                                ->first();
+
+                            $emails_copy = $conceptoEstablecimiento->funcionarios()->pluck('users.email')->toArray();
+                        }
+                    }
+                    SolicitudCreated::dispatch($solicitud, $emails_copy);
                 }
 
                 return response()->json(
@@ -585,8 +604,6 @@ class SolicitudController extends Controller
     {
         try {
             $solicitud = Solicitud::where('uuid', $request->solicitud_uuid)->firstOrFail();
-
-
             $this->authorize('update', $solicitud);
 
             $is_update          = $solicitud->authorizedToUpdate();
@@ -675,6 +692,9 @@ class SolicitudController extends Controller
                     ]
                 ], 422);
             }
+
+            $is_update_derecho_pago = $solicitud->derecho_pago != $request->derecho_pago;
+            Log::info($is_update_derecho_pago);
 
             $update             = $solicitud->update($request->only($form));
             $utiliza_transporte = (bool)$request->utiliza_transporte;
@@ -824,8 +844,15 @@ class SolicitudController extends Controller
                     'user_id'                   => $firma_disponible ? $firma_disponible->id_user_ejecuted_firma : null,
                     'is_subrogante'             => $firma_disponible ? $firma_disponible->is_subrogante : false
                 ];
-                Log::info($estados);
                 $create_status  = $solicitud->addEstados($estados);
+
+                if ($is_update_derecho_pago) {
+                    $firmantes      = $solicitud->firmantes()->whereIn('role_id', [2, 3])->get();
+                    $emails_copy    = $firmantes->pluck('funcionario.email')->toArray();
+                    Log::info($emails_copy);
+                    SolicitudUpdated::dispatch($solicitud, $emails_copy);
+                }
+
 
                 return response()->json(
                     array(

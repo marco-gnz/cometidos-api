@@ -2,6 +2,8 @@
 
 namespace App\Http\Controllers\Rendicion;
 
+use App\Events\ProcesoRendicionGastoCreated;
+use App\Events\ProcesoRendicionGastoStatus;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Rendicion\AnularRendicionRequest;
 use App\Http\Requests\Rendicion\AprobarRendicionRequest;
@@ -292,6 +294,7 @@ class RendicionController extends Controller
                             'is_subrogante'         => $firma_disponible->is_subrogante
                         ];
                         $status = EstadoProcesoRendicionGasto::create($estado);
+                        ProcesoRendicionGastoCreated::dispatch($proceso_rendicion_gasto);
                     }
 
                     return response()->json(
@@ -520,6 +523,9 @@ class RendicionController extends Controller
             $status = EstadoProcesoRendicionGasto::create($estado);
 
             $proceso_rendicion_gasto = $proceso_rendicion_gasto->fresh();
+
+            $last_status = $proceso_rendicion_gasto->estados()->orderBy('id', 'DESC')->first();
+            ProcesoRendicionGastoStatus::dispatch($last_status);
             return response()->json(
                 array(
                     'status'        => 'success',
@@ -570,6 +576,9 @@ class RendicionController extends Controller
             $status_r = EstadoProcesoRendicionGasto::create($estado);
 
             $proceso_rendicion_gasto = $proceso_rendicion_gasto->fresh();
+
+            $last_status = $proceso_rendicion_gasto->estados()->orderBy('id', 'DESC')->first();
+            ProcesoRendicionGastoStatus::dispatch($last_status);
             return response()->json(
                 array(
                     'status'        => 'success',

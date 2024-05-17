@@ -184,7 +184,7 @@
                     <td>{{ $proceso_rendicion_gasto->n_folio }}</td>
                 </tr>
                 <tr style="font-size: 8px;">
-                    <th>N° RESOLUCION:</th>
+                    <th>N° RESOLUCION COMETIDO:</th>
                     <td>{{ $proceso_rendicion_gasto->solicitud->codigo }}</td>
                 </tr>
             </table>
