@@ -154,6 +154,11 @@ class InformeCometido extends Model
         return Gate::allows('delete', $this);
     }
 
+    public function userBy()
+    {
+        return $this->belongsTo(User::class, 'user_id_by');
+    }
+
     public function firmaJefatura()
     {
         $firma = $this->estados()->where('status', EstadoInformeCometido::STATUS_APROBADO)->where('role_id', 3)->first();

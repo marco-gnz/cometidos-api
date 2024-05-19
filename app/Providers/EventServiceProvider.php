@@ -2,12 +2,16 @@
 
 namespace App\Providers;
 
+use App\Events\InformeCometidoCreated;
+use App\Events\InformeCometidoStatus;
 use App\Events\ProcesoRendicionGastoCreated;
 use App\Events\ProcesoRendicionGastoStatus;
 use App\Events\SolicitudChangeStatus;
 use App\Events\SolicitudCreated;
 use App\Events\SolicitudReasignada;
 use App\Events\SolicitudUpdated;
+use App\Listeners\SendInformeCometidoCreatedNotification;
+use App\Listeners\SendInformeCometidoStatusNotification;
 use App\Listeners\SendProcesoRendicionGastoCreatedNotification;
 use App\Listeners\SendProcesoRendicionGastoStatusNotification;
 use App\Listeners\SendSolicitudChangeStatusNotification;
@@ -47,6 +51,12 @@ class EventServiceProvider extends ServiceProvider
         ],
         ProcesoRendicionGastoStatus::class => [
             SendProcesoRendicionGastoStatusNotification::class
+        ],
+        InformeCometidoCreated::class => [
+            SendInformeCometidoCreatedNotification::class
+        ],
+        InformeCometidoStatus::class => [
+            SendInformeCometidoStatusNotification::class
         ]
     ];
 

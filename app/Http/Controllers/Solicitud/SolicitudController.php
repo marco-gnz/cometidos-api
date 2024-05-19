@@ -2,6 +2,8 @@
 
 namespace App\Http\Controllers\Solicitud;
 
+use App\Events\InformeCometidoCreated;
+use App\Events\InformeCometidoStatus;
 use App\Events\SolicitudCreated;
 use App\Events\SolicitudUpdated;
 use App\Http\Controllers\Controller;
@@ -437,6 +439,7 @@ class SolicitudController extends Controller
                 $create_status      = $informeCometido->addEstados($estados);
                 $informeCometido    = $informeCometido->fresh();
 
+                InformeCometidoCreated::dispatch($informeCometido);
                 return response()->json(
                     array(
                         'status'        => 'success',
@@ -535,6 +538,9 @@ class SolicitudController extends Controller
                 if ($create_status) {
                     $solicitud  = $informeCometido->solicitud->fresh();
                     $navStatus  = $this->navStatusSolicitud($solicitud);
+
+                    $last_status = $informeCometido->estados()->orderBy('id', 'DESC')->first();
+                    InformeCometidoStatus::dispatch($last_status);
 
                     return response()->json(
                         array(
