@@ -126,7 +126,8 @@ trait FirmaDisponibleTrait
             $title      = "{$name_user}, registras firma disponible de emergencia.";
             $type       = 'warning';
             $is_firma   = true;
-            $if_buttom  = true;
+            $if_buttom              = true;
+            $id_user_ejecuted_firma = $auth['id'];
         } else {
             $id_permission                      = $this->idPermission($name_permission);
             $first_firma_habilitada_solicitud   = $this->obtenerPrimerFirmanteHabilitado($solicitud, $id_permission);

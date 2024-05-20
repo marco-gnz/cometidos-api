@@ -215,7 +215,6 @@ class SolicitudAdminController extends Controller
             if ($solicitud->grupo) {
                 $firmantes_solicitud = [];
                 $firmantes = $solicitud->grupo->firmantes()->where('status', true)->get();
-                Log::info($firmantes);
                 if ($firmantes) {
                     foreach ($firmantes as $firmante) {
                         $status = true;
@@ -236,7 +235,6 @@ class SolicitudAdminController extends Controller
                             'permissions_id'    => $this->getPermissions($firmante->role_id, $solicitud)
                         ];
                     }
-                    Log::info($firmantes_solicitud);
                     $solicitud->addFirmantes($firmantes_solicitud);
                 }
             }
@@ -1129,7 +1127,6 @@ class SolicitudAdminController extends Controller
             $navStatus = $this->navStatusSolicitud($solicitud);
             $title = "Solicitud {$solicitud->codigo} verificada con éxito.";
             $message = EstadoSolicitud::STATUS_NOM[$solicitud->last_status];
-
             return response()->json(
                 array(
                     'status'        => 'success',

@@ -442,6 +442,15 @@
                             </thead>
                             <tbody>
                                 <tr>
+                                    <td colspan="1"><strong>Días</strong></td>
+                                    <td>{{ $solicitud->ultimoCalculo->n_dias_40 != null ? $solicitud->ultimoCalculo->n_dias_40 : 'N/A' }}
+                                    </td>
+                                    <td>{{ $solicitud->ultimoCalculo->n_dias_100 != null ? $solicitud->ultimoCalculo->n_dias_100 : 'N/A' }}
+                                    </td>
+                                    <td>{{$solicitud->ultimoCalculo->n_dias_40  + $solicitud->ultimoCalculo->n_dias_100  }}
+                                    </td>
+                                </tr>
+                                <tr>
                                     <td colspan="1"><strong>Escala de valores</strong></td>
                                     <td>{{ $solicitud->ultimoCalculo->monto_40 != null ? "$" . number_format($solicitud->ultimoCalculo->monto_40, 0, ',', '.') : 'N/A' }}
                                     </td>

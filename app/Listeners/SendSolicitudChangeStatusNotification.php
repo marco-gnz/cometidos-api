@@ -28,10 +28,18 @@ class SendSolicitudChangeStatusNotification
      */
     public function handle(SolicitudChangeStatus $event)
     {
-        Mail::to($event->solicitud->funcionario->email)
+        if($event->emails_copy){
+            Mail::to($event->solicitud->funcionario->email)
             ->cc($event->emails_copy)
             ->queue(
                 new MailSolicitudChangeStatus($event->solicitud, $event->last_status, null)
             );
+        }else{
+            Mail::to($event->solicitud->funcionario->email)
+            ->queue(
+                new MailSolicitudChangeStatus($event->solicitud, $event->last_status, null)
+            );
+        }
+
     }
 }
