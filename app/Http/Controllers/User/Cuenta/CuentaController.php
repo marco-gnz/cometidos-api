@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\User\Cuenta;
 
+use App\Events\ChangeDataSolicitud;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Auth\ChangeDataRequest;
 use App\Models\Grupo;
@@ -45,12 +46,13 @@ class CuentaController extends Controller
         $add = $user->addHistorys($historys);
 
         if ($add) {
-            $email = $jefe_personal->funcionario->email;
+            $history = $user->historys()->where('type', HistoryActionUser::TYPE_3)->orderBy('id', 'DESC')->first();
+            ChangeDataSolicitud::dispatch($history);
             return response()->json(
                 array(
                     'status'        => 'success',
                     'title'         => "Solicitud de cambio de datos enviada.",
-                    'message'       => "Se envió a $email"
+                    'message'       => null
                 )
             );
         }

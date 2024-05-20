@@ -22,7 +22,8 @@ class HistoryActionUser extends Model
         'observacion',
         'user_id',
         'send_to_user_id',
-        'user_id_by'
+        'user_id_by',
+        'created_at'
     ];
 
     public const TYPE_0      = 0;
@@ -43,5 +44,15 @@ class HistoryActionUser extends Model
             $history->user_id_by   = Auth::check() ? Auth::user()->id : null;
             $history->ip_address   = Request::ip();
         });
+    }
+
+    public function userBy()
+    {
+        return $this->belongsTo(User::class, 'user_id_by');
+    }
+
+    public function userSendBy()
+    {
+        return $this->belongsTo(User::class, 'send_to_user_id');
     }
 }

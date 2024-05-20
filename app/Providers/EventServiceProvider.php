@@ -2,6 +2,7 @@
 
 namespace App\Providers;
 
+use App\Events\ChangeDataSolicitud;
 use App\Events\InformeCometidoCreated;
 use App\Events\InformeCometidoStatus;
 use App\Events\ProcesoRendicionGastoCreated;
@@ -10,6 +11,7 @@ use App\Events\SolicitudChangeStatus;
 use App\Events\SolicitudCreated;
 use App\Events\SolicitudReasignada;
 use App\Events\SolicitudUpdated;
+use App\Listeners\SendChangeDataSolicitudNotification;
 use App\Listeners\SendInformeCometidoCreatedNotification;
 use App\Listeners\SendInformeCometidoStatusNotification;
 use App\Listeners\SendProcesoRendicionGastoCreatedNotification;
@@ -57,6 +59,9 @@ class EventServiceProvider extends ServiceProvider
         ],
         InformeCometidoStatus::class => [
             SendInformeCometidoStatusNotification::class
+        ],
+        ChangeDataSolicitud::class => [
+            SendChangeDataSolicitudNotification::class
         ]
     ];
 

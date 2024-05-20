@@ -13,6 +13,7 @@ use Laravel\Sanctum\HasApiTokens;
 use Spatie\Permission\Traits\HasRoles;
 use Spatie\Permission\Models\Permission;
 use Illuminate\Support\Str;
+use App\Notifications\ResetPasswordNotification;
 
 class User extends Authenticatable
 {
@@ -263,4 +264,9 @@ class User extends Authenticatable
         $apellidos  = mb_substr($this->apellidos, 0, 14);
         return "$nombres. $apellidos.";
     }
+
+    /* public function sendPasswordResetNotification($token)
+    {
+        $this->notify(new ResetPasswordNotification($token));
+    } */
 }

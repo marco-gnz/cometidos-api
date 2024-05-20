@@ -27,6 +27,14 @@ class UserAuthResource extends JsonResource
         if ($firmas > 0 || $subrogancias > 0 || $this->hasRole('SUPER ADMINISTRADOR')) {
             $is_firmante = true;
         }
+
+        $is_group = Grupo::where('departamento_id', $this->departamento->id)
+            ->where('sub_departamento_id', $this->subDepartamento->id)
+            ->where('establecimiento_id', $this->establecimiento->id)
+            ->whereHas('firmantes', function ($q) {
+                $q->where('status', true);
+            })
+            ->first() ? true : false;
         return [
             'uuid'                      => $this->uuid,
             'id'                        => $this->id,
@@ -45,14 +53,16 @@ class UserAuthResource extends JsonResource
             'hora'                      => $this->hora ? $this->hora->nombre : null,
             'calidad'                   => $this->calidad ? $this->calidad->nombre : null,
             'telefono'                  => $this->telefono ? $this->telefono : null,
-            'is_group'                  => Grupo::where('departamento_id', $this->departamento->id)->where('sub_departamento_id', $this->subDepartamento->id)->where('establecimiento_id', $this->establecimiento->id)->first() ? true : false,
+            'is_group'                  => $is_group,
             'create_solicitud'          => $this->authorizedToCreateSolicitud(),
+            'create_rendicion'          => $this->authorizedToCreateRendicion(),
+            'create_informe'            => $this->authorizedToCreateInforme(),
             'last_login'                => $this->lastHistory(HistoryActionUser::TYPE_2) ? Carbon::parse($this->lastHistory(HistoryActionUser::TYPE_2)->created_at)->format('d-m-Y H:i:s') : 'Sin registros',
             'last_change_password'      => $this->lastHistory(HistoryActionUser::TYPE_0) ? Carbon::parse($this->lastHistory(HistoryActionUser::TYPE_0)->created_at)->format('d-m-Y H:i:s') : 'Sin registros',
             'last_change_data'          => $this->lastHistory(HistoryActionUser::TYPE_1) ? Carbon::parse($this->lastHistory(HistoryActionUser::TYPE_1)->created_at)->format('d-m-Y H:i:s') : 'Sin registros',
             'last_change_request_data'  => $this->lastHistory(HistoryActionUser::TYPE_3) ? Carbon::parse($this->lastHistory(HistoryActionUser::TYPE_3)->created_at)->format('d-m-Y H:i:s') : 'Sin registros',
             'last_cuenta_bancaria'      => $this->lastCuentaBancaria() ? CuentaBancariaResource::make($this->lastCuentaBancaria())  : null,
-            'is_firmante'               => $is_firmante
+            'is_firmante'               => true
         ];
     }
 }
