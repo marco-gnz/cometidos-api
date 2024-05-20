@@ -428,7 +428,12 @@ class Solicitud extends Model
 
     public function informeCometido()
     {
-        return $this->informes()->whereIn('last_status', [EstadoInformeCometido::STATUS_INGRESADA, EstadoInformeCometido::STATUS_APROBADO])->orderBy('fecha_by_user', 'DESC')->first();
+        $status = [
+            EstadoInformeCometido::STATUS_INGRESADA,
+            EstadoInformeCometido::STATUS_MODIFICADO,
+            EstadoInformeCometido::STATUS_APROBADO
+        ];
+        return $this->informes()->whereIn('last_status', $status)->orderBy('fecha_by_user', 'DESC')->first();
     }
 
     public function isInformeAtrasado()

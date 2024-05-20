@@ -18,6 +18,7 @@ class ListConceptoResource extends JsonResource
             'id'                            => $this->id,
             'uuid'                          => $this->uuid,
             'nombre'                        => $this->nombre,
+            'descripcion'                   => $this->descripcion,
             'conceptos_establecimientos'    => ListConceptoEstablecimientoResource::collection($this->whenLoaded('conceptosEstablecimientos'))
         ];
     }
