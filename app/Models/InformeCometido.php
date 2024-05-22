@@ -95,7 +95,7 @@ class InformeCometido extends Model
             $horas                          = $diferencia->h;
             $minutos                        = $diferencia->i;
             $message_dias                   = $dias_permitidos > 1 ? 'días' : 'día';
-            return "El Informe se ingresó después del plazo de $dias_permitidos $message_dias. La diferencia es de $dias días, $horas horas y $minutos minutos.";
+            return "El Informe se ingresó después del plazo de $dias_permitidos $message_dias de haber finalizado el cometido. La diferencia es de $dias días, $horas horas y $minutos minutos.";
         } else {
             return null;
         }

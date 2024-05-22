@@ -226,7 +226,7 @@ class SolicitudController extends Controller
                                     $nuevos_firmantes   = [];
                                     foreach ($firmantes_solicitud as $firmante) {
                                         $nuevos_firmantes[] = $firmante;
-                                        if ($firmante['role_id'] === 3) {
+                                        if ($firmante['role_id'] === 2) {
                                             // Crear el nuevo firmante de capacitación
                                             $firmante_capacitacion = [
                                                 'posicion_firma'    => $firmante['posicion_firma'] + 1,
@@ -749,7 +749,7 @@ class SolicitudController extends Controller
                                 $nuevos_firmantes = [];
                                 $firmantes_actual          = $solicitud->firmantes()->get();
                                 foreach ($firmantes_actual as $firmante) {
-                                    if ($firmante->role_id === 3) {
+                                    if ($firmante->role_id === 2) {
                                         $firmante_capacitacion = [
                                             'posicion_firma'    => $firmante['posicion_firma'] + 1,
                                             'solicitud_id'      => $solicitud->id,
@@ -944,7 +944,8 @@ class SolicitudController extends Controller
         try {
             $fecha_inicio    = Carbon::parse($request->fecha_inicio);
             $fecha_termino   = Carbon::parse($request->fecha_termino);
-            $diff_days       = $fecha_inicio->diffInDays($fecha_termino) + 2;
+            $diff_days       = $fecha_inicio->diffInDays($fecha_termino) + 1;
+            $diff_days       = $diff_days * 2;
             $n_dias_40       = $request->n_dias_40 != null ? (int)$request->n_dias_40 : 0;
             $n_dias_100      = $request->n_dias_100 != null ? (int)$request->n_dias_100 : 0;
             $total_40_100    = $n_dias_40 + $n_dias_100;

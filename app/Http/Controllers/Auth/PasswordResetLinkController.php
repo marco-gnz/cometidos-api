@@ -40,6 +40,14 @@ class PasswordResetLinkController extends Controller
                 ], 422);
             }
 
+            if (($user) && (!$user->estado)) {
+                return response()->json([
+                    'errors' => [
+                        'rut'  => ['Cuenta deshabilitada.']
+                    ]
+                ], 422);
+            }
+
             $status = Password::sendResetLink([
                 'email' => $user->email
             ]);
