@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\User\Solicitudes;
 
+use App\Events\SolicitudChangeStatus;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Solicitud\AnularSolicitudUserRequest;
 use App\Http\Resources\ListSolicitudCalculoAdminResource;
@@ -89,6 +90,17 @@ class SolicitudesController extends Controller
 
                 $title      = "Solicitud {$solicitud->codigo} verificada con éxito.";
                 $message    = EstadoSolicitud::STATUS_NOM[$solicitud->last_status];
+
+                $ids_roles_anulado  = [3, 7, 8];
+                $emails_copy        = [];
+                $last_status        = $solicitud->estados()->orderBy('id', 'DESC')->first();
+
+                if($last_status){
+                    if ($solicitud->derecho_pago) {
+                        $emails_copy = $solicitud->firmantes()->whereIn('role_id', $ids_roles_anulado)->with('funcionario')->get()->pluck('funcionario.email')->toArray();
+                    }
+                    SolicitudChangeStatus::dispatch($solicitud, $last_status, $emails_copy);
+                }
 
                 return response()->json(
                     array(
