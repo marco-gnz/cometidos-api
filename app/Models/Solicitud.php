@@ -140,9 +140,9 @@ class Solicitud extends Model
 
     public function grupoDepto($solicitud)
     {
-        $grupo = Grupo::where('establecimiento_id', $solicitud->funcionario->establecimiento_id)
-            ->where('departamento_id', $solicitud->funcionario->departamento_id)
-            ->where('sub_departamento_id', $solicitud->funcionario->sub_departamento_id)
+        $grupo = Grupo::where('establecimiento_id', $solicitud->establecimiento_id)
+            ->where('departamento_id', $solicitud->departamento_id)
+            ->where('sub_departamento_id', $solicitud->sub_departamento_id)
             ->whereHas('firmantes', function ($q) {
                 $q->where('status', true);
             })
@@ -181,16 +181,7 @@ class Solicitud extends Model
             $grupo                          = self::grupoDepto($solicitud);
             $solicitud->correlativo         = self::generarCorrelativo($solicitud);
             $solicitud->codigo              = self::generarCodigo($solicitud);
-            $solicitud->departamento_id     = $solicitud->funcionario->departamento_id;
-            $solicitud->sub_departamento_id = $solicitud->funcionario->sub_departamento_id;
-            $solicitud->establecimiento_id  = $solicitud->funcionario->establecimiento_id;
             $solicitud->grupo_id            = $grupo ? $grupo->id : null;
-            $solicitud->ley_id              = $solicitud->funcionario ? $solicitud->funcionario->ley_id : null;
-            $solicitud->grado_id            = $solicitud->funcionario ? $solicitud->funcionario->grado_id : null;
-            $solicitud->cargo_id            = $solicitud->funcionario ? $solicitud->funcionario->cargo_id : null;
-            $solicitud->estamento_id        = $solicitud->funcionario ? $solicitud->funcionario->estamento_id : null;
-            $solicitud->hora_id             = $solicitud->funcionario ? $solicitud->funcionario->hora_id : null;
-            $solicitud->calidad_id          = $solicitud->funcionario ? $solicitud->funcionario->calidad_id : null;
             $solicitud->tipo_resolucion     = self::RESOLUCION_EXENTA;
             $solicitud->total_firmas        = $solicitud->firmantes()->where('status', true)->count();
             $solicitud->dias_permitidos     = $dias_permitidos;
@@ -208,7 +199,7 @@ class Solicitud extends Model
     private static function generarCodigo($solicitud)
     {
         $derecho_pago           = $solicitud->derecho_pago ? 1 : 2;
-        $codigoEstablecimiento  = $solicitud->funcionario->establecimiento->cod_sirh;
+        $codigoEstablecimiento  = $solicitud->establecimiento->cod_sirh;
         $correlativo            = self::generarCorrelativo($solicitud);
         $codigo                 = "{$codigoEstablecimiento}{$derecho_pago}{$correlativo}";
         return $codigo;
@@ -225,7 +216,7 @@ class Solicitud extends Model
     private static function generarCodigoUpdate($solicitud)
     {
         $derecho_pago           = $solicitud->derecho_pago ? 1 : 2;
-        $codigoEstablecimiento  = $solicitud->funcionario->establecimiento->cod_sirh;
+        $codigoEstablecimiento  = $solicitud->establecimiento->cod_sirh;
         $correlativo            = $solicitud->correlativo;
         $codigo                 = "{$codigoEstablecimiento}{$derecho_pago}{$correlativo}";
         return $codigo;
@@ -424,6 +415,22 @@ class Solicitud extends Model
             }
         }
         return "$" . number_format($total, 0, ',', '.');
+    }
+
+    public function sumTotalProcesosRendicionesNumber()
+    {
+        $total = 0;
+
+        $procesos = $this->procesoRendicionGastos()
+            ->whereIn('status', [EstadoProcesoRendicionGasto::STATUS_APROBADO_N, EstadoProcesoRendicionGasto::STATUS_APROBADO_S])
+            ->get();
+
+        if ($procesos) {
+            foreach ($procesos as $proceso) {
+                $total += $proceso->sumRendicionesAprobadasValue();
+            }
+        }
+        return $total;
     }
 
     public function informeCometido()

@@ -46,7 +46,7 @@ class Convenio extends Model
         static::creating(function ($convenio) {
             $convenio->uuid                    = Str::uuid();
             $convenio->user_id_by              = Auth::check() ? Auth::user()->id : null;
-            /* $convenio->fecha_by_user           = now(); */
+            $convenio->fecha_by_user           = now();
         });
 
         static::created(function ($convenio) {

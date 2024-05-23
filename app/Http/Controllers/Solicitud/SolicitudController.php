@@ -22,6 +22,7 @@ use App\Http\Resources\Solicitud\UpdateSolicitudResource;
 use App\Models\CicloFirma;
 use App\Models\Concepto;
 use App\Models\ConceptoEstablecimiento;
+use App\Models\Contrato;
 use App\Models\Convenio;
 use App\Models\Documento;
 use App\Models\EstadoInformeCometido;
@@ -58,11 +59,9 @@ class SolicitudController extends Controller
             $fecha_inicio       = $request->fecha_inicio;
             $fecha_termino      = $request->fecha_termino;
             $funcionario        = User::where('id', $request->user_id)->firstOrFail();
-            $total_convenios    = Convenio::where('user_id', $funcionario->id)
+
+            $total_convenios    = $funcionario->convenios()
                 ->where('active', true)
-                ->where('estamento_id', $funcionario->estamento_id)
-                ->where('ley_id', $funcionario->ley_id)
-                ->where('establecimiento_id', $funcionario->establecimiento_id)
                 ->where(function ($query) use ($fecha_inicio, $fecha_termino) {
                     $query->where(function ($query) use ($fecha_inicio, $fecha_termino) {
                         $query->where('fecha_inicio', '<=', $fecha_inicio)
@@ -93,27 +92,7 @@ class SolicitudController extends Controller
     public function storeSolicitud(StoreSolicitudRequest $request)
     {
         try {
-            $form = [
-                'user_id',
-                'fecha_inicio',
-                'fecha_termino',
-                'hora_llegada',
-                'hora_salida',
-                'derecho_pago',
-                'utiliza_transporte',
-                'alimentacion_red',
-                'jornada',
-                'dentro_pais',
-                'tipo_comision_id',
-                'actividad_realizada',
-                'gastos_alimentacion',
-                'gastos_alojamiento',
-                'pernocta_lugar_residencia',
-                'n_dias_40',
-                'n_dias_100',
-                'observacion_gastos'
-            ];
-
+            DB::beginTransaction();
             $validate_date              = $this->validateSolicitudDate($request);
             $validate_days_40_100       = $this->validateSolicitudDate40100($request);
             $validate_date_derecho_pago = $this->validateSolicitudDateDerechoViatico($request);
@@ -159,8 +138,40 @@ class SolicitudController extends Controller
                 ], 422);
             }
 
-            $solicitud = Solicitud::create($request->only($form));
 
+            $contrato = Contrato::where('uuid', $request->contrato_uuid)->firstOrFail();
+
+            $data = [
+                'user_id'                   => $request->user_id,
+                'fecha_inicio'              => $request->fecha_inicio,
+                'fecha_termino'             => $request->fecha_termino,
+                'hora_llegada'              => $request->hora_llegada,
+                'hora_salida'               => $request->hora_salida,
+                'derecho_pago'              => $request->derecho_pago,
+                'utiliza_transporte'        => $request->utiliza_transporte,
+                'alimentacion_red'          => $request->alimentacion_red,
+                'jornada'                   => $request->jornada,
+                'dentro_pais'               => $request->dentro_pais,
+                'tipo_comision_id'          => $request->tipo_comision_id,
+                'actividad_realizada'       => $request->actividad_realizada,
+                'gastos_alimentacion'       => $request->gastos_alimentacion,
+                'gastos_alojamiento'        => $request->gastos_alojamiento,
+                'pernocta_lugar_residencia' => $request->pernocta_lugar_residencia,
+                'n_dias_40'                 => $request->n_dias_40,
+                'n_dias_100'                => $request->n_dias_100,
+                'observacion_gastos'        => $request->observacion_gastos,
+                'departamento_id'           => $contrato->departamento_id,
+                'sub_departamento_id'       => $contrato->sub_departamento_id,
+                'ley_id'                    => $contrato->ley_id,
+                'calidad_id'                => $contrato->calidad_id,
+                'cargo_id'                  => $contrato->cargo_id,
+                'grado_id'                  => $contrato->grado_id,
+                'estamento_id'              => $contrato->estamento_id,
+                'establecimiento_id'        => $contrato->establecimiento_id,
+                'hora_id'                   => $contrato->hora_id
+            ];
+
+            $solicitud = Solicitud::create($data);
             if ($solicitud) {
                 $solicitante = Role::where('name', 'SOLICITANTE')->first();
                 $first_firmante[] = [
@@ -179,7 +190,7 @@ class SolicitudController extends Controller
                 $estados[] = [
                     'status'                => EstadoSolicitud::STATUS_INGRESADA,
                     'posicion_firma_s'      => $firma ? $firma->posicion_firma : 0,
-                    'history_solicitud_new' => json_encode($solicitud->only($form)),
+                    'history_solicitud_new' => json_encode($solicitud->only($data)),
                     'solicitud_id'          => $solicitud->id,
                     'user_id'               => $firma ? $firma->user_id : null,
                     's_role_id'             => $firma ? $firma->role_id : null,
@@ -306,7 +317,7 @@ class SolicitudController extends Controller
                     $message = "¿Requiere ingresar una nueva solicitud de cometido?";
                 }
 
-                if ($solicitud) {
+                 if ($solicitud) {
                     $emails_copy = [];
                     if ($solicitud->tipo_comision_id === 5) {
                         $name = 'CAPACITACIÓN FINANCIAMIENTO CENTRALIZADO';
@@ -321,7 +332,7 @@ class SolicitudController extends Controller
                     }
                     SolicitudCreated::dispatch($solicitud, $emails_copy);
                 }
-
+                DB::commit();
                 return response()->json(
                     array(
                         'status'        => 'success',
@@ -331,8 +342,11 @@ class SolicitudController extends Controller
                     )
                 );
             }
+
         } catch (\Exception $error) {
-            return response()->json($error->getMessage());
+            DB::rollback();
+            Log::info($error->getMessage());
+            return response()->json($error->getMessage(), 500);
         }
     }
 

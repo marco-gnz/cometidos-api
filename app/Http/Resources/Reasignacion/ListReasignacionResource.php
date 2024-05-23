@@ -23,7 +23,7 @@ class ListReasignacionResource extends JsonResource
             'firmante_ausente_email'        => $this->firmanteAusente ? $this->firmanteAusente->email : null,
             'firmante_reasignado'           => $this->firmanteReasignado ? $this->firmanteReasignado->abreNombres() : null,
             'firmante_reasignado_email'     => $this->firmanteReasignado ? $this->firmanteReasignado->email : null,
-            'solicitudes'                   => $this->solicitudes ? $this->solicitudes()->take(10)->pluck('codigo')->implode('-') : null,
+            'solicitudes'                   => $this->solicitudes ? $this->solicitudes()->take(2)->pluck('codigo')->implode('-') : null,
             'is_plus'                       => $is_plus
         ];
     }

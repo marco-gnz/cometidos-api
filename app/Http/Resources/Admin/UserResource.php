@@ -2,6 +2,7 @@
 
 namespace App\Http\Resources\Admin;
 
+use App\Http\Resources\User\Contrato\ListContratosResource;
 use App\Http\Resources\User\CuentaBancariaResource;
 use Illuminate\Http\Resources\Json\JsonResource;
 
@@ -38,7 +39,11 @@ class UserResource extends JsonResource
             'calidad'           => $this->calidad ? $this->calidad->nombre : null,
             'grado'             => $this->grado ? $this->grado->nombre : null,
             'ley'               => $this->ley ? $this->ley->nombre : null,
-            'cuentas_bancarias' => $this->cuentas ? CuentaBancariaResource::collection($this->cuentas) : null
+            'cuentas_bancarias' => $this->cuentas ? CuentaBancariaResource::collection($this->cuentas) : [],
+            'contratos'         => $this->contratos ? ListContratosResource::collection($this->contratos) : [],
+            'total_viaticos_procesados'     => $this->totalViaticosProcesados(),
+            'total_valorizacion'            => $this->totalValorizacion(),
+            'total_rendiciones'              => $this->totalRendiciones()
         ];
     }
 }

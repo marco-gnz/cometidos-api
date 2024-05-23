@@ -36,18 +36,8 @@ class User extends Authenticatable
         'email',
         'telefono',
         'password',
-        'ley_id',
-        'estamento_id',
-        'grado_id',
-        'cargo_id',
-        'departamento_id',
-        'sub_departamento_id',
-        'establecimiento_id',
-        'hora_id',
-        'calidad_id',
         'is_firmante',
         'is_subrogante',
-
         'is_solicitud',
         'is_informe',
         'is_rendicion',
@@ -87,51 +77,6 @@ class User extends Authenticatable
         });
     }
 
-    public function ley()
-    {
-        return $this->belongsTo(Ley::class, 'ley_id');
-    }
-
-    public function estamento()
-    {
-        return $this->belongsTo(Estamento::class, 'estamento_id');
-    }
-
-    public function grado()
-    {
-        return $this->belongsTo(Grado::class, 'grado_id');
-    }
-
-    public function calidad()
-    {
-        return $this->belongsTo(Calidad::class, 'calidad_id');
-    }
-
-    public function cargo()
-    {
-        return $this->belongsTo(Cargo::class, 'cargo_id');
-    }
-
-    public function departamento()
-    {
-        return $this->belongsTo(Departamento::class, 'departamento_id');
-    }
-
-    public function subDepartamento()
-    {
-        return $this->belongsTo(SubDepartamento::class, 'sub_departamento_id');
-    }
-
-    public function establecimiento()
-    {
-        return $this->belongsTo(Establecimiento::class, 'establecimiento_id');
-    }
-
-    public function hora()
-    {
-        return $this->belongsTo(Hora::class, 'hora_id');
-    }
-
     public function firmas()
     {
         return $this->hasMany(SolicitudFirmante::class);
@@ -150,6 +95,16 @@ class User extends Authenticatable
     public function solicitudes()
     {
         return $this->hasMany(Solicitud::class);
+    }
+
+    public function contratos()
+    {
+        return $this->hasMany(Contrato::class);
+    }
+
+    public function convenios()
+    {
+        return $this->hasMany(Convenio::class);
     }
 
     public function ausentismos()
@@ -211,7 +166,7 @@ class User extends Authenticatable
     public function scopeEstablecimiento($query, $params)
     {
         if ($params)
-            return $query->whereHas('establecimiento', function ($q) use ($params) {
+            return $query->whereHas('contratos.establecimiento', function ($q) use ($params) {
                 $q->whereIn('id', $params);
             });
     }
@@ -219,7 +174,7 @@ class User extends Authenticatable
     public function scopeDepto($query, $params)
     {
         if ($params)
-            return $query->whereHas('departamento', function ($q) use ($params) {
+            return $query->whereHas('contratos.departamento', function ($q) use ($params) {
                 $q->whereIn('id', $params);
             });
     }
@@ -227,7 +182,7 @@ class User extends Authenticatable
     public function scopeGrado($query, $params)
     {
         if ($params)
-            return $query->whereHas('grado', function ($q) use ($params) {
+            return $query->whereHas('contratos.grado', function ($q) use ($params) {
                 $q->whereIn('id', $params);
             });
     }
@@ -235,7 +190,7 @@ class User extends Authenticatable
     public function scopeLey($query, $params)
     {
         if ($params)
-            return $query->whereHas('ley', function ($q) use ($params) {
+            return $query->whereHas('contratos.ley', function ($q) use ($params) {
                 $q->whereIn('id', $params);
             });
     }
@@ -263,6 +218,39 @@ class User extends Authenticatable
         $nombres    = mb_substr($this->nombres, 0, 1);
         $apellidos  = mb_substr($this->apellidos, 0, 14);
         return "$nombres. $apellidos.";
+    }
+
+    public function totalViaticosProcesados()
+    {
+        return $this->solicitudes()->where('status', Solicitud::STATUS_PROCESADO)->count();
+    }
+
+    public function totalValorizacion()
+    {
+        $total = 0;
+        $solicitudes =  $this->solicitudes()
+        ->where('status', Solicitud::STATUS_PROCESADO)
+        ->get();
+
+        foreach ($solicitudes as $solicitud) {
+            if($solicitud->getLastCalculo()){
+                $total += $solicitud->getLastCalculo()->monto_total;
+            }
+        }
+        return "$".number_format($total, 0, ',', '.');
+    }
+
+    public function totalRendiciones()
+    {
+        $total = 0;
+        $solicitudes =  $this->solicitudes()
+            ->where('status', Solicitud::STATUS_PROCESADO)
+            ->get();
+
+        foreach ($solicitudes as $solicitud) {
+            $total += $solicitud->sumTotalProcesosRendicionesNumber();
+        }
+        return "$" . number_format($total, 0, ',', '.');
     }
 
     /* public function sendPasswordResetNotification($token)

@@ -36,33 +36,6 @@ class CreateUsersTable extends Migration
             $table->boolean('is_informe')->default(1);
             $table->boolean('is_rendicion')->default(1);
 
-            $table->unsignedBigInteger('ley_id')->nullable();
-            $table->foreign('ley_id')->references('id')->on('leys');
-
-            $table->unsignedBigInteger('estamento_id')->nullable();
-            $table->foreign('estamento_id')->references('id')->on('estamentos');
-
-            $table->unsignedBigInteger('cargo_id')->nullable();
-            $table->foreign('cargo_id')->references('id')->on('cargos');
-
-            $table->unsignedBigInteger('departamento_id')->nullable();
-            $table->foreign('departamento_id')->references('id')->on('departamentos');
-
-            $table->unsignedBigInteger('sub_departamento_id')->nullable();
-            $table->foreign('sub_departamento_id')->references('id')->on('sub_departamentos');
-
-            $table->unsignedBigInteger('establecimiento_id')->nullable();
-            $table->foreign('establecimiento_id')->references('id')->on('establecimientos');
-
-            $table->unsignedBigInteger('grado_id')->nullable();
-            $table->foreign('grado_id')->references('id')->on('grados');
-
-            $table->unsignedBigInteger('hora_id')->nullable();
-            $table->foreign('hora_id')->references('id')->on('horas');
-
-            $table->unsignedBigInteger('calidad_id')->nullable();
-            $table->foreign('calidad_id')->references('id')->on('calidads');
-
             $table->unsignedBigInteger('usuario_add_id')->nullable();
             $table->foreign('usuario_add_id')->references('id')->on('users');
             $table->dateTime('fecha_add', 0)->nullable();

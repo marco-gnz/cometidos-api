@@ -98,6 +98,9 @@ Route::group(
         Route::post('/admin/users/cuenta-bancaria/store', [UserController::class, 'storeCuentaBancaria']);
         Route::put('/admin/users/status/{uuid}', [UserController::class, 'updateStatusUser']);
         Route::put('/admin/users/status-permiso', [UserController::class, 'updatePermisoPrincipalUser']);
+        Route::delete('/admin/users/contrato/{uuid}', [UserController::class, 'deleteContrato']);
+        Route::post('/admin/users/contrato', [UserController::class, 'storeContrato']);
+        Route::put('/admin/users/contrato/{uuid}', [UserController::class, 'updateContrato']);
 
         Route::get('/admin/solicitudes', [SolicitudAdminController::class, 'listSolicitudes']);
         Route::get('/admin/solicitudes/{uuid}/{nav}', [SolicitudAdminController::class, 'findSolicitud']);

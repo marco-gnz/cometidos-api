@@ -3,12 +3,15 @@
 namespace App\Http\Controllers\Admin\Users;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\User\StoreContratoRequest;
 use App\Http\Requests\User\StoreCuentaBancariaRequest;
 use App\Http\Requests\User\StoreUserRequest;
+use App\Http\Requests\User\UpdateContratoRequest;
 use App\Http\Requests\User\UpdateUserRequest;
 use App\Http\Resources\Admin\ListUsersResource;
 use App\Http\Resources\Admin\UserResource;
 use App\Http\Resources\Admin\UserUpdateResource;
+use App\Models\Contrato;
 use App\Models\CuentaBancaria;
 use App\Models\User;
 use Illuminate\Http\Request;
@@ -93,39 +96,54 @@ class UserController extends Controller
     public function storeUser(StoreUserRequest $request)
     {
         try {
-            $form = [
-                'rut',
-                'dv',
-                'nombres',
-                'apellidos',
-                'email',
-                'establecimiento_id',
-                'departamento_id',
-                'sub_departamento_id',
-                'estamento_id',
-                'cargo_id',
-                'calidad_id',
-                'hora_id',
-                'ley_id',
-                'grado_id'
+            DB::beginTransaction();
+            $data_user = [
+                'rut'       => $request->rut,
+                'dv'        => $request->dv,
+                'nombres'   => $request->nombres,
+                'apellidos' => $request->apellidos,
+                'email'     => $request->email
             ];
 
-            $user = User::create($request->only($form));
+            $user = User::create($data_user);
 
             if ($user) {
-                $user = $user->fresh();
-                return response()->json(
-                    array(
-                        'status'        => 'success',
-                        'title'         => "Funcionario ingresado con éxito.",
-                        'message'       => null,
-                        'data'          => ListUsersResource::make($user)
-                    )
-                );
+                $data = [
+                    'ley_id'                => $request->ley_id,
+                    'estamento_id'          => $request->estamento_id,
+                    'grado_id'              => $request->grado_id,
+                    'cargo_id'              => $request->cargo_id,
+                    'departamento_id'       => $request->departamento_id,
+                    'sub_departamento_id'   => $request->sub_departamento_id,
+                    'establecimiento_id'    => $request->establecimiento_id,
+                    'hora_id'               => $request->hora_id,
+                    'calidad_id'            => $request->calidad_id,
+                ];
+                $contrato = Contrato::create($data);
+                if($contrato){
+                    $user->contratos()->save($contrato);
+                    $user = $user->fresh();
+                    DB::commit();
+                    return response()->json(
+                        array(
+                            'status'        => 'success',
+                            'title'         => "Funcionario ingresado con éxito.",
+                            'message'       => null,
+                            'data'          => ListUsersResource::make($user)
+                        )
+                    );
+                }
+
             }
         } catch (\Exception $error) {
+            DB::rollback();
             return response()->json(['error' => $error->getMessage()], 500);
         }
+    }
+
+    private function existeContrato($user, $data)
+    {
+        return $user->contratos()->where($data)->exists();
     }
 
     public function userUpdate($uuid, UpdateUserRequest $request)
@@ -139,15 +157,6 @@ class UserController extends Controller
                 'nombres',
                 'apellidos',
                 'email',
-                'establecimiento_id',
-                'departamento_id',
-                'sub_departamento_id',
-                'estamento_id',
-                'cargo_id',
-                'calidad_id',
-                'hora_id',
-                'ley_id',
-                'grado_id'
             ];
             $update = $user->update($request->only($form));
 
@@ -298,6 +307,107 @@ class UserController extends Controller
                     'data'          => UserResource::make($user)
                 )
             );
+        } catch (\Exception $error) {
+            return response()->json(['error' => $error->getMessage()], 500);
+        }
+    }
+
+    public function deleteContrato($uuid)
+    {
+        try {
+            $contrato = Contrato::where('uuid', $uuid)->firstOrFail();
+            $delete = $contrato->delete();
+            if($delete){
+                return response()->json(
+                    array(
+                        'status'        => 'success',
+                        'title'         => "Contrato eliminado con éxito.",
+                        'message'       => null,
+                        'data'          => null
+                    )
+                );
+            }
+
+        } catch (\Exception $error) {
+            return response()->json(['error' => $error->getMessage()], 500);
+        }
+    }
+
+    public function storeContrato(StoreContratoRequest $request)
+    {
+        try {
+            $user = User::where('uuid', $request->user_uuid)->firstOrFail();
+
+            $data = [
+                'ley_id'                => $request->ley_id,
+                'estamento_id'          => $request->estamento_id,
+                'grado_id'              => $request->grado_id,
+                'cargo_id'              => $request->cargo_id,
+                'departamento_id'       => $request->departamento_id,
+                'sub_departamento_id'   => $request->sub_departamento_id,
+                'establecimiento_id'    => $request->establecimiento_id,
+                'hora_id'               => $request->hora_id,
+                'calidad_id'            => $request->calidad_id,
+            ];
+
+            $existe_contrato = $this->existeContrato($user, $data);
+
+            if($existe_contrato){
+                return response()->json([
+                    'errors' => ['establecimiento_id' => ['Contrato ya existe.']]
+                ], 422);
+            }
+
+            $contrato = Contrato::create($data);
+
+            if($contrato){
+                $user->contratos()->save($contrato);
+                $user = $user->fresh();
+                return response()->json(
+                    array(
+                        'status'        => 'success',
+                        'title'         => "Contrato ingresado con éxito.",
+                        'message'       => null,
+                        'data'          => UserResource::make($user)
+                    )
+                );
+            }
+
+
+        } catch (\Exception $error) {
+            return response()->json(['error' => $error->getMessage()], 500);
+        }
+    }
+
+    public function updateContrato($uuid, UpdateContratoRequest $request)
+    {
+        try {
+            $contrato = Contrato::where('uuid', $uuid)->firstOrFail();
+            $data = [
+                'ley_id'                => $request->ley_id,
+                'estamento_id'          => $request->estamento_id,
+                'grado_id'              => $request->grado_id,
+                'cargo_id'              => $request->cargo_id,
+                'departamento_id'       => $request->departamento_id,
+                'sub_departamento_id'   => $request->sub_departamento_id,
+                'establecimiento_id'    => $request->establecimiento_id,
+                'hora_id'               => $request->hora_id,
+                'calidad_id'            => $request->calidad_id,
+            ];
+
+            $update = $contrato->update($data);
+
+            if ($update) {
+                $user = $contrato->funcionario->fresh();
+                return response()->json(
+                    array(
+                        'status'        => 'success',
+                        'title'         => "Contrato modificado con éxito.",
+                        'message'       => null,
+                        'data'          => UserResource::make($user)
+                    )
+                );
+            }
         } catch (\Exception $error) {
             return response()->json(['error' => $error->getMessage()], 500);
         }

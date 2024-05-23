@@ -24,6 +24,7 @@ class StoreSolicitudRequest extends FormRequest
     public function rules()
     {
         return [
+            'contrato_uuid'             => ['required', 'exists:contratos,uuid'],
             'fecha_inicio'              => ['required', 'date', 'before_or_equal:fecha_termino'],
             'fecha_termino'             => ['required', 'date', 'after_or_equal:fecha_inicio'],
             'hora_llegada'              => ['required'],
@@ -54,6 +55,8 @@ class StoreSolicitudRequest extends FormRequest
     public function messages()
     {
         return [
+            'contrato_uuid.required'                => 'El :attribute es obligatorio',
+
             'fecha_inicio.required'                 => 'La :attribute es obligatoria',
             'fecha_inicio.date'                     => 'La :attribute debe ser una fecha válida',
             'fecha_inicio.before_or_equal'          => 'La :attribute debe ser anterior a fecha de término',
@@ -102,6 +105,7 @@ class StoreSolicitudRequest extends FormRequest
     public function attributes()
     {
         return [
+            'contrato_uuid'         => 'contrato',
             'fecha_inicio'          => 'fecha de inicio',
             'fecha_termino'         => 'fecha de término',
             'hora_salida'           => 'hora de salida',
