@@ -10,11 +10,16 @@ class Configuration extends Model
     protected $table        = "configurations";
     protected $primaryKey   = 'id';
 
-    protected $fillable = ['clave', 'valor', 'tipo'];
+    protected $fillable = ['clave', 'valor', 'tipo', 'descripcion','establecimiento_id'];
 
-    public static function obtenerValor($clave)
+    public static function obtenerValor($clave, $establecimiento_id)
     {
-        $configuracion = self::where('clave', $clave)->first();
+        $configuracion = self::where('clave', $clave)->where('establecimiento_id', $establecimiento_id)->first();
         return $configuracion ? $configuracion->valor : null;
+    }
+
+    public function establecimiento()
+    {
+        return $this->belongsTo(Establecimiento::class, 'establecimiento_id');
     }
 }

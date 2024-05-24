@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Admin\Ausentismo\AusentismoController;
 use App\Http\Controllers\Admin\Conceptos\ConceptosController;
+use App\Http\Controllers\Admin\Configuration\ConfigurationController;
 use App\Http\Controllers\Admin\Grupos\GrupoFirmaController;
 use App\Http\Controllers\Admin\Mantenedores\MantenedorController;
 use App\Http\Controllers\Admin\Reasignacion\ReasignacionController;
@@ -137,6 +138,9 @@ Route::group(
         Route::get('/admin/concepto/list', [ConceptosController::class, 'listConceptos']);
         Route::post('/admin/concepto/change-position', [ConceptosController::class, 'changePosition']);
         Route::post('/admin/concepto/delete-user', [ConceptosController::class, 'deleteUser']);
+
+        Route::get('/admin/configurations/{establecimiento_id}', [ConfigurationController::class, 'getConfiguration']);
+        Route::put('/admin/configurations/{configuration_id}', [ConfigurationController::class, 'updateConfiguration']);
     }
 );
 

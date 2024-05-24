@@ -176,8 +176,8 @@ class Solicitud extends Model
         });
 
         static::created(function ($solicitud) {
-            $dias_permitidos                = (int)Configuration::obtenerValor('informecometido.dias_atraso');
-            $vistos                         = Configuration::obtenerValor('info.vistos');
+            $dias_permitidos                = (int)Configuration::obtenerValor('informecometido.dias_atraso', $solicitud->establecimiento_id);
+            $vistos                         = Configuration::obtenerValor('info.vistos', $solicitud->establecimiento_id);
             $grupo                          = self::grupoDepto($solicitud);
             $solicitud->correlativo         = self::generarCorrelativo($solicitud);
             $solicitud->codigo              = self::generarCodigo($solicitud);
@@ -694,7 +694,7 @@ class Solicitud extends Model
         ];
 
         if (($last_status) && ($last_status->posicion_firma === 0 && $last_status->is_reasignado)) {
-            $dias_atraso_actividad  = (int)Configuration::obtenerValor('solicitud.dias_atraso_actividad');
+            $dias_atraso_actividad  = (int)Configuration::obtenerValor('solicitud.dias_atraso_actividad', $this->establecimiento_id);
             $date_status            = Carbon::parse($last_status->created_at);
             $date_plazo             = $date_status->addDays($dias_atraso_actividad);
             $data = (object)[

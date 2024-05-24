@@ -152,6 +152,11 @@ class User extends Authenticatable
         return $this->historys()->where('type', $type)->orderBy('id', 'DESC')->first();
     }
 
+    public function lastContrato()
+    {
+        return $this->contratos()->orderBy('id', 'DESC')->first();
+    }
+
     public function scopeGeneral($query, $input)
     {
         if ($input)

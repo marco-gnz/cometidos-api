@@ -133,7 +133,9 @@ class SolicitudPolicy
     public function create(User $user)
     {
         $now = Carbon::now()->format('Y-m-d');
-        $total_informes_pendientes = (int)Configuration::obtenerValor('informecometido.total_pendiente');
+        $last_contrato = $user->lastContrato();
+        $establecimiento_id = $last_contrato ? $last_contrato->establecimiento_id : 1;
+        $total_informes_pendientes = (int)Configuration::obtenerValor('informecometido.total_pendiente', $establecimiento_id);
         $total_por_ingresar_informes = $user->solicitudes()
             ->where('status', '!=', Solicitud::STATUS_ANULADO)
             ->where('fecha_termino', '<', $now)

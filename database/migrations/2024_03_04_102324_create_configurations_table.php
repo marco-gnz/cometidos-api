@@ -15,9 +15,10 @@ class CreateConfigurationsTable extends Migration
     {
         Schema::create('configurations', function (Blueprint $table) {
             $table->id();
-            $table->string('clave')->unique();
+            $table->string('clave');
             $table->text('valor');
             $table->string('tipo')->nullable();
+            $table->string('descripcion')->nullable();
 
             $table->foreign('establecimiento_id')->references('id')->on('establecimientos');
             $table->unsignedBigInteger('establecimiento_id')->nullable();

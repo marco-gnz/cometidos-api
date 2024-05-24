@@ -349,7 +349,7 @@ class ProcesoRendicionGasto extends Model
     {
         if ($params) {
             return $query->whereHas('solicitud', function ($q) use ($params) {
-                $query->whereIn('derecho_pago', $params);
+                $q->whereIn('derecho_pago', $params);
             });
         }
     }
