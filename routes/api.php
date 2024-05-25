@@ -3,6 +3,7 @@
 use App\Http\Controllers\Admin\Ausentismo\AusentismoController;
 use App\Http\Controllers\Admin\Conceptos\ConceptosController;
 use App\Http\Controllers\Admin\Configuration\ConfigurationController;
+use App\Http\Controllers\Admin\Convenios\ConvenioController;
 use App\Http\Controllers\Admin\Grupos\GrupoFirmaController;
 use App\Http\Controllers\Admin\Mantenedores\MantenedorController;
 use App\Http\Controllers\Admin\Reasignacion\ReasignacionController;
@@ -56,6 +57,7 @@ Route::group(
         'middleware'    => 'auth:sanctum'
     ],
     function () {
+        Route::get('/admin/mantenedores/ilustres', [MantenedorController::class, 'getIlustres']);
         Route::get('/admin/mantenedores/leys', [MantenedorController::class, 'getLeys']);
         Route::get('/admin/mantenedores/grados', [MantenedorController::class, 'getGrados']);
         Route::get('/admin/mantenedores/motivos', [MantenedorController::class, 'getMotivos']);
@@ -141,6 +143,14 @@ Route::group(
 
         Route::get('/admin/configurations/{establecimiento_id}', [ConfigurationController::class, 'getConfiguration']);
         Route::put('/admin/configurations/{configuration_id}', [ConfigurationController::class, 'updateConfiguration']);
+
+        Route::get('/admin/convenios', [ConvenioController::class, 'getConvenios']);
+        Route::post('/admin/convenios', [ConvenioController::class, 'storeConvenio']);
+        Route::get('/admin/convenios/{uuid}', [ConvenioController::class, 'getConvenio']);
+        Route::get('/admin/convenios/edit/{uuid}', [ConvenioController::class, 'getConvenioEdit']);
+        Route::delete('/admin/convenios/{uuid}', [ConvenioController::class, 'deleteConvenio']);
+        Route::put('/admin/convenios/{uuid}', [ConvenioController::class, 'updateConvenio']);
+        Route::get('/admin/con-users', [ConvenioController::class, 'getUsers']);
     }
 );
 

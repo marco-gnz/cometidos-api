@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Str;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Gate;
 
 class Convenio extends Model
 {
@@ -36,9 +37,7 @@ class Convenio extends Model
         'establecimiento_id',
         'ilustre_id',
         'user_id_by',
-        'fecha_by_user',
         'user_id_update',
-        'fecha_by_user_update',
     ];
 
     protected static function booted()
@@ -46,7 +45,6 @@ class Convenio extends Model
         static::creating(function ($convenio) {
             $convenio->uuid                    = Str::uuid();
             $convenio->user_id_by              = Auth::check() ? Auth::user()->id : null;
-            $convenio->fecha_by_user           = now();
         });
 
         static::created(function ($convenio) {
@@ -59,14 +57,19 @@ class Convenio extends Model
     private static function generarCodigo($convenio)
     {
         $correlativo            = str_pad(self::whereYear('created_at', $convenio->created_at->year)->count(), 5, '0', STR_PAD_LEFT);
-        $anio                   = $convenio->anio;
-        $codigo                 = "{$anio}{$correlativo}";
+        $anio                   = $convenio->created_at->year;
+        $codigo                 = "{$correlativo}/{$anio}";
         return $codigo;
     }
 
     public function funcionario()
     {
         return $this->belongsTo(User::class, 'user_id');
+    }
+
+    public function solicitudes()
+    {
+        return $this->hasMany(Solicitud::class);
     }
 
     public function estamento()
@@ -87,5 +90,69 @@ class Convenio extends Model
     public function ilustre()
     {
         return $this->belongsTo(Ilustre::class, 'ilustre_id');
+    }
+
+    public function userBy()
+    {
+        return $this->belongsTo(User::class, 'user_id_by');
+    }
+
+    public function scopeInput($query, $params)
+    {
+        if ($params)
+            return $query->where('codigo', 'like', '%' . $params . '%')
+                ->orWhere('n_resolucion', 'like', '%' . $params . '%')
+                ->orWhere('observacion', 'like', '%' . $params . '%')
+                ->orWhere(function ($query) use ($params) {
+                    $query->whereHas('funcionario', function ($query) use ($params) {
+                        $query->where('rut_completo', 'like', '%' . $params . '%')
+                            ->orWhere('rut', 'like', '%' . $params . '%')
+                            ->orWhere('nombres', 'like', '%' . $params . '%')
+                            ->orWhere('apellidos', 'like', '%' . $params . '%')
+                            ->orWhere('nombre_completo', 'like', '%' . $params . '%')
+                            ->orWhere('email', 'like', '%' . $params . '%');
+                    });
+                });
+    }
+
+    public function scopeEstablecimiento($query, $params)
+    {
+        if ($params)
+            return $query->whereHas('establecimiento', function ($q) use ($params) {
+                $q->whereIn('id', $params);
+            });
+    }
+
+    public function scopePeriodo($query, $params)
+    {
+        if ($params) {
+            return $query->whereBetween('fecha_inicio', array($params[0], $params[1]));
+        }
+    }
+
+    public function scopeLey($query, $params)
+    {
+        if ($params)
+            return $query->whereHas('ley', function ($q) use ($params) {
+                $q->whereIn('id', $params);
+            });
+    }
+
+    public function scopeIlustre($query, $params)
+    {
+        if ($params)
+            return $query->whereHas('ilustre', function ($q) use ($params) {
+                $q->whereIn('id', $params);
+            });
+    }
+
+    public function authorizedToDelete()
+    {
+        return Gate::allows('delete', $this);
+    }
+
+    public function authorizedToUpdate()
+    {
+        return Gate::allows('update', $this);
     }
 }

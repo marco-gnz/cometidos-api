@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Http\Resources\Solicitud;
+namespace App\Http\Resources\Convenio;
 
 use App\Models\Convenio;
 use Carbon\Carbon;
@@ -17,20 +17,18 @@ class ListConvenioResource extends JsonResource
     public function toArray($request)
     {
         return [
-            'convenio_id'           => $this->id,
             'uuid'                  => $this->uuid,
             'codigo'                => $this->codigo ? $this->codigo : null,
             'fecha_inicio'          => $this->fecha_inicio ? Carbon::parse($this->fecha_inicio)->format('d-m-Y') : null,
             'fecha_termino'         => $this->fecha_termino ? Carbon::parse($this->fecha_termino)->format('d-m-Y') : null,
             'fecha_resolucion'      => $this->fecha_resolucion ? Carbon::parse($this->fecha_resolucion)->format('d-m-Y') : null,
-            'tipo_convenio'         => Convenio::TYPE_NOM[$this->tipo_convenio],
             'n_resolucion'          => $this->n_resolucion,
-            'n_viatico_mensual'     => $this->n_viatico_mensual,
-            'observacion'           => $this->observacion ? $this->observacion : null,
-            'estamento'             => $this->estamento ? $this->estamento->nombre : null,
             'ley'                   => $this->ley ? $this->ley->nombre : null,
             'establecimiento'       => $this->establecimiento ? $this->establecimiento->nombre : null,
-            'ilustre'               => $this->ilustre ? $this->ilustre->nombre : null
+            'ilustre'               => $this->ilustre ? $this->ilustre->nombre : null,
+            'funcionario'           => $this->funcionario ? $this->funcionario->nombre_completo : null,
+            'authorized_to_delete'    => $this->authorizedToDelete(),
+            'authorized_to_update'    => $this->authorizedToUpdate()
         ];
     }
 }

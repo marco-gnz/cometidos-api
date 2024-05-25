@@ -17,6 +17,7 @@ use App\Models\EstadoSolicitud;
 use App\Models\Estamento;
 use App\Models\Grado;
 use App\Models\Hora;
+use App\Models\Ilustre;
 use App\Models\Ley;
 use App\Models\Lugar;
 use App\Models\Motivo;
@@ -72,6 +73,17 @@ class MantenedorController extends Controller
             $motivos = Motivo::orderBy('nombre', 'ASC')->get();
 
             return response()->json($motivos);
+        } catch (\Exception $error) {
+            return response()->json($error->getMessage());
+        }
+    }
+
+    public function getIlustres()
+    {
+        try {
+            $ilustres = Ilustre::orderBy('nombre', 'ASC')->get();
+
+            return response()->json($ilustres);
         } catch (\Exception $error) {
             return response()->json($error->getMessage());
         }
