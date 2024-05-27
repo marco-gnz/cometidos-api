@@ -127,6 +127,21 @@ class User extends Authenticatable
         return $this->hasMany(CuentaBancaria::class);
     }
 
+    public function establecimientos()
+    {
+        return $this->belongsToMany(Establecimiento::class);
+    }
+
+    public function leyes()
+    {
+        return $this->belongsToMany(Ley::class);
+    }
+
+    public function departamentos()
+    {
+        return $this->belongsToMany(Departamento::class);
+    }
+
     public function addCuentas(array $cuentas)
     {
         return $this->cuentas()->createMany($cuentas);
@@ -173,6 +188,39 @@ class User extends Authenticatable
         if ($params)
             return $query->whereHas('contratos.establecimiento', function ($q) use ($params) {
                 $q->whereIn('id', $params);
+            });
+    }
+
+    //pivote
+    public function scopeEstablecimientos($query, $params)
+    {
+        if ($params)
+            return $query->whereHas('establecimientos', function ($q) use ($params) {
+                $q->whereIn('establecimientos.id', $params);
+            });
+    }
+
+    public function scopeDepartamentos($query, $params)
+    {
+        if ($params)
+            return $query->whereHas('departamentos', function ($q) use ($params) {
+                $q->whereIn('departamentos.id', $params);
+            });
+    }
+
+    public function scopeLeyes($query, $params)
+    {
+        if ($params)
+            return $query->whereHas('leyes', function ($q) use ($params) {
+                $q->whereIn('leys.id', $params);
+            });
+    }
+
+    public function scopePerfiles($query, $params)
+    {
+        if ($params)
+            return $query->whereHas('roles', function ($q) use ($params) {
+                $q->whereIn('roles.id', $params);
             });
     }
 

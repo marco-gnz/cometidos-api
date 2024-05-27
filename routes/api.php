@@ -6,6 +6,7 @@ use App\Http\Controllers\Admin\Configuration\ConfigurationController;
 use App\Http\Controllers\Admin\Convenios\ConvenioController;
 use App\Http\Controllers\Admin\Grupos\GrupoFirmaController;
 use App\Http\Controllers\Admin\Mantenedores\MantenedorController;
+use App\Http\Controllers\Admin\Perfil\PerfilController;
 use App\Http\Controllers\Admin\Reasignacion\ReasignacionController;
 use App\Http\Controllers\Admin\Rendicion\ProcesoRendicionController;
 use App\Http\Controllers\Admin\Solicitudes\SolicitudAdminController;
@@ -57,6 +58,7 @@ Route::group(
         'middleware'    => 'auth:sanctum'
     ],
     function () {
+        Route::post('/admin/mantenedores/permisos-adicionales', [MantenedorController::class, 'getPermisosAdicionales']);
         Route::get('/admin/mantenedores/ilustres', [MantenedorController::class, 'getIlustres']);
         Route::get('/admin/mantenedores/leys', [MantenedorController::class, 'getLeys']);
         Route::get('/admin/mantenedores/grados', [MantenedorController::class, 'getGrados']);
@@ -68,6 +70,7 @@ Route::group(
         Route::get('/admin/mantenedores/departamentos', [MantenedorController::class, 'getDepartamentos']);
         Route::get('/admin/mantenedores/subdepartamentos', [MantenedorController::class, 'getSubdepartamentos']);
         Route::get('/admin/mantenedores/roles', [MantenedorController::class, 'getRoles']);
+        Route::get('/admin/mantenedores/roles/perfil', [MantenedorController::class, 'getRolesPerfil']);
         Route::get('/admin/mantenedores/firmantes', [MantenedorController::class, 'getFirmantes']);
         Route::get('/admin/mantenedores/user/{id}', [MantenedorController::class, 'getUser']);
         Route::get('/admin/mantenedores/estados-rechazo', [MantenedorController::class, 'getStatusRechazo']);
@@ -151,6 +154,12 @@ Route::group(
         Route::delete('/admin/convenios/{uuid}', [ConvenioController::class, 'deleteConvenio']);
         Route::put('/admin/convenios/{uuid}', [ConvenioController::class, 'updateConvenio']);
         Route::get('/admin/con-users', [ConvenioController::class, 'getUsers']);
+
+        Route::post('/admin/perfil', [PerfilController::class, 'storePerfil']);
+        Route::get('/admin/perfil', [PerfilController::class, 'getPerfiles']);
+        Route::get('/admin/perfil/edit/{uuid}', [PerfilController::class, 'getPerfilEdit']);
+        Route::delete('/admin/perfil/{uuid}', [PerfilController::class, 'deletePerfil']);
+        Route::put('/admin/perfil/{uuid}', [PerfilController::class, 'updatePerfil']);
     }
 );
 

@@ -92,7 +92,9 @@ class ConvenioController extends Controller
     public function getUsers(Request $request)
     {
         try {
-           $users = User::general($request->input)->get();
+           $users = User::general($request->input)
+           ->doesntHave('roles')
+           ->get();
 
             return response()->json(
                 array(

@@ -29,12 +29,36 @@ use App\Models\Transporte;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Spatie\Permission\Models\Role;
+use Spatie\Permission\Models\Permission;
 
 class MantenedorController extends Controller
 {
     public function __construct()
     {
         $this->middleware(['auth:sanctum']);
+    }
+
+    public function getPermisosAdicionales(Request $request)
+    {
+        try {
+            $permissions    = [];
+            $roles          = Role::whereIn('id', $request->roles_id)->get();
+
+            foreach ($roles as $role) {
+                foreach ($role->permissions as $permission) {
+                    if (!in_array($permission->id, $permissions)) {
+                        array_push($permissions, $permission->id);
+                    }
+                }
+            }
+            $models = ['grupofirma', 'convenio', 'ausentismo', 'funcionario', 'usuarioespecial', 'configuracion', 'perfil', 'solicitudes', 'reasignaciones'];
+            $permissions_aditional = Permission::whereNotIn('id', $permissions)
+            ->whereIn('model', $models)
+            ->get();
+            return response()->json($permissions_aditional);
+        } catch (\Exception $error) {
+            return response()->json($error->getMessage());
+        }
     }
 
     public function getStatusRechazo()
@@ -231,6 +255,18 @@ class MantenedorController extends Controller
         try {
             $name_roles = ['SOLICITANTE', 'SUPER ADMINISTRADOR', 'ABASTECIMIENTO', 'CAPACITACION'];
             $roles = Role::whereNotIn('name', $name_roles)->orderBy('name', 'ASC')->get();
+
+            return response()->json($roles);
+        } catch (\Exception $error) {
+            return response()->json($error->getMessage());
+        }
+    }
+
+    public function getRolesPerfil()
+    {
+        try {
+            $name_roles = ['SUPER ADMINISTRADOR', 'ADMINISTRADOR', 'VISOR'];
+            $roles = Role::whereIn('name', $name_roles)->orderBy('name', 'ASC')->get();
 
             return response()->json($roles);
         } catch (\Exception $error) {
