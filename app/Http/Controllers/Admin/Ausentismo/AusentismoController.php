@@ -70,6 +70,7 @@ class AusentismoController extends Controller
     public function listAusentismos()
     {
         try {
+            $this->authorize('viewAny', Ausentismo::class);
             $ausentismos = Ausentismo::orderBy('fecha_inicio', 'DESC')->get();
 
             return response()->json(
@@ -88,6 +89,7 @@ class AusentismoController extends Controller
     public function storeAusentismo(StoreAdminAusentismoRequest $request)
     {
         try {
+            $this->authorize('create', Ausentismo::class);
             $firmante = User::where('uuid', $request->firmante_uuid)->firstOrFail();
             $data = [
                 'user_ausente_id'   => $firmante->id,
@@ -139,6 +141,7 @@ class AusentismoController extends Controller
     {
         try {
             $ausentismo = Ausentismo::where('uuid', $uuid)->firstOrFail();
+            $this->authorize('delete', $ausentismo);
             $delete = $ausentismo->subrogantes()->detach();
             $delete = $ausentismo->delete();
             if ($delete) {

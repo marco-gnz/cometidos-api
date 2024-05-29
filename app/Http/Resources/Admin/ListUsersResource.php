@@ -18,7 +18,8 @@ class ListUsersResource extends JsonResource
             'uuid'              => $this->uuid,
             'rut'               => $this->rut_completo,
             'nombres'           => "{$this->apellidos} {$this->nombres}",
-            'status'            => $this->estado ? true : false
+            'status'            => $this->estado ? true : false,
+            'authorized_to_update'    => $this->authorizedToUpdate()
         ];
     }
 }

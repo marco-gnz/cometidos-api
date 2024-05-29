@@ -22,6 +22,7 @@ class ConvenioController extends Controller
     public function getConvenios(Request $request)
     {
         try {
+            $this->authorize('viewAny', Convenio::class);
             $convenios = Convenio::input($request->input)
                 ->periodo($request->periodo)
                 ->establecimiento($request->establecimientos_id)
@@ -55,8 +56,9 @@ class ConvenioController extends Controller
     public function getConvenio($uuid)
     {
         try {
-            $convenio = Convenio::where('uuid', $uuid)->firstOrFail();
 
+            $convenio = Convenio::where('uuid', $uuid)->firstOrFail();
+            $this->authorize('view', $convenio);
             return response()->json(
                 array(
                     'status'        => 'success',
@@ -112,7 +114,7 @@ class ConvenioController extends Controller
     public function storeConvenio(StoreConvenioRequest $request)
     {
         try {
-            $this->authorize('create');
+            $this->authorize('create', Convenio::class);
             $form = [
                 'fecha_inicio',
                 'fecha_termino',

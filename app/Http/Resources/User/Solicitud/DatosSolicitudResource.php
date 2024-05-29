@@ -54,6 +54,7 @@ class DatosSolicitudResource extends JsonResource
             'gastos_alojamiento'        => $this->gastos_alojamiento ? "Si" : "No",
             'pernocta_lugar_residencia' => $this->pernocta_lugar_residencia ? "Si" : "No",
             'actividad_realizada'       => $this->actividad_realizada ? $this->actividad_realizada : null,
+            'observacion'               => $this->observacion,
             'observacion_gastos'        => $this->observacion_gastos ? $this->observacion_gastos : null,
             'last_status_nom'           => EstadoSolicitud::STATUS_NOM[$this->last_status],
             'last_status_type'          => $this->typeLastStatus(),

@@ -14,6 +14,7 @@ use Spatie\Permission\Traits\HasRoles;
 use Spatie\Permission\Models\Permission;
 use Illuminate\Support\Str;
 use App\Notifications\ResetPasswordNotification;
+use Illuminate\Support\Facades\Gate;
 
 class User extends Authenticatable
 {
@@ -304,6 +305,29 @@ class User extends Authenticatable
             $total += $solicitud->sumTotalProcesosRendicionesNumber();
         }
         return "$" . number_format($total, 0, ',', '.');
+    }
+
+    public function authorizedToUpdate()
+    {
+        return Gate::allows('update', $this);
+    }
+
+    public function authorizedToUpdatePerfil()
+    {
+        return Gate::allows('updatePerfil', $this);
+    }
+
+    public function authorizedToDeletePerfil()
+    {
+        return Gate::allows('deletePerfil', $this);
+    }
+
+    public function viewPermisos()
+    {
+        $permissions_extras     = $this->getPermissionNames()->toArray();
+        $permissions_to_roles   = $this->getPermissionsViaRoles()->pluck('name')->toArray();
+        $permissions            = array_merge($permissions_extras, $permissions_to_roles);
+        return $permissions;
     }
 
     /* public function sendPasswordResetNotification($token)

@@ -48,6 +48,7 @@ class UpdateSolicitudRequest extends FormRequest
             'n_dias_100'                => ['required'],
             'observacion_gastos'        => ['nullable'],
             'archivos'                  => ['nullable'],
+            'observacion'               => ['nullable']
         ];
     }
 

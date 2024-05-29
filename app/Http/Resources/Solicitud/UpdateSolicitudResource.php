@@ -44,7 +44,8 @@ class UpdateSolicitudResource extends JsonResource
             'archivos'                          => [],
             'is_update'                         => $this->authorizedToUpdate(),
             'is_store_informe_cometido'         => $this->authorizedToCreateInformeCometido(),
-            'dias_permitidos'                   => $this->dias_permitidos
+            'dias_permitidos'                   => $this->dias_permitidos,
+            'observacion'                       => $this->observacion
         ];
     }
 }

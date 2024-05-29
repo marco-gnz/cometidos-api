@@ -288,7 +288,7 @@ class SolicitudPolicy
 
     public function createconvenio(User $user, Solicitud $solicitud)
     {
-        if ($solicitud->status === Solicitud::STATUS_ANULADO || $solicitud->status === Solicitud::STATUS_PROCESADO) {
+        if ($solicitud->status === Solicitud::STATUS_ANULADO) {
             return false;
         }
         $firma  = $this->isFirmaDisponibleActionPolicy($solicitud, 'solicitud.convenio.crear');

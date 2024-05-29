@@ -27,6 +27,7 @@ class UserController extends Controller
     public function listUsers(Request $request)
     {
         try {
+            $this->authorize('viewAny', User::class);
             $users = User::general($request->input)
                 ->establecimiento($request->establecimientos_id)
                 ->depto($request->deptos_id)
@@ -61,7 +62,7 @@ class UserController extends Controller
     {
         try {
             $user = User::where('uuid', $uuid)->firstOrFail();
-
+            $this->authorize('view', $user);
             return response()->json(
                 array(
                     'status'        => 'success',
@@ -79,6 +80,7 @@ class UserController extends Controller
     {
         try {
             $user = User::where('uuid', $uuid)->firstOrFail();
+            $this->authorize('update', $user);
 
             return response()->json(
                 array(
@@ -96,6 +98,7 @@ class UserController extends Controller
     public function storeUser(StoreUserRequest $request)
     {
         try {
+            $this->authorize('create', User::class);
             DB::beginTransaction();
             $data_user = [
                 'rut'       => $request->rut,
@@ -150,7 +153,7 @@ class UserController extends Controller
     {
         try {
             $user = User::where('uuid', $uuid)->firstOrFail();
-
+            $this->authorize('update', $user);
             $form = [
                 'rut',
                 'dv',
@@ -179,7 +182,7 @@ class UserController extends Controller
     {
         try {
             $user = User::where('uuid', $uuid)->firstOrFail();
-
+            $this->authorize('update', $user);
             $update = $user->update([
                 'estado'    => !$user->estado
             ]);
@@ -203,7 +206,7 @@ class UserController extends Controller
     {
         try {
             $user = User::where('uuid', $request->user_uuid)->firstOrFail();
-
+            $this->authorize('update', $user);
             $permisos = [
                 'solicitud' => 'is_solicitud',
                 'informe'   => 'is_informe',
@@ -241,7 +244,7 @@ class UserController extends Controller
     {
         try {
             $cuenta = CuentaBancaria::where('uuid', $uuid)->firstOrFail();
-
+            $this->authorize('update', $cuenta->funcionario);
             $cuentas_total = $cuenta->funcionario->cuentas()->where('status', true)->count();
 
             if (!$cuenta->status && $cuentas_total > 0) {
@@ -273,6 +276,7 @@ class UserController extends Controller
     {
         try {
             $user = User::where('uuid', $request->user_uuid)->firstOrFail();
+            $this->authorize('update', $user);
 
             $cuentas_total = $user->cuentas()->where('status', true)->count();
             $status = true;
@@ -316,6 +320,7 @@ class UserController extends Controller
     {
         try {
             $contrato = Contrato::where('uuid', $uuid)->firstOrFail();
+            $this->authorize('update', $contrato->funcionario);
             $delete = $contrato->delete();
             if($delete){
                 return response()->json(
@@ -337,6 +342,7 @@ class UserController extends Controller
     {
         try {
             $user = User::where('uuid', $request->user_uuid)->firstOrFail();
+            $this->authorize('update', $user);
 
             $data = [
                 'ley_id'                => $request->ley_id,
@@ -383,6 +389,7 @@ class UserController extends Controller
     {
         try {
             $contrato = Contrato::where('uuid', $uuid)->firstOrFail();
+            $this->authorize('update', $contrato->funcionario);
             $data = [
                 'ley_id'                => $request->ley_id,
                 'estamento_id'          => $request->estamento_id,

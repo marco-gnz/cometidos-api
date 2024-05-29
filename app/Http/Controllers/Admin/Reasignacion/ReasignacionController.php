@@ -20,6 +20,7 @@ class ReasignacionController extends Controller
     public function listReasignaciones()
     {
         try {
+            $this->authorize('viewAny', Reasignacion::class);
             $reasignaciones = Reasignacion::orderBy('id', 'DESC')->get();
 
             return response()->json(
@@ -31,13 +32,14 @@ class ReasignacionController extends Controller
                 )
             );
         } catch (\Exception $error) {
-            return response()->json($error->getMessage());
+            return response()->json(['error' => $error->getMessage()], 500);
         }
     }
 
     public function storeReasignacion(StoreReasignacionRequest $request)
     {
         try {
+            $this->authorize('create', Reasignacion::class);
             $form = [
                 'firmante_uuid',
                 'fecha_inicio',
@@ -77,6 +79,7 @@ class ReasignacionController extends Controller
     {
         try {
             $reasignacion   = Reasignacion::where('uuid', $uuid)->firstOrFail();
+            $this->authorize('delete', $reasignacion);
             $delete         = $reasignacion->solicitudes()->detach();
             $delete         = $reasignacion->delete();
             if ($delete) {

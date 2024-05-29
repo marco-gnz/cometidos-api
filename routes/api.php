@@ -13,6 +13,7 @@ use App\Http\Controllers\Admin\Solicitudes\SolicitudAdminController;
 use App\Http\Controllers\Admin\Users\UserController;
 use App\Http\Controllers\Auth\NewPasswordController;
 use App\Http\Controllers\File\FileController;
+use App\Http\Controllers\LinksController;
 use App\Http\Controllers\Rendicion\RendicionController;
 use App\Http\Controllers\Solicitud\SolicitudController;
 use App\Http\Controllers\User\Archivos\ArchivosController;
@@ -170,6 +171,7 @@ Route::group(
     ],
     function () {
         Route::post('/solicitud/get-count-convenios', [SolicitudController::class, 'getCountConvenios']);
+        Route::get('/solicitud/plazo-avion', [SolicitudController::class, 'isPlazoAvion']);
 
         Route::get('/archivos/list', [ArchivosController::class, 'listArchivos']);
         Route::get('/firmantes/list', [FirmantesController::class, 'listFirmantes']);
@@ -227,5 +229,6 @@ Route::group(
     function () {
         Route::post('/change-pass/{uuid}', [NewPasswordController::class, 'changePass']);
         Route::post('/change-data', [CuentaController::class, 'changeData']);
+        Route::get('/links', [LinksController::class, 'getLinks']);
     }
 );

@@ -20,6 +20,7 @@ class ConceptosController extends Controller
     public function getUsersConcepto(Request $request)
     {
         try {
+            $this->authorize('viewAny', Concepto::class);
             $conceptoEstablecimiento = ConceptoEstablecimiento::where('id', $request->concepto_establecimiento_id)
                 ->firstOrFail();
 
@@ -39,6 +40,7 @@ class ConceptosController extends Controller
     public function listConceptos(Request $request)
     {
         try {
+            $this->authorize('viewAny', Concepto::class);
             $establecimiento_id = $request->establecimiento_id;
             $conceptos          = Concepto::with(['conceptosEstablecimientos' => function ($q) use ($establecimiento_id) {
                 $q->where('establecimiento_id', $establecimiento_id);
@@ -66,6 +68,7 @@ class ConceptosController extends Controller
                     $q->where('concepto_establecimiento_user.posicion', $position_actual);
                 }])
                 ->firstOrFail();
+            $this->authorize('update', $conceptoEstablecimiento->concepto);
 
             $funcionario = $conceptoEstablecimiento->funcionarios->first();
 
@@ -110,6 +113,7 @@ class ConceptosController extends Controller
         try {
             $conceptoEstablecimiento = ConceptoEstablecimiento::where('id', $request->concepto_establecimiento_id)
                 ->firstOrFail();
+            $this->authorize('update', $conceptoEstablecimiento->concepto);
             $count_users = $conceptoEstablecimiento->funcionarios()->count();
             $user = User::where('uuid', $request->user_selected_id)->firstOrFail();
             $posicion = $count_users + 1;
@@ -134,6 +138,7 @@ class ConceptosController extends Controller
                     $q->where('concepto_establecimiento_user.posicion', $position_actual);
                 }])
                 ->firstOrFail();
+            $this->authorize('update', $conceptoEstablecimiento->concepto);
             $funcionario = $conceptoEstablecimiento->funcionarios->first();
             if ($funcionario) {
                 $conceptoEstablecimiento->funcionarios()->detach($funcionario->id);

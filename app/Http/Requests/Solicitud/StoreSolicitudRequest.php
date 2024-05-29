@@ -41,6 +41,7 @@ class StoreSolicitudRequest extends FormRequest
             'paises_cometido'           => ['required_if:dentro_pais,1', 'array'],
             'medio_transporte'          => ['required_if:utiliza_transporte,1', 'array'],
             'actividad_realizada'       => ['required'],
+            'observacion'               => ['nullable'],
 
             'gastos_alimentacion'       => ['required', 'boolean'],
             'gastos_alojamiento'        => ['required', 'boolean'],

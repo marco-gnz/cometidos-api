@@ -32,7 +32,9 @@ class ListAusentismoResource extends JsonResource
             'nombres_firmante_ausente'  => $this->firmanteAusente ? $this->firmanteAusente->abreNombres() : null,
             'fecha_inicio'      => $this->fecha_inicio ? Carbon::parse($this->fecha_inicio)->format('d-m-Y') : null,
             'fecha_termino'     => $this->fecha_termino ? Carbon::parse($this->fecha_termino)->format('d-m-Y') : null,
-            'subrogantes'       => $resultado
+            'subrogantes'       => $resultado,
+            'authorized_to_delete'    => $this->authorizedToDelete(),
+            'authorized_to_update'    => $this->authorizedToUpdate()
         ];
     }
 }

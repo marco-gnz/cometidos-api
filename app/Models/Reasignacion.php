@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Str;
 use Carbon\Carbon;
+use Illuminate\Support\Facades\Gate;
 
 class Reasignacion extends Model
 {
@@ -45,5 +46,15 @@ class Reasignacion extends Model
     public function solicitudes()
     {
         return $this->belongsToMany(Solicitud::class);
+    }
+
+    public function authorizedToDelete()
+    {
+        return Gate::allows('delete', $this);
+    }
+
+    public function authorizedToUpdate()
+    {
+        return Gate::allows('update', $this);
     }
 }

@@ -177,8 +177,7 @@ trait FirmaDisponibleTrait
                     $fecha_by_solicitud = Carbon::parse($solicitud->fecha_by_user)->format('Y-m-d');
                     $first_firma_position = $solicitud->firmantes()
                         ->where(function ($q) use ($first_firma_habilitada_solicitud) {
-                            $q->where('id', $first_firma_habilitada_solicitud->id)
-                                ->where('is_executed', false);
+                            $q->where('id', $first_firma_habilitada_solicitud->id);
                         })
                         ->where(function ($q) use ($auth, $fecha_by_solicitud) {
                             $q->whereHas('funcionario.reasignacionAusencias', function ($q) use ($auth, $fecha_by_solicitud) {
@@ -203,6 +202,7 @@ trait FirmaDisponibleTrait
                                 });
                             });
                         })
+                        ->where('is_executed', false)
                         ->where('solicitud_id', $solicitud->id)
                         ->first();
 

@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Str;
 use Carbon\Carbon;
+use Illuminate\Support\Facades\Gate;
 
 class Grupo extends Model
 {
@@ -73,6 +74,16 @@ class Grupo extends Model
     public function userBy()
     {
         return $this->belongsTo(User::class, 'user_id_by');
+    }
+
+    public function authorizedToDelete()
+    {
+        return Gate::allows('delete', $this);
+    }
+
+    public function authorizedToUpdate()
+    {
+        return Gate::allows('update', $this);
     }
 
     public function scopeSearchEstablecimiento($query, $params)

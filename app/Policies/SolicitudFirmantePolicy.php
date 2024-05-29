@@ -71,7 +71,7 @@ class SolicitudFirmantePolicy
 
     private function isFinanzas($solicitudFirmante)
     {
-        $rolesFinanzas = Role::whereIn('name', ['REVISOR FINANZAS', 'JEFE FINANZAS'])->pluck('id')->toArray();
+        $rolesFinanzas = Role::whereIn('name', ['REVISOR FINANZAS', 'SUPERVISOR FINANZAS'])->pluck('id')->toArray();
         return in_array($solicitudFirmante->role_id, $rolesFinanzas);
     }
 

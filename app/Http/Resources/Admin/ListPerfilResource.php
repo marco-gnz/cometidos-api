@@ -23,7 +23,9 @@ class ListPerfilResource extends JsonResource
             'establecimientos'  => $this->establecimientos ? $this->establecimientos->pluck('sigla')->implode(' - ') : null,
             'ley'               => $this->leyes ? $this->leyes->pluck('nombre')->implode(' - ') : null,
             'deptos'            => $this->departamentos->count(),
-            'permisos'          => $this->permissions->count()
+            'permisos'          => $this->permissions->count(),
+            'authorized_to_update_perfil'  => $this->authorizedToUpdatePerfil(),
+            'authorized_to_delete_perfil'  => $this->authorizedToDeletePerfil()
         ];
     }
 }

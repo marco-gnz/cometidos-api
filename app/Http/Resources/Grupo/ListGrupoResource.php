@@ -30,8 +30,9 @@ class ListGrupoResource extends JsonResource
             'firmantes'         => $this->firmantes ? ListFirmantesGrupoResource::collection($this->firmantes) : null,
             'user_by'           => $this->userBy ? $this->userBy->abreNombres() : null,
             'created_at'        => $this->created_at ? Carbon::parse($this->created_at)->format('d-m-Y H:i:s') : null,
-            'delete_grupo'      => $this->solicitudes()->count() > 0 ? true : false,
-            'n_users'           => $n_users
+            'n_users'           => $n_users,
+            'authorized_to_delete'    => $this->authorizedToDelete(),
+            'authorized_to_update'    => $this->authorizedToUpdate()
         ];
     }
 }

@@ -98,6 +98,7 @@ class Solicitud extends Model
         'pernocta_lugar_residencia',
         'n_dias_40',
         'n_dias_100',
+        'observacion',
         'observacion_gastos',
         'status',
         'last_status',
@@ -811,7 +812,8 @@ class Solicitud extends Model
     public function menuAdmin()
     {
         $menu = [];
-        if (self::authorizedToVerDatos()) {
+        $user = Auth::user();
+        if (self::authorizedToVerDatos() || $user->hasPermissionTo('solicitudes.ver')) {
             $menu[] = [
                 'code'      => 'datos',
                 'name'      => 'Datos',
@@ -819,7 +821,7 @@ class Solicitud extends Model
             ];
         }
 
-        if (self::authorizedToVerFirmantes()) {
+        if (self::authorizedToVerFirmantes() || $user->hasPermissionTo('solicitudes.ver')) {
             $n_firmantes            = $this->firmantes()->where('posicion_firma', '>', 0)->count();
             $menu[] = [
                 'code'      => 'firmantes',
@@ -828,7 +830,7 @@ class Solicitud extends Model
             ];
         }
 
-        if (self::authorizedToVerInformes()) {
+        if (self::authorizedToVerInformes() || $user->hasPermissionTo('solicitudes.ver')) {
             $n_informes_cometido    = $this->informes()->count();
             $menu[] = [
                 'code'      => 'informes',
@@ -837,7 +839,7 @@ class Solicitud extends Model
             ];
         }
 
-        if (self::authorizedToVerValorizacion()) {
+        if (self::authorizedToVerValorizacion()|| $user->hasPermissionTo('solicitudes.ver')) {
             $is_calculo             = self::getLastCalculo() ? 'Si' : 'No';
             $menu[] = [
                 'code'      => 'calculo',
@@ -846,7 +848,7 @@ class Solicitud extends Model
             ];
         }
 
-        if (self::authorizedToVerConvenio()) {
+        if (self::authorizedToVerConvenio()|| $user->hasPermissionTo('solicitudes.ver')) {
             $is_convenio            = $this->convenio ? 'Si' : 'No';
             $menu[] = [
                 'code'      => 'convenio',
@@ -855,7 +857,7 @@ class Solicitud extends Model
             ];
         }
 
-        if (self::authorizedToVerRendicion()) {
+        if (self::authorizedToVerRendicion()|| $user->hasPermissionTo('solicitudes.ver')) {
             $n_proceso_rendiciones  = $this->procesoRendicionGastos()->count();
             $menu[] = [
                 'code'      => 'rendiciones',
@@ -864,7 +866,7 @@ class Solicitud extends Model
             ];
         }
 
-        if (self::authorizedToVerArchivos()) {
+        if (self::authorizedToVerArchivos()|| $user->hasPermissionTo('solicitudes.ver')) {
             $n_documentos           = $this->documentos()->count();
             $menu[] = [
                 'code'      => 'archivos',
@@ -873,7 +875,7 @@ class Solicitud extends Model
             ];
         }
 
-        if (self::authorizedToVerHistorial()) {
+        if (self::authorizedToVerHistorial()|| $user->hasPermissionTo('solicitudes.ver')) {
             $n_estados              = $this->estados()->count();
             $menu[] = [
                 'code'      => 'seguimiento',

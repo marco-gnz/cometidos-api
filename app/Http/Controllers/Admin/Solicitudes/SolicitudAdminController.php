@@ -57,7 +57,7 @@ class SolicitudAdminController extends Controller
     {
         try {
             $params = $request->validate([
-                'result' => 'required|in:all,noverify,verify',
+                'result' => 'required|in:none,all,noverify,verify',
             ]);
 
             $resultSolicitud = $params['result'];
@@ -85,6 +85,12 @@ class SolicitudAdminController extends Controller
                 $this->filterVerify($query, $auth);
             } elseif ($resultSolicitud === 'all') {
                 $this->filterAll($query, $auth);
+            }else if ($resultSolicitud === 'none'){
+                if ($auth->hasPermissionTo('solicitudes.ver')) {
+                    $this->filterRole($query, $auth);
+                }else{
+                    $this->filterAll($query, $auth);
+                }
             }
 
             $solicitudes = $query->orderByDesc('fecha_inicio')->paginate(50);
@@ -109,14 +115,36 @@ class SolicitudAdminController extends Controller
         }
     }
 
+    private function filterRole($query, $auth)
+    {
+        $establecimientos_id    = $auth->establecimientos->pluck('id')->toArray();
+        $leyes_id               = $auth->leyes->pluck('id')->toArray();
+        $deptos_id              = $auth->departamentos->pluck('id')->toArray();
+        if($establecimientos_id){
+            $query->whereHas('establecimiento', function($q) use($establecimientos_id){
+                $q->whereIn('id', $establecimientos_id);
+            });
+        }
+
+        if ($leyes_id) {
+            $query->whereHas('ley', function ($q) use ($leyes_id) {
+                $q->whereIn('id', $leyes_id);
+            });
+        }
+
+        if ($deptos_id) {
+            $query->whereHas('departamento', function ($q) use ($deptos_id) {
+                $q->whereIn('id', $deptos_id);
+            });
+        }
+    }
+
     private function filterNoVerify($query, $auth)
     {
         $query->whereHas('firmantes', function ($q) use ($auth) {
             $q->where('status', true)->where('is_executed', false)
-                ->where('role_id', '!=', 1);
-            if (!$auth->hasRole('SUPER ADMINISTRADOR')) {
-                $q->where('user_id', $auth->id);
-            }
+                ->where('role_id', '!=', 1)
+                ->where('user_id', $auth->id);
         })->orWhereHas('firmantes', function ($q) use ($auth) {
             $q->where('is_executed', false)
                 ->whereHas('funcionario.ausentismos', function ($q) use ($auth) {
@@ -141,10 +169,8 @@ class SolicitudAdminController extends Controller
     {
         $query->whereHas('firmantes', function ($q) use ($auth) {
             $q->where('status', true)->where('is_executed', true)
-                ->where('role_id', '!=', 1);
-            if (!$auth->hasRole('SUPER ADMINISTRADOR')) {
-                $q->where('user_id', $auth->id);
-            }
+                ->where('role_id', '!=', 1)
+                ->where('user_id', $auth->id);
         })->orWhereHas('firmantes', function ($q) use ($auth) {
             $q->where('is_executed', true)
                 ->whereHas('funcionario.ausentismos', function ($q) use ($auth) {
@@ -167,24 +193,19 @@ class SolicitudAdminController extends Controller
 
     private function filterAll($query, $auth)
     {
-        if ($auth->hasRole('SUPER ADMINISTRADOR')) {
-            $query;
-        } else {
-            $query->whereHas('firmantes', function ($q) use ($auth) {
-                $q->where('status', true)
-                    ->where('role_id', '!=', 1);
-                if (!$auth->hasRole('SUPER ADMINISTRADOR')) {
-                    $q->where('user_id', $auth->id);
-                }
-            })->orWhereHas('firmantes.funcionario.ausentismos', function ($q) use ($auth) {
-                $q->whereHas('subrogantes', function ($q) use ($auth) {
-                    $q->where('users.id', $auth->id);
-                })->whereRaw("DATE(solicituds.fecha_by_user) >= ausentismos.fecha_inicio")
-                    ->whereRaw("DATE(solicituds.fecha_by_user) <= ausentismos.fecha_termino");
-            })->orWhereHas('reasignaciones', function ($q) use ($auth) {
-                $q->where('user_subrogante_id', $auth->id);
-            });
-        }
+        $query->whereHas('firmantes', function ($q) use ($auth) {
+            $q->where('status', true)
+            ->where('role_id', '!=', 1)
+            ->where('user_id', $auth->id);
+
+        })->orWhereHas('firmantes.funcionario.ausentismos', function ($q) use ($auth) {
+            $q->whereHas('subrogantes', function ($q) use ($auth) {
+                $q->where('users.id', $auth->id);
+            })->whereRaw("DATE(solicituds.fecha_by_user) >= ausentismos.fecha_inicio")
+            ->whereRaw("DATE(solicituds.fecha_by_user) <= ausentismos.fecha_termino");
+        })->orWhereHas('reasignaciones', function ($q) use ($auth) {
+            $q->where('user_subrogante_id', $auth->id);
+        });
     }
 
 
@@ -458,7 +479,7 @@ class SolicitudAdminController extends Controller
             $total_solicitudes = Solicitud::where('convenio_id', $convenio->id)
                 ->whereMonth('fecha_inicio', $month)
                 ->whereYear('fecha_inicio', $year)
-                ->where('last_status', '!=', 4)
+                ->where('last_status', '!=', EstadoSolicitud::STATUS_ANULADO)
                 ->count();
 
             return $total_solicitudes;

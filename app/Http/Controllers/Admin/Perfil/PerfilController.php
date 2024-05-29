@@ -21,6 +21,7 @@ class PerfilController extends Controller
     public function getPerfiles(Request $request)
     {
         try {
+            $this->authorize('viewAnyPerfil', User::class);
             $names_roles = ['VISOR','ADMINISTRADOR', 'SUPER ADMINISTRADOR'];
             $roles       = Role::whereIn('name', $names_roles)->pluck('name')->toArray();
             $perfiles    = User::role($roles)
@@ -58,7 +59,7 @@ class PerfilController extends Controller
     {
         try {
             $user = User::where('uuid', $uuid)->firstOrFail();
-
+            $this->authorize('deletePerfil', $user);
             $user->syncRoles([]);
             $user->establecimientos()->detach();
             $user->leyes()->detach();
@@ -82,7 +83,7 @@ class PerfilController extends Controller
     {
         try {
             $user = User::where('uuid', $uuid)->firstOrFail();
-
+            $this->authorize('updatePerfil', $user);
             return response()->json(
                 array(
                     'status'        => 'success',
@@ -99,6 +100,7 @@ class PerfilController extends Controller
     public function storePerfil(StorePerfilRequest $request)
     {
         try {
+            $this->authorize('createPerfil', User::class);
             DB::beginTransaction();
             $user = User::find($request->user_id);
 
@@ -131,7 +133,7 @@ class PerfilController extends Controller
     {
         try {
             $user = User::where('uuid', $uuid)->firstOrFail();
-
+            $this->authorize('updatePerfil', $user);
             $user->syncRoles($request->perfiles_id ?? []);
             $user->establecimientos()->sync($request->establecimientos_id ?? []);
             $user->leyes()->sync($request->leys_id ?? []);

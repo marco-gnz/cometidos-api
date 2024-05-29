@@ -19,7 +19,10 @@ class ListConceptoResource extends JsonResource
             'uuid'                          => $this->uuid,
             'nombre'                        => $this->nombre,
             'descripcion'                   => $this->descripcion,
-            'conceptos_establecimientos'    => ListConceptoEstablecimientoResource::collection($this->whenLoaded('conceptosEstablecimientos'))
+            'conceptos_establecimientos'    => ListConceptoEstablecimientoResource::collection($this->whenLoaded('conceptosEstablecimientos')),
+            'authorized_to_delete'    => $this->authorizedToDelete(),
+            'authorized_to_update'    => $this->authorizedToUpdate(),
+            'authorized_to_create'       => $this->authorizedToCreate()
         ];
     }
 }

@@ -10,6 +10,7 @@
         body {
             margin: -28;
             font-family: Arial, sans-serif;
+            font-size: 10px;
         }
 
         .header-container {
@@ -46,13 +47,13 @@
 
         .fecha {
             text-align: right;
-            font-size: 11px;
+            font-size: 10px;
             margin: 0;
         }
 
         .content-container {
             padding: 0px;
-            font-size: 11px;
+            /* font-size: 11px; */
         }
 
         .seccion {

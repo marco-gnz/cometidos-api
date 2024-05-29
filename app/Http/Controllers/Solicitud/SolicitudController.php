@@ -22,6 +22,7 @@ use App\Http\Resources\Solicitud\UpdateSolicitudResource;
 use App\Models\CicloFirma;
 use App\Models\Concepto;
 use App\Models\ConceptoEstablecimiento;
+use App\Models\Configuration;
 use App\Models\Contrato;
 use App\Models\Convenio;
 use App\Models\Documento;
@@ -42,7 +43,9 @@ use Spatie\Permission\Models\Role;
 use App\Traits\FirmaDisponibleTrait;
 use App\Traits\StatusSolicitudTrait;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Http;
 
 class SolicitudController extends Controller
 {
@@ -58,9 +61,9 @@ class SolicitudController extends Controller
         try {
             $fecha_inicio       = $request->fecha_inicio;
             $fecha_termino      = $request->fecha_termino;
-            $funcionario        = User::where('id', $request->user_id)->firstOrFail();
+            $contrato        = Contrato::where('uuid', $request->contrato_uuid)->firstOrFail();
 
-            $total_convenios    = $funcionario->convenios()
+            $total_convenios    = $contrato->funcionario->convenios()
                 ->where('active', true)
                 ->where(function ($query) use ($fecha_inicio, $fecha_termino) {
                     $query->where(function ($query) use ($fecha_inicio, $fecha_termino) {
@@ -86,6 +89,113 @@ class SolicitudController extends Controller
             );
         } catch (\Exception $error) {
             return response()->json($error->getMessage());
+        }
+    }
+
+    private function feriados($fecha)
+    {
+        $fecha      = Carbon::parse($fecha);
+        $anio       = $fecha->format('Y');
+        $cacheKey   = "feriados_{$anio}";
+        $feriados   = Cache::get($cacheKey);
+        if ($feriados !== null) {
+            return $feriados;
+        }
+
+        try {
+            $url        = "https://apis.digital.gob.cl/fl/feriados/{$anio}";
+            $response   = Http::get($url);
+            if ($response->successful()) {
+                $apiResponse = $response->body();
+                $feriados = json_decode($apiResponse, true, 512, JSON_UNESCAPED_UNICODE);
+
+                if (is_array($feriados)) {
+                    $fechas = collect($feriados)->pluck('fecha')->toArray();
+                    Cache::put($cacheKey, $fechas, now()->addDays(31));
+                    return $fechas;
+                }
+            }
+            return [];
+        } catch (\Exception $exception) {
+            Log::error("Error al procesar la solicitud de feriados: {$exception->getMessage()}");
+            $feriados = Cache::get($cacheKey);
+            return $feriados !== null ? $feriados : [];
+        }
+    }
+
+    private function getWeekendCount(Carbon $startDate, Carbon $endDate): int
+    {
+        $weekendCount = 0;
+
+        while ($startDate->lte($endDate)) {
+            if ($startDate->isSaturday() || $startDate->isSunday()) {
+                $weekendCount++;
+            }
+            $startDate->addDay();
+        }
+
+        return $weekendCount;
+    }
+
+    private function getFeriadosCount(Carbon $startDate, Carbon $endDate): int
+    {
+        $feriadosCount          = 0;
+        $array_fechas_feriados  = $this->feriados($startDate);
+        while ($startDate->lte($endDate)) {
+            if ((!$startDate->isSaturday() && !$startDate->isSunday()) && in_array($startDate->format('Y-m-d'), $array_fechas_feriados)) {
+                $feriadosCount++;
+            }
+            $startDate->addDay();
+        }
+
+        return $feriadosCount;
+    }
+
+    public function isPlazoAvion(Request $request)
+    {
+        try {
+            $request->validate([
+                'contrato_uuid' => 'required|exists:contratos,uuid',
+                'fecha_inicio'  => 'required|date',
+            ]);
+
+            $contrato           = Contrato::where('uuid', $request->contrato_uuid)->firstOrFail();
+            $diaz_plazo_avion   = (int)Configuration::obtenerValor('solicitud.dias_plazo_avion', $contrato->establecimiento_id);
+            $now                = Carbon::now();
+            $fecha_inicio       = Carbon::parse($request->fecha_inicio);
+            $status = null;
+            $title = null;
+            $message = null;
+            if($fecha_inicio->format('Y-m-d') >= $now->format('Y-m-d')){
+                $diff_in_days           = $now->diffInDays($fecha_inicio) + 1;
+                $fecha_termino_f        = $fecha_inicio->copy();
+                $fds                    = $this->getWeekendCount(Carbon::now(), $fecha_termino_f);
+                $feriados               = $this->getFeriadosCount(Carbon::now(), $fecha_termino_f);
+                $total_descuento        = $fds + $feriados;
+                $diff_in_days_total     = $diff_in_days - $total_descuento;
+                $status             = 'success';
+                $title              = "Plazo de Avión está dentro del plazo de {$diaz_plazo_avion} días hábiles.";
+                $message            = null;
+                if ($diff_in_days_total < $diaz_plazo_avion) {
+                    $status     = 'error';
+                    $title      = "Plazo de Avión está fuera del plazo de {$diaz_plazo_avion} días hábiles.";
+                    $message    = 'Solicitud puede ser rechazada y debe indicar el motivo por el cuál está fuera de plazo';
+                }
+            }
+
+            return response()->json(
+                array(
+                    'status'        => $status,
+                    'title'         => $title,
+                    'message'       => $message,
+                    'data'          => null
+                )
+            );
+
+
+        } catch (\Exception $error) {
+            Log::info($error->getMessage());
+            return response()->json(['error' => $error->getMessage()], 500);
         }
     }
 
@@ -168,7 +278,8 @@ class SolicitudController extends Controller
                 'grado_id'                  => $contrato->grado_id,
                 'estamento_id'              => $contrato->estamento_id,
                 'establecimiento_id'        => $contrato->establecimiento_id,
-                'hora_id'                   => $contrato->hora_id
+                'hora_id'                   => $contrato->hora_id,
+                'observacion'               => $request->observacion
             ];
 
             $solicitud = Solicitud::create($data);
@@ -180,7 +291,7 @@ class SolicitudController extends Controller
                     'grupo_id'          => null,
                     'user_id'           => $solicitud->user_id,
                     'role_id'           => $solicitante ? $solicitante->id : null,
-                    'permissions_id'        => $this->getPermissions($solicitante->id, $solicitud)
+                    'permissions_id'    => $this->getPermissions($solicitante->id, $solicitud)
                 ];
 
                 $solicitud->addFirmantes($first_firmante);
@@ -623,6 +734,7 @@ class SolicitudController extends Controller
     public function updateSolicitud(UpdateSolicitudRequest $request)
     {
         try {
+            DB::beginTransaction();
             $solicitud = Solicitud::where('uuid', $request->solicitud_uuid)->firstOrFail();
             $this->authorize('update', $solicitud);
 
@@ -664,6 +776,7 @@ class SolicitudController extends Controller
                 'n_dias_40',
                 'n_dias_100',
                 'observacion_gastos',
+                'observacion'
             ];
 
             $history_solicitud_old = $solicitud->only($form);
@@ -714,7 +827,6 @@ class SolicitudController extends Controller
             }
 
             $is_update_derecho_pago = $solicitud->derecho_pago != $request->derecho_pago;
-            Log::info($is_update_derecho_pago);
 
             $update             = $solicitud->update($request->only($form));
             $utiliza_transporte = (bool)$request->utiliza_transporte;
@@ -852,6 +964,7 @@ class SolicitudController extends Controller
                 $solicitud = $solicitud->fresh();
 
                 $firma_disponible = $this->isFirmaDisponibleActionPolicy($solicitud, 'solicitud.datos.editar-solicitud');
+
                 $estados[] = [
                     'status'                    => EstadoSolicitud::STATUS_MODIFICADA,
                     'is_reasignado'             => false,
@@ -873,7 +986,7 @@ class SolicitudController extends Controller
                     SolicitudUpdated::dispatch($solicitud, $emails_copy);
                 }
 
-
+                DB::commit();
                 return response()->json(
                     array(
                         'status'        => 'success',
@@ -884,6 +997,7 @@ class SolicitudController extends Controller
                 );
             }
         } catch (\Exception $error) {
+            DB::rollback();
             Log::info($error->getMessage());
             return response()->json(['error' => $error->getMessage()], 500);
         }

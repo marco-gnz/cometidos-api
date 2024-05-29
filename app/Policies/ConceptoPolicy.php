@@ -2,11 +2,11 @@
 
 namespace App\Policies;
 
-use App\Models\Convenio;
+use App\Models\Concepto;
 use App\Models\User;
 use Illuminate\Auth\Access\HandlesAuthorization;
 
-class ConvenioPolicy
+class ConceptoPolicy
 {
     use HandlesAuthorization;
 
@@ -18,19 +18,19 @@ class ConvenioPolicy
      */
     public function viewAny(User $user)
     {
-        return $user->hasPermissionTo('convenio.ver');
+        return $user->hasPermissionTo('usuarioespecial.ver');
     }
 
     /**
      * Determine whether the user can view the model.
      *
      * @param  \App\Models\User  $user
-     * @param  \App\Models\Convenio  $convenio
+     * @param  \App\Models\Concepto  $concepto
      * @return \Illuminate\Auth\Access\Response|bool
      */
-    public function view(User $user, Convenio $convenio)
+    public function view(User $user, Concepto $concepto)
     {
-        return $user->hasPermissionTo('convenio.ver');
+        return $user->hasPermissionTo('usuarioespecial.ver');
     }
 
     /**
@@ -41,42 +41,41 @@ class ConvenioPolicy
      */
     public function create(User $user)
     {
-        return $user->hasPermissionTo('convenio.crear');
+        return $user->hasPermissionTo('usuarioespecial.crear');
     }
 
     /**
      * Determine whether the user can update the model.
      *
      * @param  \App\Models\User  $user
-     * @param  \App\Models\Convenio  $convenio
+     * @param  \App\Models\Concepto  $concepto
      * @return \Illuminate\Auth\Access\Response|bool
      */
-    public function update(User $user, Convenio $convenio)
+    public function update(User $user, Concepto $concepto)
     {
-        return $user->hasPermissionTo('convenio.editar');
+        return $user->hasPermissionTo('usuarioespecial.editar');
     }
 
     /**
      * Determine whether the user can delete the model.
      *
      * @param  \App\Models\User  $user
-     * @param  \App\Models\Convenio  $convenio
+     * @param  \App\Models\Concepto  $concepto
      * @return \Illuminate\Auth\Access\Response|bool
      */
-    public function delete(User $user, Convenio $convenio)
+    public function delete(User $user, Concepto $concepto)
     {
-        $total_solicitudes = $convenio->solicitudes()->count();
-        return $total_solicitudes <= 0 && $user->hasPermissionTo('convenio.eliminar');
+        return $user->hasPermissionTo('usuarioespecial.eliminar');
     }
 
     /**
      * Determine whether the user can restore the model.
      *
      * @param  \App\Models\User  $user
-     * @param  \App\Models\Convenio  $convenio
+     * @param  \App\Models\Concepto  $concepto
      * @return \Illuminate\Auth\Access\Response|bool
      */
-    public function restore(User $user, Convenio $convenio)
+    public function restore(User $user, Concepto $concepto)
     {
         //
     }
@@ -85,10 +84,10 @@ class ConvenioPolicy
      * Determine whether the user can permanently delete the model.
      *
      * @param  \App\Models\User  $user
-     * @param  \App\Models\Convenio  $convenio
+     * @param  \App\Models\Concepto  $concepto
      * @return \Illuminate\Auth\Access\Response|bool
      */
-    public function forceDelete(User $user, Convenio $convenio)
+    public function forceDelete(User $user, Concepto $concepto)
     {
         //
     }

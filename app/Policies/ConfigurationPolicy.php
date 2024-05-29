@@ -2,11 +2,11 @@
 
 namespace App\Policies;
 
-use App\Models\Convenio;
+use App\Models\Configuration;
 use App\Models\User;
 use Illuminate\Auth\Access\HandlesAuthorization;
 
-class ConvenioPolicy
+class ConfigurationPolicy
 {
     use HandlesAuthorization;
 
@@ -18,19 +18,19 @@ class ConvenioPolicy
      */
     public function viewAny(User $user)
     {
-        return $user->hasPermissionTo('convenio.ver');
+        return $user->hasPermissionTo('configuracion.ver');
     }
 
     /**
      * Determine whether the user can view the model.
      *
      * @param  \App\Models\User  $user
-     * @param  \App\Models\Convenio  $convenio
+     * @param  \App\Models\Configuration  $configuration
      * @return \Illuminate\Auth\Access\Response|bool
      */
-    public function view(User $user, Convenio $convenio)
+    public function view(User $user, Configuration $configuration)
     {
-        return $user->hasPermissionTo('convenio.ver');
+        return $user->hasPermissionTo('configuracion.ver');
     }
 
     /**
@@ -41,42 +41,41 @@ class ConvenioPolicy
      */
     public function create(User $user)
     {
-        return $user->hasPermissionTo('convenio.crear');
+        return $user->hasPermissionTo('configuracion.crear');
     }
 
     /**
      * Determine whether the user can update the model.
      *
      * @param  \App\Models\User  $user
-     * @param  \App\Models\Convenio  $convenio
+     * @param  \App\Models\Configuration  $configuration
      * @return \Illuminate\Auth\Access\Response|bool
      */
-    public function update(User $user, Convenio $convenio)
+    public function update(User $user, Configuration $configuration)
     {
-        return $user->hasPermissionTo('convenio.editar');
+        return $user->hasPermissionTo('configuracion.editar');
     }
 
     /**
      * Determine whether the user can delete the model.
      *
      * @param  \App\Models\User  $user
-     * @param  \App\Models\Convenio  $convenio
+     * @param  \App\Models\Configuration  $configuration
      * @return \Illuminate\Auth\Access\Response|bool
      */
-    public function delete(User $user, Convenio $convenio)
+    public function delete(User $user, Configuration $configuration)
     {
-        $total_solicitudes = $convenio->solicitudes()->count();
-        return $total_solicitudes <= 0 && $user->hasPermissionTo('convenio.eliminar');
+        return $user->hasPermissionTo('configuracion.eliminar');
     }
 
     /**
      * Determine whether the user can restore the model.
      *
      * @param  \App\Models\User  $user
-     * @param  \App\Models\Convenio  $convenio
+     * @param  \App\Models\Configuration  $configuration
      * @return \Illuminate\Auth\Access\Response|bool
      */
-    public function restore(User $user, Convenio $convenio)
+    public function restore(User $user, Configuration $configuration)
     {
         //
     }
@@ -85,10 +84,10 @@ class ConvenioPolicy
      * Determine whether the user can permanently delete the model.
      *
      * @param  \App\Models\User  $user
-     * @param  \App\Models\Convenio  $convenio
+     * @param  \App\Models\Configuration  $configuration
      * @return \Illuminate\Auth\Access\Response|bool
      */
-    public function forceDelete(User $user, Convenio $convenio)
+    public function forceDelete(User $user, Configuration $configuration)
     {
         //
     }

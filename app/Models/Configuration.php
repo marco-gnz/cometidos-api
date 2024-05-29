@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\Gate;
 
 class Configuration extends Model
 {
@@ -21,5 +22,15 @@ class Configuration extends Model
     public function establecimiento()
     {
         return $this->belongsTo(Establecimiento::class, 'establecimiento_id');
+    }
+
+    public function authorizedToDelete()
+    {
+        return Gate::allows('delete', $this);
+    }
+
+    public function authorizedToUpdate()
+    {
+        return Gate::allows('update', $this);
     }
 }

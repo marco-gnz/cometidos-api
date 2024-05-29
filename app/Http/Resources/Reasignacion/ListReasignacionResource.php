@@ -24,7 +24,9 @@ class ListReasignacionResource extends JsonResource
             'firmante_reasignado'           => $this->firmanteReasignado ? $this->firmanteReasignado->abreNombres() : null,
             'firmante_reasignado_email'     => $this->firmanteReasignado ? $this->firmanteReasignado->email : null,
             'solicitudes'                   => $this->solicitudes ? $this->solicitudes()->take(2)->pluck('codigo')->implode('-') : null,
-            'is_plus'                       => $is_plus
+            'is_plus'                       => $is_plus,
+            'authorized_to_delete'    => $this->authorizedToDelete(),
+            'authorized_to_update'    => $this->authorizedToUpdate()
         ];
     }
 }

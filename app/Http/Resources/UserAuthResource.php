@@ -48,7 +48,8 @@ class UserAuthResource extends JsonResource
             'last_cuenta_bancaria'      => $this->lastCuentaBancaria() ? CuentaBancariaResource::make($this->lastCuentaBancaria())  : null,
             'is_firmante'               => true,
             'is_show_solicitud'         => true,
-            'contratos'                 => $this->contratos ? ListContratosResource::collection($this->contratos) : []
+            'contratos'                 => $this->contratos ? ListContratosResource::collection($this->contratos) : [],
+            'view_permisos'             => $this->viewPermisos()
         ];
     }
 }

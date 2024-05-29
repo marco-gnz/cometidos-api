@@ -22,6 +22,7 @@ class GrupoFirmaController extends Controller
     public function listGruposFirma(Request $request)
     {
         try {
+            $this->authorize('viewAny', Grupo::class);
             $grupos = Grupo::searchInput($request->input)
                 ->searchEstablecimiento($request->establecimientos_id)
                 ->searchDepto($request->deptos_id)
@@ -48,7 +49,7 @@ class GrupoFirmaController extends Controller
                 )
             );
         } catch (\Exception $error) {
-            return $error->getMessage();
+            return response()->json(['error' => $error->getMessage()], 500);
         }
     }
 
@@ -56,6 +57,7 @@ class GrupoFirmaController extends Controller
     {
         try {
             $grupo = Grupo::where('uuid', $uuid)->firstOrFail();
+            $this->authorize('view', $grupo);
 
             return response()->json(
                 array(
@@ -74,6 +76,7 @@ class GrupoFirmaController extends Controller
     {
         try {
             $grupo = Grupo::where('uuid', $uuid)->firstOrFail();
+            $this->authorize('delete', $grupo);
             $total_solicitudes = $grupo->solicitudes()->count();
             if ($total_solicitudes > 0) {
                 return response()->json(['error' => 'No es posible eliminar grupo.'], 500);
@@ -99,6 +102,7 @@ class GrupoFirmaController extends Controller
     public function changePosition(Request $request)
     {
         try {
+            $this->authorize('update', $grupo);
             $firma = Firmante::where('uuid', $request->firmante_uuid)->firstOrFail();
             if ($firma) {
                 $posicion_actual        = $firma->posicion_firma;
@@ -140,6 +144,7 @@ class GrupoFirmaController extends Controller
     {
         try {
             $grupo              = Grupo::where('uuid', $request->grupo_uuid)->firstOrFail();
+            $this->authorize('update', $grupo);
             $funcinario         = User::find($request->funcionario_id);
             $perfil_id          = $request->perfil_id;
             $total_firmantes    = $grupo->firmantes()->count();
@@ -185,7 +190,7 @@ class GrupoFirmaController extends Controller
         try {
             $firma = Firmante::where('uuid', $uuid)->firstOrFail();
             $grupo = $firma->grupo;
-
+            $this->authorize('update', $grupo);
             $firma->delete();
 
             $firmantes = $grupo->firmantes()->orderBy('posicion_firma')->get();
@@ -207,6 +212,7 @@ class GrupoFirmaController extends Controller
     public function storeGrupo(StoreGrupoRequest $request)
     {
         try {
+            $this->authorize('create', Grupo::class);
             $form = ['establecimiento_id', 'departamento_id', 'sub_departamento_id'];
 
             $validate_duplicate = $this->validateDuplicate($request);
