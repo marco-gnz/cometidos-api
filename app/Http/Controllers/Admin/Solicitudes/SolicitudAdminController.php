@@ -99,6 +99,7 @@ class SolicitudAdminController extends Controller
                 'status' => 'success',
                 'pagination' => [
                     'total'         => $solicitudes->total(),
+                    'total_desc'    => $solicitudes->total() > 1 ? "{$solicitudes->total()} resultados" : "{$solicitudes->total()} resultado",
                     'current_page'  => $solicitudes->currentPage(),
                     'per_page'      => $solicitudes->perPage(),
                     'last_page'     => $solicitudes->lastPage(),
