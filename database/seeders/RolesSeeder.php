@@ -23,9 +23,12 @@ class RolesSeeder extends Seeder
         $admin_jefe_personal        = Role::create(['name' => 'JEFE PERSONAL']);
         $admin_sub_director         = Role::create(['name' => 'SUB DIRECTOR']);
         $admin_revisor_finanzas     = Role::create(['name' => 'REVISOR FINANZAS']);
-        $admin_jefe_finanzas        = Role::create(['name' => 'JEFE FINANZAS']);
+        $admin_jefe_finanzas        = Role::create(['name' => 'SUPERVISOR FINANZAS']);
         $super_admin                = Role::create(['name' => 'SUPER ADMINISTRADOR']);
         $admin_abas                 = Role::create(['name' => 'ADMIN ABASTECIMIENTO']);
         $admin_capa                 = Role::create(['name' => 'ADMIN CAPACITACION']);
+        $admin_depto                = Role::create(['name' => 'JEFE DEPARTAMENTO']);
+        $admin                      = Role::create(['name' => 'ADMINISTRADOR']);
+        $visor                      = Role::create(['name' => 'VISOR']);
     }
 }

@@ -16,10 +16,11 @@ class DatabaseSeeder extends Seeder
     {
         DB::statement('SET FOREIGN_KEY_CHECKS=0;');
 
-        $this->call(UserSeeder::class);
         $this->call(DatosMaestrosSeeder::class);
         $this->call(RolesSeeder::class);
-        $this->call(TestEstadosSolicitud::class);
+        $this->call(TestEscalaValoresSeeder::class);
+        $this->call(ConfigurationSeeder::class);
+        $this->call(PermissionsSeeder::class);
 
         DB::statement('SET FOREIGN_KEY_CHECKS=1;');
     }
