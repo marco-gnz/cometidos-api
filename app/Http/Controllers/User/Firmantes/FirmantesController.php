@@ -4,6 +4,7 @@ namespace App\Http\Controllers\User\Firmantes;
 
 use App\Http\Controllers\Controller;
 use App\Http\Resources\Firmante\ListFirmanteResource;
+use App\Models\Contrato;
 use App\Models\Grupo;
 use Illuminate\Http\Request;
 
@@ -14,14 +15,15 @@ class FirmantesController extends Controller
         $this->middleware(['auth:sanctum']);
     }
 
-    public function listFirmantes()
+    public function listFirmantes(Request $request)
     {
-        $user_auth = auth()->user();
-        $grupo = Grupo::where('establecimiento_id', $user_auth->establecimiento_id)
-            ->where('departamento_id', $user_auth->departamento_id)
-            ->where('sub_departamento_id', $user_auth->sub_departamento_id)
+        $contrato   = Contrato::where('uuid', $request->contrato_uuid)->firstOrFail();
+        $grupo      = Grupo::where('establecimiento_id', $contrato->establecimiento_id)
+            ->where('departamento_id', $contrato->departamento_id)
+            ->where('sub_departamento_id', $contrato->sub_departamento_id)
             ->first();
 
+        $firmantes = [];
         if ($grupo) {
             $firmantes = $grupo->firmantes()->where('status', true)->get();
         }

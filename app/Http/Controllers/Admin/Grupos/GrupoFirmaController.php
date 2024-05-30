@@ -102,8 +102,8 @@ class GrupoFirmaController extends Controller
     public function changePosition(Request $request)
     {
         try {
-            $this->authorize('update', $grupo);
             $firma = Firmante::where('uuid', $request->firmante_uuid)->firstOrFail();
+            $this->authorize('update', $firma->grupo);
             if ($firma) {
                 $posicion_actual        = $firma->posicion_firma;
                 $nuevo_valor_posicion   = ($request->up_down == 'sum') ? ($posicion_actual + 1) : ($posicion_actual - 1);

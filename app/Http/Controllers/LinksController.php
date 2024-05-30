@@ -58,8 +58,8 @@ class LinksController extends Controller
         if ($user->hasPermissionTo('grupofirma.ver')) {
             $linksUsers[] = Link::create(
                 "list-grupos",
-                "Grupos de firmantes",
-                "Listado de grupos de firmantes",
+                "Grupos de firma",
+                "Listado de grupos de firma",
                 "/admin/grupos",
                 "0e6db8",
                 false
