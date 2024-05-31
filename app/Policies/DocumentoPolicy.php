@@ -72,7 +72,7 @@ class DocumentoPolicy
             return false;
         }
 
-        if ($documento->model === Documento::MODEL_SOLICITUD && $documento->solicitud->last_status === EstadoSolicitud::STATUS_INGRESADA) {
+        if ($documento->model === Documento::MODEL_SOLICITUD && ($documento->solicitud->last_status === EstadoSolicitud::STATUS_INGRESADA || $documento->solicitud->last_status === EstadoSolicitud::STATUS_MODIFICADA)) {
             return true;
         }
 

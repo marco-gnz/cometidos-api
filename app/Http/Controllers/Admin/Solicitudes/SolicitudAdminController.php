@@ -38,7 +38,6 @@ use App\Traits\FirmaDisponibleTrait;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Log;
 use SebastianBergmann\Type\FalseType;
 use Spatie\Permission\Models\Role;
 use App\Traits\StatusSolicitudTrait;
@@ -916,10 +915,12 @@ class SolicitudAdminController extends Controller
             $firmantes_disponible   = [];
             if ($status === EstadoSolicitud::STATUS_RECHAZADO) {
                 if ($firma_disponible->is_firma) {
+                    $id_permission_solicitud_editar     = $this->idPermission('solicitud.datos.editar-solicitud');
                     $id_permission_valorizacion_crear   = $this->idPermission('solicitud.valorizacion.crear');
                     $id_permission_convenio_crear       = $this->idPermission('solicitud.convenio.crear');
-                    $id_permission_ajustes_crear        = $this->idPermission('solicitud.ajustes.crear');
+                    $id_permission_ajustes_crear        = $this->idPermission('solicitud.ajuste.crear');
                     $ids_permissions = [
+                        $id_permission_solicitud_editar,
                         $id_permission_valorizacion_crear,
                         $id_permission_convenio_crear,
                         $id_permission_ajustes_crear
@@ -928,17 +929,16 @@ class SolicitudAdminController extends Controller
                         return $value !== null;
                     });
                     $firmantes_disponible = $solicitud->firmantes()
-                        ->where('status', true)
                         ->where('id', '!=', $firma_disponible->id_firma)
+                        ->where('status', true)
+                        ->where('posicion_firma', '<', $firma_disponible->posicion_firma)
                         ->where(function ($query) use ($filtered_permissions_id) {
                             foreach ($filtered_permissions_id as $permission_id) {
                                 $query->orWhereRaw("JSON_CONTAINS(permissions_id, CAST('$permission_id' AS JSON))");
                             }
                         })
-                        ->orWhere('role_id', 1)
-                        ->where('posicion_firma', '<', $firma_disponible->posicion_firma)
                         ->orderBy('posicion_firma', 'ASC')
-                        ->get()->unique('role_id');
+                        ->get();
                 }
             }
 

@@ -211,7 +211,7 @@ class CicloFirmaSeeder extends Seeder
                                 $cicloFirma->permissions()->attach($permissions);
                             }
                         }
-                    } else if ($role->name === 'CAPACITACION') {
+                    } else if ($role->name === 'CAPACITACION' || $role->name === 'ABASTECIMIENTO') {
                         $cicloFirma = new CicloFirma();
                         $cicloFirma->establecimiento_id = $establecimiento->id;
                         $cicloFirma->role_id = $role->id;
