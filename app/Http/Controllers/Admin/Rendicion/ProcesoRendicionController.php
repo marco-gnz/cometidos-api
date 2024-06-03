@@ -31,6 +31,12 @@ class ProcesoRendicionController extends Controller
     public function getProcesoRendiciones(Request $request)
     {
         try {
+            $params = $request->validate([
+                'result' => 'required|in:none,noverify',
+            ]);
+
+            $resultSolicitud = $params['result'];
+
             $auth = auth()->user();
             $query = ProcesoRendicionGasto::searchInput($request->input)
                 ->periodoSolicitud($request->periodo_cometido)
@@ -48,7 +54,11 @@ class ProcesoRendicionController extends Controller
                 ->concepto($request->conceptos_id)
                 ->estadoRendicion($request->estados_rendicion_id);
 
-            $this->filterAll($query, $auth);
+            if ($resultSolicitud === 'noverify') {
+                $this->filterNoVerify($query, $auth);
+            }else if($resultSolicitud === 'none'){
+                $this->filterAll($query, $auth);
+            }
 
             $proceso_rendiciones = $query->orderByDesc('n_folio')->paginate(50);
 
@@ -74,76 +84,54 @@ class ProcesoRendicionController extends Controller
         }
     }
 
-    private function filterAll($proceso_rendiciones, $auth)
+    private function filterNoVerify($query, $auth)
     {
-        $establecimientos_id    = $auth->establecimientos->pluck('id')->toArray();
-        $leyes_id               = $auth->leyes->pluck('id')->toArray();
-        $deptos_id              = $auth->departamentos->pluck('id')->toArray();
-
-        $proceso_rendiciones
-                ->where(function($q) use($auth){
-                    $q->whereHas('solicitud.firmantes', function ($q) use ($auth) {
-                        if (!$auth->hasRole('SUPER ADMINISTRADOR')) {
-                            $q->where('user_id', $auth->id);
-                        }
-                    })->orWhereHas('solicitud.firmantes', function ($q) use ($auth) {
-                        $q->whereIn('is_executed', [true, false])
-                            ->whereHas('funcionario.ausentismos', function ($q) use ($auth) {
-                                $q->whereHas('subrogantes', function ($q) use ($auth) {
-                                    $q->where('users.id', $auth->id);
-                                })->whereRaw("DATE(proceso_rendicion_gastos.fecha_by_user) >= ausentismos.fecha_inicio")
-                                    ->whereRaw("DATE(proceso_rendicion_gastos.fecha_by_user) <= ausentismos.fecha_termino");
-                            });
+        $query
+            ->where(function ($q) use ($auth) {
+                $q->whereHas('solicitud.firmantes', function ($q) use ($auth) {
+                     $q->where('role_id', '!=', 1)
+                    ->where('user_id', $auth->id);
+            })->orWhereHas('solicitud.firmantes', function ($q) use ($auth) {
+                $q->whereIn('is_executed', [true, false])
+                    ->whereHas('funcionario.ausentismos', function ($q) use ($auth) {
+                        $q->whereHas('subrogantes', function ($q) use ($auth) {
+                            $q->where('users.id', $auth->id);
+                        })->whereRaw("DATE(proceso_rendicion_gastos.fecha_by_user) >= ausentismos.fecha_inicio")
+                            ->whereRaw("DATE(proceso_rendicion_gastos.fecha_by_user) <= ausentismos.fecha_termino");
                     });
-                })->orWhere(function ($q) use ($auth) {
-                    $q->whereHas('solicitud.firmantes', function ($q) use ($auth) {
-                        $q->where('is_executed', true)
-                            ->whereHas('funcionario.reasignacionAusencias', function ($q) use ($auth) {
-                                $q->where('user_subrogante_id', $auth->id);
-                            });
-                    })->whereHas('solicitud.reasignaciones', function ($q) use ($auth) {
-                        $q->where('user_subrogante_id', $auth->id);
-                    });
-                })->orWhere(function($query) use($establecimientos_id, $leyes_id, $deptos_id){
-                    if ($establecimientos_id) {
-                        $query->whereHas('solicitud.establecimiento', function ($q) use ($establecimientos_id) {
-                            $q->whereIn('id', $establecimientos_id);
-                        });
-                    }
-
-                    if ($leyes_id) {
-                        $query->whereHas('solicitud.ley', function ($q) use ($leyes_id) {
-                            $q->whereIn('id', $leyes_id);
-                        });
-                    }
-
-                    if ($deptos_id) {
-                        $query->whereHas('solicitud.departamento', function ($q) use ($deptos_id) {
-                            $q->whereIn('id', $deptos_id);
-                        });
-                    }
                 });
+            })->orWhere(function ($q) use ($auth) {
+                $q->whereHas('solicitud.firmantes', function ($q) use ($auth) {
+                    $q->where('is_executed', true)
+                        ->whereHas('funcionario.reasignacionAusencias', function ($q) use ($auth) {
+                            $q->where('user_subrogante_id', $auth->id);
+                        });
+                })->whereHas('solicitud.reasignaciones', function ($q) use ($auth) {
+                    $q->where('user_subrogante_id', $auth->id);
+                });
+            });
     }
 
-    private function filterRole($proceso_rendiciones, $auth)
+    private function filterAll($query, $auth)
     {
         $establecimientos_id    = $auth->establecimientos->pluck('id')->toArray();
         $leyes_id               = $auth->leyes->pluck('id')->toArray();
         $deptos_id              = $auth->departamentos->pluck('id')->toArray();
+
         if ($establecimientos_id) {
-            $proceso_rendiciones->orWhereHas('solicitud.establecimiento', function ($q) use ($establecimientos_id) {
+            $query->whereHas('solicitud.establecimiento', function ($q) use ($establecimientos_id) {
                 $q->whereIn('id', $establecimientos_id);
             });
         }
 
         if ($leyes_id) {
-            $proceso_rendiciones->orWhereHas('solicitud.ley', function ($q) use ($leyes_id) {
+            $query->whereHas('solicitud.ley', function ($q) use ($leyes_id) {
                 $q->whereIn('id', $leyes_id);
             });
         }
 
         if ($deptos_id) {
-            $proceso_rendiciones->orWhereHas('solicitud.departamento', function ($q) use ($deptos_id) {
+            $query->whereHas('solicitud.departamento', function ($q) use ($deptos_id) {
                 $q->whereIn('id', $deptos_id);
             });
         }
