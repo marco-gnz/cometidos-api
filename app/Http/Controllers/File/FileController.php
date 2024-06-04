@@ -101,4 +101,25 @@ class FileController extends Controller
             return $error->getMessage();
         }
     }
+
+    public function getDocument($name)
+    {
+        try {
+            $path = storage_path("app/public/institucional/{$name}");
+            if (file_exists($path)) {
+                $content  = file_get_contents($path);
+                $mimeType = mime_content_type($path);
+
+                return response($content, 200)
+                    ->header('Content-Type', $mimeType)
+                    ->header('Content-Disposition', "inline; filename={$name}")
+                    ->header('Content-Disposition', "inline; filename={$name}; filename*=UTF-8\'\'{$name}");
+            } else {
+                return false;
+            }
+
+        } catch (\Exception $error) {
+            return $error->getMessage();
+        }
+    }
 }

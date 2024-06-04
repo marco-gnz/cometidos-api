@@ -219,6 +219,7 @@ Route::group(
         Route::post('/documento/validate-file', [FileController::class, 'validateFileSolicitud']);
         Route::post('/documento/upload-file', [FileController::class, 'uploadFile']);
         Route::delete('/documento/delete-file/{uuid}', [FileController::class, 'deleteFile']);
+        Route::get('/documento/{name}', [FileController::class, 'getDocument']);
     }
 );
 
