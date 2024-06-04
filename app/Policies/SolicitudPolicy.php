@@ -155,6 +155,7 @@ class SolicitudPolicy
      * @param  \App\Models\Solicitud  $solicitud
      * @return \Illuminate\Auth\Access\Response|bool
      */
+
     public function update(User $user, Solicitud $solicitud)
     {
         if ($solicitud->status === Solicitud::STATUS_ANULADO) {
@@ -166,9 +167,26 @@ class SolicitudPolicy
             EstadoSolicitud::STATUS_RECHAZADO,
             EstadoSolicitud::STATUS_PENDIENTE
         ];
+        if ((in_array($solicitud->last_status, $status_disponibles)) && $solicitud->posicion_firma_actual === 0 && $solicitud->user_id === $user->id) {
+            return true;
+        }
+        return false;
+    }
+
+    public function updateadmin(User $user, Solicitud $solicitud)
+    {
+        if ($solicitud->status === Solicitud::STATUS_ANULADO) {
+            return false;
+        }
+        $status_disponibles = [
+            EstadoSolicitud::STATUS_INGRESADA,
+            EstadoSolicitud::STATUS_MODIFICADA,
+            EstadoSolicitud::STATUS_RECHAZADO,
+            EstadoSolicitud::STATUS_PENDIENTE
+        ];
         $firma          = $this->isFirmaDisponibleActionPolicy($solicitud, 'solicitud.datos.editar-solicitud');
-        $last_status    = $solicitud->estados()->orderBy('id', 'DESC')->first();
-        if (($last_status) && (in_array($last_status->status, $status_disponibles) && $solicitud->posicion_firma_actual === 0 || in_array($last_status->status, $status_disponibles) && $last_status->posicion_firma === 0 &&  $last_status->is_reasignado && $solicitud->posicion_firma_actual === 0) && ($firma->is_firma || $user->id === $solicitud->user_id)) {
+
+        if($firma->is_firma && in_array($solicitud->last_status, $status_disponibles)){
             return true;
         }
         return false;

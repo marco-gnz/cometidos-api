@@ -735,20 +735,15 @@ class SolicitudController extends Controller
     {
         try {
             DB::beginTransaction();
-            $solicitud = Solicitud::where('uuid', $request->solicitud_uuid)->firstOrFail();
-            $this->authorize('update', $solicitud);
+            $solicitud          = Solicitud::where('uuid', $request->solicitud_uuid)->firstOrFail();
+            $firma_disponible   = $this->isFirmaDisponibleActionPolicy($solicitud, 'solicitud.datos.editar-solicitud');
 
-            $is_update          = $solicitud->authorizedToUpdate();
-            $is_update_files    = $this->validateUpdateSolicitudFiles($solicitud, $request->archivos);
-
-            if (!$is_update) {
-                $message = "No es posible modificar solicitud.";
-                return response()->json([
-                    'errors' => [
-                        'otros'  => [$message]
-                    ]
-                ], 422);
+            if (($firma_disponible) && ($firma_disponible->id_user_ejecuted_firma === $solicitud->user_id)) {
+                $this->authorize('update', $solicitud);
+            }else{
+                $this->authorize('updateadmin', $solicitud);
             }
+            $is_update_files    = $this->validateUpdateSolicitudFiles($solicitud, $request->archivos);
 
             /* if (!$is_update_files) {
                 $message = "Se requiere adjuntar documentos.";
@@ -917,7 +912,7 @@ class SolicitudController extends Controller
 
                         $store = Documento::create([
                             'url'           => $path,
-                            'nombre'        => "UPDATE_{$file->getClientOriginalName()}",
+                            'nombre'        => "{$file->getClientOriginalName()}",
                             'size'          => $file->getSize(),
                             'format'        => $file->getMimeType(),
                             'extension'     => $file->getClientOriginalExtension(),
@@ -961,28 +956,61 @@ class SolicitudController extends Controller
                     $solicitud->transportes()->detach();
                 }
 
-                $solicitud = $solicitud->fresh();
+                $solicitud  = $solicitud->fresh();
+                $estados    = [];
+                if(($firma_disponible) && ($firma_disponible->id_user_ejecuted_firma === $solicitud->user_id)){
+                    $estados[] = [
+                        'status'                    => EstadoSolicitud::STATUS_MODIFICADA,
+                        'is_reasignado'             => false,
+                        'posicion_firma_s'          => $firma_disponible ? $firma_disponible->posicion_firma : null,
+                        'history_solicitud_old'     => json_encode($history_solicitud_old),
+                        'history_solicitud_new'     => json_encode($solicitud->only($form)),
+                        'solicitud_id'              => $solicitud->id,
+                        'posicion_firma'            => $firma_disponible ? $firma_disponible->posicion_firma : null,
+                        's_firmante_id'             => $firma_disponible ? $firma_disponible->id_firma : null,
+                        'user_id'                   => $firma_disponible ? $firma_disponible->id_user_ejecuted_firma : null,
+                        'is_subrogante'             => $firma_disponible ? $firma_disponible->is_subrogante : false
+                    ];
+                    $next_url = '/mi-cuenta/solicitudes';
+                }else{
+                    if(($firma_disponible) && ($firma_disponible->posicion_firma === $solicitud->posicion_firma_actual)){
+                        $estados[] = [
+                            'status'                    => EstadoSolicitud::STATUS_MODIFICADA,
+                            'is_reasignado'             => false,
+                            'posicion_firma_s'          => $firma_disponible ? $firma_disponible->posicion_firma : null,
+                            'history_solicitud_old'     => json_encode($history_solicitud_old),
+                            'history_solicitud_new'     => json_encode($solicitud->only($form)),
+                            'solicitud_id'              => $solicitud->id,
+                            'posicion_firma'            => $firma_disponible ? $firma_disponible->posicion_firma : null,
+                            's_firmante_id'             => $firma_disponible ? $firma_disponible->id_firma : null,
+                            'user_id'                   => $firma_disponible ? $firma_disponible->id_user_ejecuted_firma : null,
+                            'is_subrogante'             => $firma_disponible ? $firma_disponible->is_subrogante : false
+                        ];
+                    }else{
+                        $firma_funcionario  = $solicitud->firmantes()->where('role_id', 1)->first();
+                        $abreNombres        = Auth::user()->abreNombres();
+                        $estados[]          = [
+                            'status'                    => EstadoSolicitud::STATUS_MODIFICADA,
+                            'is_reasignado'             => false,
+                            'posicion_firma_s'          => 0,
+                            'history_solicitud_old'     => json_encode($history_solicitud_old),
+                            'history_solicitud_new'     => json_encode($solicitud->only($form)),
+                            'solicitud_id'              => $solicitud->id,
+                            'posicion_firma'            => 0,
+                            's_firmante_id'             => $firma_funcionario ? $firma_funcionario->id : null,
+                            'user_id'                   => $solicitud->user_id,
+                            'is_subrogante'             => $firma_disponible ? $firma_disponible->is_subrogante : false,
+                            'observacion'               => "Modificada por usuario {$abreNombres} desde su firma {$firma_disponible->id_firma}."
+                        ];
+                    }
+                    $next_url = '/firmante/solicitudes';
+                }
 
-                $firma_disponible = $this->isFirmaDisponibleActionPolicy($solicitud, 'solicitud.datos.editar-solicitud');
-
-                $estados[] = [
-                    'status'                    => EstadoSolicitud::STATUS_MODIFICADA,
-                    'is_reasignado'             => false,
-                    'posicion_firma_s'          => $firma_disponible ? $firma_disponible->posicion_firma : null,
-                    'history_solicitud_old'     => json_encode($history_solicitud_old),
-                    'history_solicitud_new'     => json_encode($solicitud->only($form)),
-                    'solicitud_id'              => $solicitud->id,
-                    'posicion_firma'            => $firma_disponible ? $firma_disponible->posicion_firma : null,
-                    's_firmante_id'             => $firma_disponible ? $firma_disponible->id_firma : null,
-                    'user_id'                   => $firma_disponible ? $firma_disponible->id_user_ejecuted_firma : null,
-                    'is_subrogante'             => $firma_disponible ? $firma_disponible->is_subrogante : false
-                ];
                 $create_status  = $solicitud->addEstados($estados);
 
                 if ($is_update_derecho_pago) {
                     $firmantes      = $solicitud->firmantes()->whereIn('role_id', [2, 3])->get();
                     $emails_copy    = $firmantes->pluck('funcionario.email')->toArray();
-                    Log::info($emails_copy);
                     SolicitudUpdated::dispatch($solicitud, $emails_copy);
                 }
 
@@ -992,7 +1020,8 @@ class SolicitudController extends Controller
                         'status'        => 'success',
                         'title'         => "Solicitud con código {$solicitud->codigo} modificada con éxito.",
                         'message'       => null,
-                        'data'          => null
+                        'data'          => null,
+                        'next_url'      => $next_url
                     )
                 );
             }

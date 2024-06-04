@@ -68,7 +68,7 @@ class ListSolicitudCompleteAdminResource extends JsonResource
             'menu_admin'                => $this->menuAdmin(),
             'page_firma'                => $this->pageFirma(),
             'type_page_firma'           => $this->typePageFirma(),
-            'is_update'                 => $this->authorizedToUpdate(),
+            'is_update'                 => $this->authorizedToUpdateAdmin(),
             'documentos'                => $this->exportarDocumentos(),
             'not_actividad'             => $this->isNotActividad(),
             'authorized_to_firma'       => $this->authorizedToFirma(),

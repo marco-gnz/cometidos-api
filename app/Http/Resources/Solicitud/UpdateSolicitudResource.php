@@ -42,7 +42,7 @@ class UpdateSolicitudResource extends JsonResource
             'paises_cometido'                   => $this->paises ? $this->paises->pluck('id') : [],
             'dentro_pais'                       => $this->dentro_pais ? 1 : 0,
             'archivos'                          => [],
-            'is_update'                         => $this->authorizedToUpdate(),
+            'is_update'                         => $this->authorizedToUpdate() || $this->authorizedToUpdateAdmin(),
             'is_store_informe_cometido'         => $this->authorizedToCreateInformeCometido(),
             'dias_permitidos'                   => $this->dias_permitidos,
             'observacion'                       => $this->observacion

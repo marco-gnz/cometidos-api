@@ -24,7 +24,7 @@ class ListSolicitudStatusResource extends JsonResource
         $posicion           = $this->posicion_firma_s !== null ? "- $this->posicion_firma_s" : '';
         $is_subrogante      = $this->is_subrogante ? '(Subrogante)' : '';
         if ($this->funcionario) {
-            $ejecucion_firma = "Ejecutado por {$this->funcionario->nombre_completo} {$is_subrogante} {$perfil_name} {$posicion}";
+            $ejecucion_firma = "Ejecutado por {$this->firmaS->funcionario->nombre_completo} {$is_subrogante} {$perfil_name} {$posicion}";
             $email_ejecucion = $this->funcionario ? $this->funcionario->email : null;
         }
 

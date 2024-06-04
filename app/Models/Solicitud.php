@@ -468,6 +468,11 @@ class Solicitud extends Model
         return Gate::allows('update', $this);
     }
 
+    public function authorizedToUpdateAdmin()
+    {
+        return Gate::allows('updateadmin', $this);
+    }
+
     public function authorizedToFirma()
     {
         return Gate::allows('firma', $this);
