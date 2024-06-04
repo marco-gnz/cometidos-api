@@ -22,7 +22,6 @@ class CreateUsersTable extends Migration
             $table->string('nombres');
             $table->string('apellidos');
             $table->string('nombre_completo');
-            $table->integer('n_cargo')->default(0);
             $table->boolean('estado')->default(1);
             $table->string('email')->unique()->nullable();
             $table->timestamp('email_verified_at')->nullable();

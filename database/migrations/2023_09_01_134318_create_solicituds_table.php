@@ -18,7 +18,6 @@ class CreateSolicitudsTable extends Migration
             $table->uuid('uuid')->unique()->nullable();
             $table->string('correlativo')->nullable();
             $table->string('codigo')->unique()->nullable();
-            $table->boolean('fijada')->default(0);
             $table->date('fecha_inicio')->nullable();
             $table->date('fecha_termino')->nullable();
             $table->time('hora_llegada')->nullable();
@@ -41,12 +40,9 @@ class CreateSolicitudsTable extends Migration
             $table->text('vistos')->nullable();
             $table->unsignedSmallInteger('status')->default(0);
             $table->unsignedSmallInteger('last_status')->default(0);
-            $table->date('fecha_resolucion')->nullable();
-            $table->string('n_resolucion')->unique()->nullable();
             $table->unsignedSmallInteger('tipo_resolucion')->default(0);
             $table->unsignedSmallInteger('jornada')->default(0);
             $table->boolean('dentro_pais')->default(0);
-            $table->integer('n_cargo_user')->default(0);
             $table->boolean('calculo_aplicado')->default(0);
             $table->integer('total_dias_cometido')->nullable();
             $table->integer('total_horas_cometido')->nullable();
