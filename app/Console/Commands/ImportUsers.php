@@ -82,34 +82,17 @@ class ImportUsers extends Command
                     $dv                     = $row['dv'];
                     $nombres                = $row['nombres'];
                     $apellidos              = $row['apellidos'];
-                    $ley                    = Ley::where('nombre', $row['ley'])->first();
-                    $estamento              = Estamento::where('nombre', $row['estamento'])->first();
-                    $grado                  = Grado::where('nombre', $row['grado'])->first();
-                    $cargo                  = Cargo::where('nombre', $row['cargo'])->first();
-                    $departamento           = Departamento::where('nombre', $row['departamento'])->first();
-                    $subdepartamento        = SubDepartamento::where('nombre', $row['subdepartamento'])->first();
-                    $establecimiento        = Establecimiento::where('cod_sirh', $row['establecimiento'])->first();
-                    $hora                   = Hora::where('nombre', $row['hora'])->first();
-                    $calidad                = Calidad::where('nombre', $row['calidad'])->first();
+                    $email                  = $row['email'];
 
-                    $user                   = User::where('rut', $rut)->where('dv', $dv)->first();
+                    $user                   = User::where('rut', $rut)->first();
 
-                    if ((!$user) && ($ley && $estamento && $grado && $cargo && $departamento && $subdepartamento && $establecimiento && $hora && $calidad)) {
+                    if (!$user) {
                         $data = [
                             'rut'                   => $rut,
                             'dv'                    => $dv,
                             'nombres'               => $nombres,
                             'apellidos'             => $apellidos,
-                            'email'                 => "{$rut}@redsalud.gob.cl",
-                            'ley_id'                => $ley->id,
-                            'estamento_id'          => $estamento->id,
-                            'grado_id'              => $grado->id,
-                            'cargo_id'              => $cargo->id,
-                            'departamento_id'       => $departamento->id,
-                            'sub_departamento_id'   => $subdepartamento->id,
-                            'establecimiento_id'    => $establecimiento->id,
-                            'hora_id'               => $hora->id,
-                            'calidad_id'            => $calidad->id
+                            'email'                 => $email !== null ? $email : NULL
                         ];
 
                         $user = User::create($data);
@@ -120,42 +103,6 @@ class ImportUsers extends Command
                         }
                     } else {
                         Log::info("Usuario de la celda {$key} no fue creado!");
-
-                        if (!$ley) {
-                            Log::info("{$row['ley']} no existe en ley. N° {$key}");
-                        }
-
-                        if (!$estamento) {
-                            Log::info("{$row['estamento']} no existe en estamento. N° {$key}");
-                        }
-
-                        if (!$grado) {
-                            Log::info("{$row['grado']} no existe en grado. N° {$key}");
-                        }
-
-                        if (!$cargo) {
-                            Log::info("{$row['cargo']} no existe en cargo. N° {$key}");
-                        }
-
-                        if (!$departamento) {
-                            Log::info("{$row['departamento']} no existe en departamento. N° {$key}");
-                        }
-
-                        if (!$subdepartamento) {
-                            Log::info("{$row['subdepartamento']} no existe en subdepartamento. N° {$key}");
-                        }
-
-                        if (!$establecimiento) {
-                            Log::info("{$row['establecimiento']} no existe en establecimiento. N° {$key}");
-                        }
-
-                        if (!$hora) {
-                            Log::info("{$row['hora']} no existe en hora. N° {$key}");
-                        }
-
-                        if (!$calidad) {
-                            Log::info("{$row['calidad']} no existe en calidad. N° {$key}");
-                        }
                     }
                 } catch (\Exception $error) {
                     Log::info($error->getMessage());

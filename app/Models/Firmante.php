@@ -31,7 +31,7 @@ class Firmante extends Model
     {
         static::creating(function ($firmante) {
             $firmante->uuid                    = Str::uuid();
-            $firmante->user_id_by             = Auth::user()->id;
+            $firmante->user_id_by               = Auth::check() ? Auth::user()->id : null;
             $firmante->fecha_by_user          = now();
         });
     }

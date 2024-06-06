@@ -46,8 +46,6 @@ class ImportGruposFirma extends Command
      */
     public function handle()
     {
-        /* DB::beginTransaction(); */
-
         try {
             $file = $this->argument('file');
             $csvContent = file_get_contents($file);
@@ -70,10 +68,7 @@ class ImportGruposFirma extends Command
                 $rowData = array_combine($headers, $row);
                 $this->processRow($key, $rowData);
             }
-
-            /*  DB::commit(); */
         } catch (\Exception $error) {
-            /*  DB::rollback(); */
             Log::info("Error: " . $error->getMessage());
         }
     }
@@ -86,17 +81,36 @@ class ImportGruposFirma extends Command
         // Buscar y asignar otros datos necesarios...
 
         if ($establecimiento && $departamento && $subdepartamento) {
-            $grupo = Grupo::create([
-                'establecimiento_id'    => $establecimiento->id,
-                'departamento_id'       => $departamento->id,
-                'sub_departamento_id'   => $subdepartamento->id
-            ]);
+            $grupo_bd = Grupo::where('establecimiento_id', $establecimiento->id)
+            ->where('departamento_id', $departamento->id)
+            ->where('sub_departamento_id', $subdepartamento->id)
+            ->first();
 
-            if ($grupo) {
-                $this->addFirmantesSearch($grupo, $row);
+            if(!$grupo_bd){
+                $grupo = Grupo::create([
+                    'establecimiento_id'    => $establecimiento->id,
+                    'departamento_id'       => $departamento->id,
+                    'sub_departamento_id'   => $subdepartamento->id
+                ]);
+
+                if ($grupo) {
+                    $grupo = $grupo->fresh();
+                    $this->addFirmantesSearch($grupo, $row);
+                }
             }
+
         } else {
-            Log::info("$key - no existe data!");
+            if(!$establecimiento){
+                Log::info("no existe establecimiento: {$row['establecimiento']}");
+            }
+
+            if (!$departamento) {
+                Log::info("no existe depto: {$row['departamento']}");
+            }
+
+            if (!$subdepartamento) {
+                Log::info("no existe subdepto: {$row['subdepartamento']}");
+            }
         }
     }
 
@@ -119,47 +133,60 @@ class ImportGruposFirma extends Command
 
     private function addFirmantesSearch($grupo, $row)
     {
+        // Verificar si grupo es un objeto y tiene la propiedad id
+        if (!is_object($grupo) || !isset($grupo->id)) {
+            Log::info("no existe grupo o el grupo no tiene ID");
+            return;
+        }
+
         for ($i = 1; $i <= 6; $i++) {
             try {
-                $user       = $this->findUser($row["rut$i"]);
-                $firmante   = $this->findRole($row["firmante$i"]);
+                $rut = $row["rut$i"] ?? null;
+                $firmante = $row["firmante$i"] ?? null;
 
-                if ($user && $firmante && $grupo) {
+                if (!$rut || !$firmante) {
+                    Log::info("Datos faltantes para firmante $i: rut o firmante");
+                    continue;
+                }
+
+                $user = $this->findUser($rut);
+                $role = $this->findRole($firmante);
+
+                if (is_object($user) && isset($user->id) && is_object($role) && isset($role->id)) {
                     $new_firmante = [
-                        'posicion_firma'    => (int)$i,
-                        'grupo_id'          => $grupo->id,
-                        'user_id'           => $user->id,
-                        'role_id'           => $firmante->id
+                        'posicion_firma' => (int)$i,
+                        'grupo_id' => $grupo->id,
+                        'user_id' => $user->id,
+                        'role_id' => $role->id
                     ];
                     Firmante::create($new_firmante);
+                } else {
+                    if (!is_object($user) || !isset($user->id)) {
+                        Log::info("no existe usuario o el usuario no tiene ID: {$rut}");
+                    }
+                    if (!is_object($role) || !isset($role->id)) {
+                        Log::info("no existe role o el role no tiene ID: {$firmante}");
+                    }
                 }
             } catch (\Exception $e) {
-                Log::info($e->getMessage());
+                Log::info("error en addFirmante: " . $e->getMessage());
                 return;
             }
         }
     }
 
 
+
+
     private function findUser($rut)
     {
         $user = User::where('rut', $rut)->first();
-
-        if (!$user) {
-            throw new \Exception("User not found for rut: $rut");
-        }
-
         return $user;
     }
 
     private function findRole($name)
     {
         $role = Role::where('name', $name)->first();
-
-        if (!$role) {
-            throw new \Exception("Role not found for name: $name");
-        }
-
         return $role;
     }
 }

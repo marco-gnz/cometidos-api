@@ -31,7 +31,7 @@ class Grupo extends Model
     {
         static::creating(function ($grupo) {
             $grupo->uuid                    = Str::uuid();
-            /*  $grupo->user_id_by              = Auth::user()->id; */
+             $grupo->user_id_by             = Auth::check() ? Auth::user()->id : null;
             $grupo->fecha_by_user           = now();
         });
 
