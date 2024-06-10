@@ -160,14 +160,14 @@ class MantenedorController extends Controller
     public function getActividades($uuid)
     {
         try {
-            $solicitud  = Solicitud::where('uuid', $uuid)->firstOrFail();
-            $actividades    = ActividadGasto::orderBy('nombre', 'ASC')->get();
-            $transportes_id = $solicitud->transportes()->pluck('transporte_id')->toArray();
+            $solicitud          = Solicitud::where('uuid', $uuid)->firstOrFail();
+            $actividades        = ActividadGasto::orderBy('nombre', 'ASC')->get();
+            $transportes_id     = $solicitud->transportes()->pluck('transporte_id')->toArray();
             foreach ($actividades as $actividad) {
                 $actividad->{'rinde_gasto'}             = 0;
                 $actividad->{'mount'}                   = "";
                 $actividad->{'rinde_gastos_servicio'}   = null;
-                if ((count($transportes_id) > 0) && (in_array($actividad->id, $transportes_id))) {
+                if (in_array($actividad->id, $transportes_id)) {
                     $actividad->{'exist_solicitud'}   = true;
                 } else {
                     $actividad->{'exist_solicitud'}   = false;

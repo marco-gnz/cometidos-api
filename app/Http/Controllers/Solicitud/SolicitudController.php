@@ -179,7 +179,7 @@ class SolicitudController extends Controller
                 if ($diff_in_days_total < $diaz_plazo_avion) {
                     $status     = 'error';
                     $title      = "Plazo de Avión está fuera del plazo de {$diaz_plazo_avion} días hábiles.";
-                    $message    = 'Solicitud puede ser rechazada y debe indicar el motivo por el cuál está fuera de plazo';
+                    $message    = 'Solicitud puede ser rechazada y debe indicar el motivo en la observación por el cuál está fuera de plazo';
                 }
             }
 

@@ -23,6 +23,7 @@ class CreateInformeCometidosTable extends Migration
             $table->time('hora_salida')->nullable();
             $table->text('actividad_realizada')->nullable();
             $table->boolean('utiliza_transporte')->default(1);
+            $table->unsignedSmallInteger('status_ingreso')->default(0);
             $table->unsignedSmallInteger('last_status')->default(0);
             $table->integer('dias_permitidos')->nullable();
 
