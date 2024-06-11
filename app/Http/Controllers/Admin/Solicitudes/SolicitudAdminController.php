@@ -267,7 +267,8 @@ class SolicitudAdminController extends Controller
                     'title'         => "Solicitud $solicitud->codigo sincronizada con éxito.",
                     'message'       => null,
                     'data'          => ListSolicitudCompleteAdminResource::make($solicitud),
-                    'nav'           => $navStatus
+                    'nav'           => $navStatus,
+                    'solicitudList' => ListSolicitudAdminResource::make($solicitud)
                 )
             );
         } catch (\Exception $error) {
@@ -598,11 +599,11 @@ class SolicitudAdminController extends Controller
     private function buscarEscalaSolicitud($solicitud, $fecha_inicio, $fecha_termino)
     {
         $escala = null;
-        $ley_solicitud = $solicitud->ley->nombre;
+        $ley_solicitud = $solicitud->ley->id;
 
         switch ($ley_solicitud) {
-            case '15.076':
-            case '19.664':
+            case 1:
+            case 4:
                 $escala = Escala::where(function ($query) use ($fecha_inicio, $fecha_termino) {
                     $query->where(function ($query) use ($fecha_inicio, $fecha_termino) {
                         $query->where('fecha_inicio', '<=', $fecha_inicio)
@@ -1161,7 +1162,8 @@ class SolicitudAdminController extends Controller
                     'title'         => $title,
                     'message'       => $message,
                     'data'          => ListSolicitudCompleteAdminResource::make($solicitud),
-                    'nav'           => $navStatus
+                    'nav'           => $navStatus,
+                    'solicitudList' => ListSolicitudAdminResource::make($solicitud)
                 )
             );
         } catch (\Exception $error) {
