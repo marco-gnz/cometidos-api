@@ -165,7 +165,7 @@ class MantenedorController extends Controller
             $transportes_id     = $solicitud->transportes()->pluck('transporte_id')->toArray();
             foreach ($actividades as $actividad) {
                 $actividad->{'rinde_gasto'}             = 0;
-                $actividad->{'mount'}                   = "";
+                $actividad->{'mount'}                   = null;
                 $actividad->{'rinde_gastos_servicio'}   = null;
                 if (in_array($actividad->id, $transportes_id)) {
                     $actividad->{'exist_solicitud'}   = true;

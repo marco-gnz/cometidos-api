@@ -171,7 +171,6 @@ class RendicionController extends Controller
                     }
                 }
             }
-
             $is_avion = $solicitud->transportes()->where('solicitud_transporte.transporte_id', 1)->exists();
             $validator = Validator::make($data, [
                 'solicitud_uuid'                            => ['required'],
@@ -194,10 +193,6 @@ class RendicionController extends Controller
                         $index = preg_replace('/[^0-9]/', '', $attribute);
                         $rinde_gasto = "actividades.{$index}.rinde_gasto";
 
-                        if (request()->input($attribute) === null && request()->input($rinde_gasto) != 0) {
-                            $fail("El monto es obligatorio");
-                        }
-
                         if ($value <= 0) {
                             $actividades = $data['actividades'];
                             $activitiesWithPositiveMountAndRindeGasto = collect($actividades)->filter(function ($actividad) {
@@ -206,6 +201,10 @@ class RendicionController extends Controller
                             if ($activitiesWithPositiveMountAndRindeGasto->isEmpty()) {
                                 $fail("Al menos una actividad debe tener un monto mayor a $0");
                             }
+                        }
+
+                        if (request()->input($attribute) === null && request()->input($rinde_gasto) != 0) {
+                            $fail("El monto es obligatorio");
                         }
                     },
                 ],
@@ -468,6 +467,8 @@ class RendicionController extends Controller
                     ];
                     $status = EstadoProcesoRendicionGasto::create($estado);
                 }
+
+                $proceso_rendicion_gasto = $proceso_rendicion_gasto->fresh();
 
                 return response()->json(
                     array(
