@@ -26,6 +26,7 @@ class ListGrupoResource extends JsonResource
 
         return [
             'uuid'              => $this->uuid,
+            'id'                => $this->id,
             'establecimiento'   => $this->establecimiento ? $this->establecimiento->sigla : null,
             'departamento'      => $this->departamento ? $this->departamento->nombre : null,
             'subdepartamento'   => $this->subdepartamento ? $this->subdepartamento->nombre : null,

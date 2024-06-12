@@ -16,6 +16,7 @@ use App\Models\EstadoProcesoRendicionGasto;
 use App\Models\EstadoSolicitud;
 use App\Models\Estamento;
 use App\Models\Grado;
+use App\Models\Grupo;
 use App\Models\Hora;
 use App\Models\Ilustre;
 use App\Models\Ley;
@@ -155,6 +156,34 @@ class MantenedorController extends Controller
         } catch (\Exception $error) {
             return response()->json($error->getMessage());
         }
+    }
+
+    public function getDepartamentosToGroup($establecimiento_id)
+    {
+        $establecimiento = Establecimiento::find($establecimiento_id);
+
+        if (!$establecimiento) {
+            return response()->json('Establecimiento no encontrado', 404);
+        }
+
+        $departamentos = $establecimiento->grupos->map(function ($grupo) {
+            return $grupo->departamento;
+        })->unique();
+
+        return response()->json($departamentos);
+    }
+
+    public function getSubdepartamentosToGroup($establecimiento_id, $departamento_id)
+    {
+        $grupos = Grupo::where('establecimiento_id', $establecimiento_id )
+        ->where('departamento_id', $departamento_id)
+        ->get();
+
+        $subdepartamentos = $grupos->map(function ($grupo) {
+            return $grupo->subdepartamento;
+        })->unique();
+
+        return response()->json($subdepartamentos);
     }
 
     public function getActividades($uuid)

@@ -28,7 +28,7 @@ class GrupoFirmaController extends Controller
                 ->searchDepto($request->deptos_id)
                 ->searchSubdepto($request->subdeptos_id)
                 ->searchPerfil($request->perfiles_id)
-                ->orderBy('id', 'DESC')
+                ->orderBy('id', 'ASC')
                 ->paginate(50);
 
             return response()->json(

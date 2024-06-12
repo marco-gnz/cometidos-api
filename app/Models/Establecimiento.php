@@ -20,4 +20,9 @@ class Establecimiento extends Model
     {
         return $this->hasMany(CicloFirma::class);
     }
+
+    public function grupos()
+    {
+        return $this->hasMany(Grupo::class, 'establecimiento_id');
+    }
 }

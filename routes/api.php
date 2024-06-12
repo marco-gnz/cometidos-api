@@ -70,6 +70,8 @@ Route::group(
         Route::get('/admin/mantenedores/establecimientos', [MantenedorController::class, 'getEstablecimientos']);
         Route::get('/admin/mantenedores/departamentos', [MantenedorController::class, 'getDepartamentos']);
         Route::get('/admin/mantenedores/subdepartamentos', [MantenedorController::class, 'getSubdepartamentos']);
+         Route::get('/admin/mantenedores/departamentos-to-group/{establecimiento_id}', [MantenedorController::class, 'getDepartamentosToGroup']);
+        Route::get('/admin/mantenedores/subdepartamentos-to-group/{establecimiento_id}/{departamento_id}', [MantenedorController::class, 'getSubdepartamentosToGroup']);
         Route::get('/admin/mantenedores/roles', [MantenedorController::class, 'getRoles']);
         Route::get('/admin/mantenedores/roles/perfil', [MantenedorController::class, 'getRolesPerfil']);
         Route::get('/admin/mantenedores/firmantes', [MantenedorController::class, 'getFirmantes']);
