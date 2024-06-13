@@ -94,8 +94,8 @@
 
         .column-firma {
             float: left;
-            width: 30%;
-            padding: 5px;
+            width: 49%;
+            padding: 2px;
         }
 
         .firma-container {
@@ -287,6 +287,7 @@
                     </tr>
                 </tbody>
             </table>
+            <p>{{$proceso_rendicion_gasto->pagoHabilesMessage() ? $proceso_rendicion_gasto->pagoHabilesMessage() : ''}}</p>
         </div>
         <div class="seccion">
             <h2 class="seccion-title">Sección 2 (Rendiciones solicitadas)</h2>
@@ -365,7 +366,6 @@
                         </td>
                     </tfoot>
                 </table>
-                <p>{{ $proceso_rendicion_gasto->pagoHabilesMessage() }}</p>
             @endif
         </div>
         <div class="seccion">
@@ -400,6 +400,14 @@
                         </p>
                         <hr>
                         <h5>JEFATURA DIRECTA</h5>
+                    </div>
+                </div>
+                <div class="column-firma">
+                    <div class="firma-container">
+                        <p>{{ $proceso_rendicion_gasto->firmaSupervisorFinanzas() ? $proceso_rendicion_gasto->firmaSupervisorFinanzas() : 'SIN FIRMA' }}
+                        </p>
+                        <hr>
+                        <h5>SUPERVISOR FINANZAS</h5>
                     </div>
                 </div>
             </div>

@@ -269,6 +269,18 @@ class ProcesoRendicionGasto extends Model
         return null;
     }
 
+    public function firmaSupervisorFinanzas()
+    {
+        $last_status_aprobado = $this->estados()->whereIn('status', [EstadoProcesoRendicionGasto::STATUS_APROBADO_N, EstadoProcesoRendicionGasto::STATUS_APROBADO_S])->orderBy('id', 'DESC')->first();
+        if ($last_status_aprobado) {
+            $nombres    = $last_status_aprobado->userBy->abreNombres();
+            $fecha      = Carbon::parse($last_status_aprobado->fecha_by_user)->format('d-m-Y H:i:s');
+            $new_firma  = "$nombres $fecha";
+            return $new_firma;
+        }
+        return null;
+    }
+
     public function scopeSearchInput($query, $params)
     {
         if ($params)
