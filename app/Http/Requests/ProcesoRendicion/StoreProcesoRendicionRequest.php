@@ -46,7 +46,7 @@ class StoreProcesoRendicionRequest extends FormRequest
                     }
                 },
             ],
-            'archivos'                                  => ['nullable'],
+            'archivos'                                  => ['required'],
             'observacion'                               => [
                 function ($attribute, $value, $fail) {
                     $actividades = $this->input('actividades', []);
@@ -87,6 +87,8 @@ class StoreProcesoRendicionRequest extends FormRequest
         return [
             'actividades.*.rinde_gasto.required'           => 'La :attribute es obligatoria',
             'actividades.*.mount.required_if'              => 'El :attribute es obligatorio',
+
+            'archivos.required'                             => 'Los :attribute son obligatorios',
         ];
     }
 
@@ -95,6 +97,7 @@ class StoreProcesoRendicionRequest extends FormRequest
         return [
             'actividades.*.rinde_gasto'     => 'actividad',
             'actividades.*.mount'            => 'monto',
+            'archivos'                      => 'archivos'
         ];
     }
 

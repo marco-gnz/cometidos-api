@@ -128,6 +128,7 @@ class Solicitud extends Model
         'tipo_comision_id',
         'cargo_id',
         'hora_id',
+        'cuenta_bancaria_id',
         'user_id_by',
         'fecha_by_user',
         'user_id_update',
@@ -363,6 +364,11 @@ class Solicitud extends Model
     public function hora()
     {
         return $this->belongsTo(Hora::class, 'hora_id');
+    }
+
+    public function cuentaBancaria()
+    {
+        return $this->belongsTo(CuentaBancaria::class, 'cuenta_bancaria_id');
     }
 
     public function userBy()

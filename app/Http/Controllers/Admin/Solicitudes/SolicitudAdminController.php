@@ -692,6 +692,16 @@ class SolicitudAdminController extends Controller
                 return $this->errorResponse("No existe escala de valores.", 422);
             }
 
+            $last_cuenta_bancaria = $solicitud->funcionario->lastCuentaBancaria();
+
+            if (!$last_cuenta_bancaria) {
+                return $this->errorResponse("Funcionario no registra cuenta bancaria habilitada o algún medio de pago.", 422);
+            }
+
+            $solicitud->update([
+                'cuenta_bancaria_id' => $last_cuenta_bancaria->id
+            ]);
+
             $data_calculo   = $this->crearDataCalculo($solicitud, $escala);
             if ($this->existeCalculoIdentico($data_calculo)) {
                 return $this->errorResponse("Ya existe un cálculo idéntico.", 422);

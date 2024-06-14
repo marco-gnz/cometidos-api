@@ -503,7 +503,14 @@ class RendicionController extends Controller
                         }
                     },
                 ],
-                'archivos'                                  => ['nullable'],
+                'documentos'                                => ['nullable'],
+                'archivos'                                  => [
+                    function ($attribute, $value, $fail) {
+                        if (empty(request()->input('documentos')) && empty($value)) {
+                            $fail('Debe adjuntar archivos.');
+                        }
+                    }
+                ],
                 'actividades'                               => ['present', 'required', 'array'],
                 'actividades.*.id'                          => ['required'],
                 'actividades.*.rinde_gasto'                 => ['required'],
@@ -575,6 +582,29 @@ class RendicionController extends Controller
                             ];
                         }
                         $proceso_rendicion_gasto->addRendiciones($actividades);
+                    }
+                }
+
+                if (isset($data['documentos'])) {
+                    $documentos = $data['documentos'];
+
+                    $documentos_not = $proceso_rendicion_gasto->documentos()
+                        ->whereNotIn('uuid', $documentos)
+                        ->get();
+
+                    if (count($documentos_not) > 0) {
+                        foreach ($documentos_not as $documento_not) {
+                            $documento_not->delete();
+                        }
+                    }
+                } else {
+                    $documentos = $proceso_rendicion_gasto->documentos()
+                        ->get();
+
+                    if (count($documentos) > 0) {
+                        foreach ($documentos as $documento) {
+                            $documento->delete();
+                        }
                     }
                 }
 

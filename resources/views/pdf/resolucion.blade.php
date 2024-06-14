@@ -479,6 +479,25 @@
                             </tfoot>
                         </table>
                     @endif
+                    @if ($solicitud->cuentaBancaria)
+                        <table class="table-1">
+                            <thead>
+                                <th>N° cuenta bancaria</th>
+                                <th>Tipo cuenta</th>
+                                <th>Banco</th>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>{{ $solicitud->cuentaBancaria ? $solicitud->cuentaBancaria->n_cuenta : '--' }}
+                                    </td>
+                                    <td>{{ $solicitud->cuentaBancaria && $solicitud->cuentaBancaria->tipo_cuenta !== null ? App\Models\CuentaBancaria::TYPE_ACCOUNT_NOM[$solicitud->cuentaBancaria->tipo_cuenta] : '--' }}
+                                    </td>
+                                    <td>{{ $solicitud->cuentaBancaria ? $solicitud->cuentaBancaria->banco->nombre : '--' }}
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    @endif
                 </div>
                 <div class="column">
                     <h4>Rendiciones de gastos aprobadas Depto. Finanzas</h4>

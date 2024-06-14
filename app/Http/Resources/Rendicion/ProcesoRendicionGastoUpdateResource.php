@@ -2,6 +2,7 @@
 
 namespace App\Http\Resources\Rendicion;
 
+use App\Http\Resources\Solicitud\ListSolicitudDocumentosResource;
 use Illuminate\Http\Resources\Json\JsonResource;
 
 class ProcesoRendicionGastoUpdateResource extends JsonResource
@@ -20,7 +21,7 @@ class ProcesoRendicionGastoUpdateResource extends JsonResource
             'observacion'                       => $this->observacion,
             'actividades'                       => $this->rendiciones ? ProcesoRendicionGastoRendicionesUpdateResource::collection($this->rendiciones) : null,
             'is_avion'                          => $this->transportes ? $this->transportes()->where('solicitud_transporte.transporte_id', 1)->exists() : false,
-            'archivos'                          => []
+            'documentos'                        => $this->documentos ? ListSolicitudDocumentosResource::collection($this->documentos) : []
         ];
     }
 }
