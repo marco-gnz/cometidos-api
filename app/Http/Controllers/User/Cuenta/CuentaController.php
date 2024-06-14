@@ -25,6 +25,12 @@ class CuentaController extends Controller
         $grupo = Grupo::where('establecimiento_id', $user->establecimiento_id)
             ->where('departamento_id', $user->departamento_id)
             ->where('sub_departamento_id', $user->sub_departamento_id)
+            ->whereHas('firmantes', function ($q) {
+                $q->where('status', true);
+            })
+            ->whereDoesntHave('firmantes', function ($query) use ($user) {
+                $query->where('user_id', $user->id);
+            })
             ->first();
 
         if (!$grupo) {

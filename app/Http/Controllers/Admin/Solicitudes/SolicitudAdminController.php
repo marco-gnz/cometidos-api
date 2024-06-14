@@ -222,6 +222,9 @@ class SolicitudAdminController extends Controller
                 ->whereHas('firmantes', function ($q) {
                     $q->where('status', true);
                 })
+                ->whereDoesntHave('firmantes', function ($query) use ($solicitud) {
+                    $query->where('user_id', $solicitud->user_id);
+                })
                 ->first();
 
             if (!$grupo) {

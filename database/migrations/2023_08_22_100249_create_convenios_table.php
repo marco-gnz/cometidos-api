@@ -22,7 +22,7 @@ class CreateConveniosTable extends Migration
             $table->date('fecha_resolucion')->nullable();
             $table->string('n_resolucion')->nullable();
             $table->integer('n_viatico_mensual');
-            $table->unsignedSmallInteger('tipo_convenio');
+            $table->unsignedSmallInteger('tipo_convenio')->nullable();
             $table->year('anio')->nullable();
             $table->text('observacion')->nullable();
             $table->boolean('active')->default(1);

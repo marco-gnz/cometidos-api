@@ -10,7 +10,6 @@ use App\Models\Firmante;
 use App\Models\Grupo;
 use App\Models\User;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Log;
 
 class GrupoFirmaController extends Controller
 {
@@ -215,11 +214,10 @@ class GrupoFirmaController extends Controller
             $this->authorize('create', Grupo::class);
             $form = ['establecimiento_id', 'departamento_id', 'sub_departamento_id'];
 
-            $validate_duplicate = $this->validateDuplicate($request);
+            $validate_duplicate_grupo_firmantes = $this->validateDuplicateGrupoFirmantes($request);
             $firmantes          = [];
-
-            if ($validate_duplicate) {
-                $message = "Ya existe un grupo con los mismos datos.";
+            if ($validate_duplicate_grupo_firmantes) {
+                $message = "Ya existe un grupo de firma asignado al establecimiento, depto. y subdepto y uno o más firmantes se repiten.";
                 return response()->json([
                     'errors' => [
                         'establecimiento_id'    => [$message],
@@ -263,18 +261,38 @@ class GrupoFirmaController extends Controller
         }
     }
 
-    private function validateDuplicate($request)
+    private function validateDuplicateGrupoFirmantes($request)
     {
+        $firmantes = [];
+        if ($request->firmantes) {
+            foreach ($request->firmantes as $key => $firmante) {
+                $firmante_id        = (int)$firmante['id'];
+                $role_id            = (int)$firmante['role_id'];
+                array_push($firmantes, $firmante_id );
+            }
+        }
+
         $existe = false;
 
-        $count = Grupo::where('establecimiento_id', $request->establecimiento_id)
-            ->where('departamento_id', $request->departamento_id)
-            ->where('sub_departamento_id', $request->sub_departamento_id)
-            ->count();
+        $grupos = Grupo::where('establecimiento_id', $request->establecimiento_id)
+        ->where('departamento_id', $request->departamento_id)
+        ->where('sub_departamento_id', $request->sub_departamento_id)
+        ->with('firmantes')
+        ->get();
 
-        if ($count > 0) {
-            $existe = true;
+        foreach ($grupos as $grupo) {
+            $firmantesGrupo = $grupo->firmantes->pluck('user_id')->toArray();
+
+            sort($firmantes);
+            sort($firmantesGrupo);
+
+            if ($firmantes == $firmantesGrupo) {
+                $existe = true;
+                break;
+            }
         }
+
+
         return $existe;
     }
 }

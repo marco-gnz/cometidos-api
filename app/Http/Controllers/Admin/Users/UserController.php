@@ -31,6 +31,7 @@ class UserController extends Controller
             $users = User::general($request->input)
                 ->establecimiento($request->establecimientos_id)
                 ->depto($request->deptos_id)
+                ->subdepto($request->subdeptos_id)
                 ->grado($request->grados_id)
                 ->ley($request->leys_id)
                 ->orderBy('apellidos', 'ASC')

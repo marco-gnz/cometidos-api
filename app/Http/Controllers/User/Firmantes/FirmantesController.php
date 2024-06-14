@@ -21,6 +21,9 @@ class FirmantesController extends Controller
         $grupo      = Grupo::where('establecimiento_id', $contrato->establecimiento_id)
             ->where('departamento_id', $contrato->departamento_id)
             ->where('sub_departamento_id', $contrato->sub_departamento_id)
+            ->whereDoesntHave('firmantes', function ($q) use($contrato) {
+                $q->where('user_id', $contrato->user_id);
+            })
             ->first();
 
         $firmantes = [];

@@ -137,13 +137,21 @@ class Solicitud extends Model
 
     public function grupoDepto($solicitud)
     {
-        $grupo = Grupo::where('establecimiento_id', $solicitud->establecimiento_id)
-            ->where('departamento_id', $solicitud->departamento_id)
-            ->where('sub_departamento_id', $solicitud->sub_departamento_id)
-            ->whereHas('firmantes', function ($q) {
-                $q->where('status', true);
-            })
-            ->first();
+        $establecimiento_id  = $solicitud->establecimiento_id;
+        $departamento_id     = $solicitud->departamento_id;
+        $subDepartamento_id  = $solicitud->sub_departamento_id;
+        $user_id             = $solicitud->user_id;
+
+        $grupo = Grupo::where('establecimiento_id', $establecimiento_id)
+        ->where('departamento_id', $departamento_id)
+        ->where('sub_departamento_id', $subDepartamento_id)
+        ->whereHas('firmantes', function ($query) {
+            $query->where('status', true);
+        })
+        ->whereDoesntHave('firmantes', function ($query) use ($user_id) {
+            $query->where('user_id', $user_id);
+        })
+        ->first();
 
         return $grupo;
     }
@@ -840,7 +848,7 @@ class Solicitud extends Model
             ];
         }
 
-        if (self::authorizedToVerValorizacion()|| $user->hasPermissionTo('solicitudes.ver')) {
+        if (self::authorizedToVerValorizacion() || $user->hasPermissionTo('solicitudes.ver')) {
             $is_calculo             = self::getLastCalculo() ? 'Si' : 'No';
             $menu[] = [
                 'code'      => 'calculo',
@@ -849,7 +857,7 @@ class Solicitud extends Model
             ];
         }
 
-        if (self::authorizedToVerConvenio()|| $user->hasPermissionTo('solicitudes.ver')) {
+        if (self::authorizedToVerConvenio() || $user->hasPermissionTo('solicitudes.ver')) {
             $is_convenio            = $this->convenio ? 'Si' : 'No';
             $menu[] = [
                 'code'      => 'convenio',
@@ -858,7 +866,7 @@ class Solicitud extends Model
             ];
         }
 
-        if (self::authorizedToVerRendicion()|| $user->hasPermissionTo('solicitudes.ver')) {
+        if (self::authorizedToVerRendicion() || $user->hasPermissionTo('solicitudes.ver')) {
             $n_proceso_rendiciones  = $this->procesoRendicionGastos()->count();
             $menu[] = [
                 'code'      => 'rendiciones',
@@ -867,7 +875,7 @@ class Solicitud extends Model
             ];
         }
 
-        if (self::authorizedToVerArchivos()|| $user->hasPermissionTo('solicitudes.ver')) {
+        if (self::authorizedToVerArchivos() || $user->hasPermissionTo('solicitudes.ver')) {
             $n_documentos           = $this->documentos()->count();
             $menu[] = [
                 'code'      => 'archivos',
@@ -876,7 +884,7 @@ class Solicitud extends Model
             ];
         }
 
-        if (self::authorizedToVerHistorial()|| $user->hasPermissionTo('solicitudes.ver')) {
+        if (self::authorizedToVerHistorial() || $user->hasPermissionTo('solicitudes.ver')) {
             $n_estados              = $this->estados()->count();
             $menu[] = [
                 'code'      => 'seguimiento',

@@ -233,6 +233,14 @@ class User extends Authenticatable
             });
     }
 
+    public function scopeSubdepto($query, $params)
+    {
+        if ($params)
+            return $query->whereHas('contratos.subDepartamento', function ($q) use ($params) {
+                $q->whereIn('id', $params);
+            });
+    }
+
     public function scopeGrado($query, $params)
     {
         if ($params)

@@ -18,7 +18,9 @@ class ListContratosResource extends JsonResource
         $grupo = Grupo::where('establecimiento_id', $this->establecimiento_id)
             ->where('departamento_id', $this->departamento_id)
             ->where('sub_departamento_id', $this->sub_departamento_id)
-            ->whereHas('firmantes')
+            ->whereDoesntHave('firmantes', function ($q) {
+                $q->where('user_id', $this->user_id);
+            })
             ->first();
 
         return [
