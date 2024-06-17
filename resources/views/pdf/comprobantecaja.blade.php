@@ -288,6 +288,19 @@
                 </tbody>
             </table>
             <p>{{$proceso_rendicion_gasto->pagoHabilesMessage() ? $proceso_rendicion_gasto->pagoHabilesMessage() : ''}}</p>
+            <div class="row">
+                <div class="column">
+                    <table class="table-1">
+                        <tbody>
+                            <tr>
+                                <th>Item presupuestario funcionario:</th>
+                                <td>{{ $proceso_rendicion_gasto->solicitud->itemPresupuestario ? $proceso_rendicion_gasto->solicitud->itemPresupuestario->nombre  : ''}}
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
         </div>
         <div class="seccion">
             <h2 class="seccion-title">Sección 2 (Rendiciones solicitadas)</h2>

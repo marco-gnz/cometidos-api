@@ -31,7 +31,7 @@ class Grupo extends Model
     {
         static::creating(function ($grupo) {
             $grupo->uuid                    = Str::uuid();
-             $grupo->user_id_by             = Auth::check() ? Auth::user()->id : null;
+            $grupo->user_id_by             = Auth::check() ? Auth::user()->id : null;
             $grupo->fecha_by_user           = now();
         });
 
@@ -121,15 +121,26 @@ class Grupo extends Model
     public function scopeSearchInput($query, $params)
     {
         if ($params)
-            return $query->where(function ($query) use ($params) {
-                $query->whereHas('firmantes.funcionario', function ($query) use ($params) {
-                    $query->where('rut_completo', 'like', '%' . $params . '%')
-                        ->orWhere('rut', 'like', '%' . $params . '%')
-                        ->orWhere('nombres', 'like', '%' . $params . '%')
-                        ->orWhere('apellidos', 'like', '%' . $params . '%')
-                        ->orWhere('nombre_completo', 'like', '%' . $params . '%')
-                        ->orWhere('email', 'like', '%' . $params . '%');
+            return $query->where('id', 'like', '%' . $params . '%')
+                ->orWhere(function ($query) use ($params) {
+                    $query->whereHas('departamento', function ($query) use ($params) {
+                        $query->where('nombre', 'like', '%' . $params . '%');
+                    });
+                })
+            ->orWhere(function ($query) use ($params) {
+                $query->whereHas('subdepartamento', function ($query) use ($params) {
+                    $query->where('nombre', 'like', '%' . $params . '%');
                 });
-            });
+            })
+                ->orWhere(function ($query) use ($params) {
+                    $query->whereHas('firmantes.funcionario', function ($query) use ($params) {
+                        $query->where('rut_completo', 'like', '%' . $params . '%')
+                            ->orWhere('rut', 'like', '%' . $params . '%')
+                            ->orWhere('nombres', 'like', '%' . $params . '%')
+                            ->orWhere('apellidos', 'like', '%' . $params . '%')
+                            ->orWhere('nombre_completo', 'like', '%' . $params . '%')
+                            ->orWhere('email', 'like', '%' . $params . '%');
+                    });
+                });
     }
 }

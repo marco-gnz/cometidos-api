@@ -42,17 +42,29 @@ class EstadoSolicitud extends Model
     public const RECHAZO_1 = 1;
     public const RECHAZO_2 = 2;
     public const RECHAZO_3 = 3;
+    public const RECHAZO_4 = 4;
+    public const RECHAZO_5 = 5;
+    public const RECHAZO_6 = 6;
+    public const RECHAZO_7 = 7;
 
     public const RECHAZO_NOM = [
-        self::RECHAZO_1 => 'FALTA DE ANTECEDENTES',
-        self::RECHAZO_2 => 'ANTECEDENTES DE PROPUESTA DE SOLICITUD INCORRECTOS',
-        self::RECHAZO_3 => 'FALTAN DOCUMENTOS ADJUNTOS',
+        self::RECHAZO_1 => 'FALTAN ANTECEDENTES',
+        self::RECHAZO_2 => 'DOCUMENTOS ILEGIBLES',
+        self::RECHAZO_3 => 'ACTIVIDAD SUSPENDIDA',
+        self::RECHAZO_4 => 'NO CORRESPONDE CON DERECHO A VIATICO',
+        self::RECHAZO_5 => 'FECHAS U HORARIOS ERRONEOS',
+        self::RECHAZO_6 => 'FUERA DE PLAZO',
+        self::RECHAZO_7 => 'ERRORES EN DATOS INGRESADOS'
     ];
 
     public const RECHAZO_DESC = [
-        self::RECHAZO_1 => 'FALTA DE ANTECEDENTES',
-        self::RECHAZO_2 => 'ANTECEDENTES DE PROPUESTA DE SOLICITUD INCORRECTOS',
-        self::RECHAZO_3 => 'FALTAN DOCUMENTOS ADJUNTOS',
+        self::RECHAZO_1 => 'FALTAN ANTECEDENTES',
+        self::RECHAZO_2 => 'DOCUMENTOS ILEGIBLES',
+        self::RECHAZO_3 => 'ACTIVIDAD SUSPENDIDA',
+        self::RECHAZO_4 => 'NO CORRESPONDE CON DERECHO A VIATICO',
+        self::RECHAZO_5 => 'FECHAS U HORARIOS ERRONEOS',
+        self::RECHAZO_6 => 'FUERA DE PLAZO',
+        self::RECHAZO_7 => 'ERRORES EN DATOS INGRESADOS'
     ];
 
     public const RECHAZO_STATUS = [

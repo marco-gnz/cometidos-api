@@ -25,6 +25,7 @@ class EstadoProcesoRendicionGasto extends Model
     public const STATUS_APROBADO_N  = 5;
     public const STATUS_APROBADO_S  = 6;
     public const STATUS_ANULADO     = 7;
+    public const STATUS_RECHAZADO   = 8;
 
     public const STATUS_NOM = [
         self::STATUS_INGRESADA      => 'INGRESADO',
@@ -35,6 +36,7 @@ class EstadoProcesoRendicionGasto extends Model
         self::STATUS_APROBADO_N     => 'APROBADO / SM',
         self::STATUS_APROBADO_S     => 'APROBADO / CM',
         self::STATUS_ANULADO        => 'ANULADO',
+        self::STATUS_RECHAZADO      => 'RECHAZADO'
     ];
 
     public const STATUS_PROCESO = [
@@ -45,7 +47,8 @@ class EstadoProcesoRendicionGasto extends Model
         ['id' => self::STATUS_VERIFICADO, 'nombre' => self::STATUS_NOM[self::STATUS_VERIFICADO]],
         ['id' => self::STATUS_APROBADO_N, 'nombre' => self::STATUS_NOM[self::STATUS_APROBADO_N]],
         ['id' => self::STATUS_APROBADO_S, 'nombre' => self::STATUS_NOM[self::STATUS_APROBADO_S]],
-        ['id' => self::STATUS_ANULADO, 'nombre' => self::STATUS_NOM[self::STATUS_ANULADO]]
+        ['id' => self::STATUS_ANULADO, 'nombre' => self::STATUS_NOM[self::STATUS_ANULADO]],
+        ['id' => self::STATUS_RECHAZADO, 'nombre' => self::STATUS_NOM[self::STATUS_RECHAZADO]]
     ];
 
     public $timestamps = false;

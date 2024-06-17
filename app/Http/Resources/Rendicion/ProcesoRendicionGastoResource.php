@@ -40,6 +40,7 @@ class ProcesoRendicionGastoResource extends JsonResource
             'authorized_to_update'              => $this->authorizedToUpdate(),
             'authorized_to_anular'              => $this->authorizedToAnular(),
             'authorized_to_aprobar'             => $this->authorizedToAprobar(),
+            'authorized_to_rechazar'            => $this->authorizedToRechazar(),
             'is_rendiciones_modificadas'        => $this->isRendicionesModificadas()
         ];
     }

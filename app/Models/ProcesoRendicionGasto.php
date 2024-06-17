@@ -202,6 +202,7 @@ class ProcesoRendicionGasto extends Model
                 break;
 
             case 7:
+            case 8:
                 $type = 'danger';
                 break;
         }
@@ -231,6 +232,11 @@ class ProcesoRendicionGasto extends Model
     public function authorizedToAprobar()
     {
         return Gate::allows('aprobar', $this);
+    }
+
+    public function authorizedToRechazar()
+    {
+        return Gate::allows('rechazar', $this);
     }
 
     public function pagoHabilesMessage()

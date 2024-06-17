@@ -129,6 +129,7 @@ class Solicitud extends Model
         'cargo_id',
         'hora_id',
         'cuenta_bancaria_id',
+        'item_presupuestario_id',
         'user_id_by',
         'fecha_by_user',
         'user_id_update',
@@ -155,6 +156,25 @@ class Solicitud extends Model
         ->first();
 
         return $grupo;
+    }
+
+    public function getItemPresupuestario($solicitud)
+    {
+        $numero_item = null;
+
+        if($solicitud->calidad_id !== 2){
+            $item = ItemPresupuestarioUser::where('calidad_id', $solicitud->calidad_id)
+            ->where('ley_id', $solicitud->ley_id)
+            ->first();
+        }else{
+            $item = ItemPresupuestarioUser::where('calidad_id', $solicitud->calidad_id)
+            ->first();
+        }
+
+        if($item){
+            $numero_item = $item->itemNumero;
+        }
+        return $numero_item;
     }
 
     protected static function booted()
@@ -185,9 +205,11 @@ class Solicitud extends Model
             $dias_permitidos                = (int)Configuration::obtenerValor('informecometido.dias_atraso', $solicitud->establecimiento_id);
             $vistos                         = Configuration::obtenerValor('info.vistos', $solicitud->establecimiento_id);
             $grupo                          = self::grupoDepto($solicitud);
+            $item                           = self::getItemPresupuestario($solicitud);
             $solicitud->correlativo         = self::generarCorrelativo($solicitud);
             $solicitud->codigo              = self::generarCodigo($solicitud);
             $solicitud->grupo_id            = $grupo ? $grupo->id : null;
+            $solicitud->item_presupuestario_id = $item ? $item->id : NULL;
             $solicitud->tipo_resolucion     = self::RESOLUCION_EXENTA;
             $solicitud->total_firmas        = $solicitud->firmantes()->where('status', true)->count();
             $solicitud->dias_permitidos     = $dias_permitidos;
@@ -369,6 +391,11 @@ class Solicitud extends Model
     public function cuentaBancaria()
     {
         return $this->belongsTo(CuentaBancaria::class, 'cuenta_bancaria_id');
+    }
+
+    public function itemPresupuestario()
+    {
+        return $this->belongsTo(ItemPresupuestario::class, 'item_presupuestario_id');
     }
 
     public function userBy()

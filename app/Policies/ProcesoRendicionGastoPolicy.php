@@ -69,7 +69,13 @@ class ProcesoRendicionGastoPolicy
             return false;
         }
 
-        if ($procesoRendicionGasto->status === EstadoProcesoRendicionGasto::STATUS_INGRESADA || $procesoRendicionGasto->status === EstadoProcesoRendicionGasto::STATUS_MODIFICADA) {
+        $status_ok = [
+            EstadoProcesoRendicionGasto::STATUS_INGRESADA,
+            EstadoProcesoRendicionGasto::STATUS_MODIFICADA,
+            EstadoProcesoRendicionGasto::STATUS_RECHAZADO
+        ];
+
+        if (in_array($procesoRendicionGasto->status, $status_ok)) {
             return true;
         }
         return false;
@@ -96,6 +102,28 @@ class ProcesoRendicionGastoPolicy
 
         $firma = $this->isFirmaDisponibleActionPolicy($procesoRendicionGasto->solicitud, 'rendicion.firma.anular');
         if ($firma->is_firma || $procesoRendicionGasto->user_id_by === $user->id) {
+            return true;
+        }
+        return false;
+    }
+
+    public function rechazar(User $user, ProcesoRendicionGasto $procesoRendicionGasto)
+    {
+        if (
+            $procesoRendicionGasto->solicitud->status === Solicitud::STATUS_ANULADO ||
+            $procesoRendicionGasto->status === EstadoProcesoRendicionGasto::STATUS_ANULADO
+        ) {
+            return false;
+        }
+
+        $status_ok = [
+            EstadoProcesoRendicionGasto::STATUS_APROBADO_JD,
+            EstadoProcesoRendicionGasto::STATUS_EN_PROCESO,
+            EstadoProcesoRendicionGasto::STATUS_VERIFICADO,
+        ];
+
+        $firma = $this->isFirmaDisponibleActionPolicy($procesoRendicionGasto->solicitud, 'rendicion.firma.rechazar');
+        if ($firma->is_firma && in_array($procesoRendicionGasto->status, $status_ok)) {
             return true;
         }
         return false;

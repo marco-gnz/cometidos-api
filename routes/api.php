@@ -124,6 +124,7 @@ Route::group(
         Route::post('/admin/solicitudes/sync-grupo', [SolicitudAdminController::class, 'syncGrupoSolicitud']);
 
         Route::get('/admin/rendicion/list', [ProcesoRendicionController::class, 'getProcesoRendiciones']);
+        Route::post('/admin/rendicion/status', [ProcesoRendicionController::class, 'statusProcesoRenicion']);
         Route::get('/admin/rendicion/{uuid}', [ProcesoRendicionController::class, 'getProcesoRendicion']);
         Route::put('/admin/rendicion/{uuid}', [ProcesoRendicionController::class, 'statusRendicion']);
         Route::post('/admin/rendicion/update-pago', [ProcesoRendicionController::class, 'updatePago']);

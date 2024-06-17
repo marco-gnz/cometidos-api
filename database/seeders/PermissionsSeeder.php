@@ -65,7 +65,7 @@ class PermissionsSeeder extends Seeder
             ],
             [
                 'model'         => 'rendicion.firma',
-                'permissions'   => ['validar', 'anular']
+                'permissions'   => ['validar', 'anular', 'rechazar']
             ],
             [
                 'model'         => 'rendicion.actividad',

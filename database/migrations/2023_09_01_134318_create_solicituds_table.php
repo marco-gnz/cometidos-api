@@ -95,6 +95,9 @@ class CreateSolicitudsTable extends Migration
             $table->unsignedBigInteger('cuenta_bancaria_id')->nullable();
             $table->foreign('cuenta_bancaria_id')->references('id')->on('cuenta_bancarias');
 
+            $table->unsignedBigInteger('item_presupuestario_id')->nullable();
+            $table->foreign('item_presupuestario_id')->references('id')->on('item_presupuestarios');
+
             $table->unsignedBigInteger('user_id_by')->nullable();
             $table->foreign('user_id_by')->references('id')->on('users');
             $table->dateTime('fecha_by_user', 0)->nullable();

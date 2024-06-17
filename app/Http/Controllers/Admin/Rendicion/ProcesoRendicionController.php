@@ -2,7 +2,9 @@
 
 namespace App\Http\Controllers\Admin\Rendicion;
 
+use App\Events\ProcesoRendicionGastoStatus;
 use App\Http\Controllers\Controller;
+use App\Http\Requests\ProcesoRendicion\StatusProcesoRendicionRequest;
 use App\Http\Requests\Rendicion\StatusRendicionRequest;
 use App\Http\Resources\Rendicion\ProcesoRendicionGastoDetalleResource;
 use App\Http\Resources\Rendicion\ProcesoRendicionGastoResource;
@@ -151,6 +153,143 @@ class ProcesoRendicionController extends Controller
             );
         } catch (\Exception $error) {
             return response()->json(['error' => $error->getMessage()], 500);
+        }
+    }
+
+    public function statusProcesoRenicion(StatusProcesoRendicionRequest $request)
+    {
+        try {
+            $proceso_rendicion_gasto    = ProcesoRendicionGasto::where('uuid', $request->uuid)->firstOrFail();
+            $status                     = (int)$request->status;
+            $observacion                = $request->observacion;
+            switch ($status) {
+                case 1:
+                    $this->authorize('anular', $proceso_rendicion_gasto);
+                    $this->anularProcesoRendicion($proceso_rendicion_gasto, $observacion);
+                    break;
+
+                case 2:
+                    $this->authorize('aprobar', $proceso_rendicion_gasto);
+                    $this->aprobarProcesoRendicion($proceso_rendicion_gasto, $observacion);
+                    break;
+
+                case 3:
+                    $this->authorize('rechazar', $proceso_rendicion_gasto);
+                    $this->rechazarProcesoRendicion($proceso_rendicion_gasto, $observacion);
+                    break;
+            }
+            $proceso_rendicion_gasto = $proceso_rendicion_gasto->fresh();
+            return response()->json(
+                array(
+                    'status'        => 'success',
+                    'title'         => 'Rendición modificada con éxito.',
+                    'message'       => null,
+                    'data'          => ProcesoRendicionGastoResource::make($proceso_rendicion_gasto)
+                )
+            );
+        } catch (\Exception $error) {
+            return response()->json(['error' => $error->getMessage()], 500);
+        }
+    }
+
+    private function anularProcesoRendicion($proceso_rendicion_gasto, $observacion)
+    {
+        try {
+            $firma_disponible = $this->isFirmaDisponibleActionPolicy($proceso_rendicion_gasto->solicitud, 'rendicion.firma.anular');
+            $estado = [
+                'observacion'           => $observacion,
+                'status'                => EstadoProcesoRendicionGasto::STATUS_ANULADO,
+                'p_rendicion_gasto_id'  => $proceso_rendicion_gasto->id,
+                'role_id'               => $firma_disponible->is_firma ? $firma_disponible->firma->role_id : null,
+                'posicion_firma'        => $firma_disponible->is_firma ? $firma_disponible->firma->posicion_firma : null,
+                'is_subrogante'         => $firma_disponible->is_subrogante
+            ];
+            $status = EstadoProcesoRendicionGasto::create($estado);
+
+            $proceso_rendicion_gasto = $proceso_rendicion_gasto->fresh();
+
+            $last_status = $proceso_rendicion_gasto->estados()->orderBy('id', 'DESC')->first();
+            ProcesoRendicionGastoStatus::dispatch($last_status);
+        } catch (\Exception $error) {
+            Log::info($error->getMessage());
+        }
+    }
+
+    private function rechazarProcesoRendicion($proceso_rendicion_gasto, $observacion)
+    {
+        try {
+            $firma_disponible = $this->isFirmaDisponibleActionPolicy($proceso_rendicion_gasto->solicitud, 'rendicion.firma.rechazar');
+            $estado = [
+                'observacion'           => $observacion,
+                'status'                => EstadoProcesoRendicionGasto::STATUS_RECHAZADO,
+                'p_rendicion_gasto_id'  => $proceso_rendicion_gasto->id,
+                'role_id'               => $firma_disponible->is_firma ? $firma_disponible->firma->role_id : null,
+                'posicion_firma'        => $firma_disponible->is_firma ? $firma_disponible->firma->posicion_firma : null,
+                'is_subrogante'         => $firma_disponible->is_subrogante
+            ];
+            $status = EstadoProcesoRendicionGasto::create($estado);
+
+            $rendiciones = $proceso_rendicion_gasto->rendiciones()
+            ->where('rinde_gasto', true)
+            ->where('last_status', '!=', RendicionGasto::STATUS_PENDIENTE)
+            ->get();
+
+            if(count($rendiciones) > 0){
+                foreach ($rendiciones as $rendicion) {
+                    $rendicion->update([
+                        'mount_real'    => $rendicion->mount,
+                        'last_status'   => RendicionGasto::STATUS_PENDIENTE
+                    ]);
+                }
+            }
+            $proceso_rendicion_gasto = $proceso_rendicion_gasto->fresh();
+
+            $last_status = $proceso_rendicion_gasto->estados()->orderBy('id', 'DESC')->first();
+            ProcesoRendicionGastoStatus::dispatch($last_status);
+        } catch (\Exception $error) {
+            Log::info($error->getMessage());
+        }
+    }
+
+    private function aprobarProcesoRendicion($proceso_rendicion_gasto, $observacion)
+    {
+        try {
+            if ($proceso_rendicion_gasto->status === EstadoProcesoRendicionGasto::STATUS_VERIFICADO) {
+                $status = EstadoProcesoRendicionGasto::STATUS_APROBADO_N;
+                if ($proceso_rendicion_gasto->isRendicionesModificadas()) {
+                    $status = EstadoProcesoRendicionGasto::STATUS_APROBADO_S;
+                }
+                $last_cuenta_bancaria = $proceso_rendicion_gasto->solicitud->funcionario->lastCuentaBancaria();
+                if (!$last_cuenta_bancaria) {
+                    return response()->json([
+                        'errors' =>  $proceso_rendicion_gasto->solicitud->funcionario->abreNombres() . " no registra cuenta bancaria habilitada o algún medio de pago."
+                    ], 422);
+                }
+
+                $proceso_rendicion_gasto->update([
+                    'cuenta_bancaria_id'    => $last_cuenta_bancaria->id
+                ]);
+            } else if ($proceso_rendicion_gasto->status === EstadoProcesoRendicionGasto::STATUS_INGRESADA || $proceso_rendicion_gasto->status === EstadoProcesoRendicionGasto::STATUS_MODIFICADA) {
+                $status = EstadoProcesoRendicionGasto::STATUS_APROBADO_JD;
+            }
+
+            $firma_disponible = $this->isFirmaDisponibleActionPolicy($proceso_rendicion_gasto->solicitud, 'rendicion.firma.validar');
+            $estado = [
+                'status'                => $status,
+                'observacion'           => $observacion,
+                'p_rendicion_gasto_id'  => $proceso_rendicion_gasto->id,
+                'role_id'               => $firma_disponible->is_firma ? $firma_disponible->firma->role_id : null,
+                'posicion_firma'        => $firma_disponible->is_firma ? $firma_disponible->firma->posicion_firma : null,
+                'is_subrogante'         => $firma_disponible->is_subrogante
+            ];
+            $status_r = EstadoProcesoRendicionGasto::create($estado);
+
+            $proceso_rendicion_gasto = $proceso_rendicion_gasto->fresh();
+
+            $last_status = $proceso_rendicion_gasto->estados()->orderBy('id', 'DESC')->first();
+            ProcesoRendicionGastoStatus::dispatch($last_status);
+        } catch (\Exception $error) {
+            Log::info($error->getMessage());
         }
     }
 
