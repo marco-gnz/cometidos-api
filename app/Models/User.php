@@ -78,6 +78,11 @@ class User extends Authenticatable
         });
     }
 
+    public function firmasGrupo()
+    {
+        return $this->hasMany(Firmante::class);
+    }
+
     public function firmas()
     {
         return $this->hasMany(SolicitudFirmante::class);

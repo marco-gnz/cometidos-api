@@ -18,7 +18,7 @@ class CuentaBancariaResource extends JsonResource
     {
         $status         = $this->status ? 'Habilitada en sistema' : 'No habilitada en sistema';
         $n_cuenta       = $this->n_cuenta ? "N° {$this->n_cuenta}": "";
-        $tipo_cuenta    = $this->tipo_cuenta !== null ? CuentaBancaria::TYPE_ACCOUNT_NOM[$this->tipo_cuenta] : 'SIN_TIPO_DE_CUENTA';
+        $tipo_cuenta    = $this->tipo_cuenta !== null ? CuentaBancaria::TYPE_ACCOUNT_NOM[$this->tipo_cuenta] : '';
         $banco          = $this->banco ? $this->banco->nombre : "";
         $descripcion    = "{$n_cuenta} {$tipo_cuenta} {$banco} - {$status}";
         return [

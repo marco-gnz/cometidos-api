@@ -36,6 +36,7 @@ class ListContratosResource extends JsonResource
             'hora'                      => $this->hora ? "{$this->hora->nombre} hrs." : null,
             'calidad'                   => $this->calidad ? $this->calidad->nombre : null,
             'is_grupo'                  => $grupo ? true : false,
+            'grupo_id'                  => $grupo ? $grupo->id : null,
             'ley_id'                    => $this->ley_id,
             'estamento_id'              => $this->estamento_id,
             'grado_id'                  => $this->grado_id,

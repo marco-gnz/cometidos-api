@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin\Grupos;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Grupo\StoreFirmanteRequest;
 use App\Http\Requests\Grupo\StoreGrupoRequest;
+use App\Http\Resources\Grupo\GrupoResource;
 use App\Http\Resources\Grupo\ListGrupoResource;
 use App\Models\Firmante;
 use App\Models\Grupo;
@@ -63,7 +64,7 @@ class GrupoFirmaController extends Controller
                     'status'        => 'success',
                     'title'         => null,
                     'message'       => null,
-                    'data'          => ListGrupoResource::make($grupo)
+                    'data'          => GrupoResource::make($grupo)
                 )
             );
         } catch (\Exception $error) {
@@ -130,7 +131,7 @@ class GrupoFirmaController extends Controller
                             'status'        => 'success',
                             'title'         => 'Posición modificada con éxito',
                             'message'       => null,
-                            'data'          => ListGrupoResource::make($grupo)
+                            'data'          => GrupoResource::make($grupo)
                         )
                     );
                 }
@@ -161,7 +162,7 @@ class GrupoFirmaController extends Controller
             return response()->json([
                 'status'    => 'success',
                 'title'     => 'Firmante agregado con éxito',
-                'data'      => ListGrupoResource::make($grupo)
+                'data'      => GrupoResource::make($grupo)
             ]);
         } catch (\Exception $error) {
             return response()->json(['error' => $error->getMessage()], 500);
@@ -177,7 +178,7 @@ class GrupoFirmaController extends Controller
             return response()->json([
                 'status'    => 'success',
                 'title'     => 'Firmante eliminado con éxito',
-                'data'      => ListGrupoResource::make($grupo)
+                'data'      => GrupoResource::make($grupo)
             ]);
         } catch (\Exception $error) {
             return response()->json(['error' => $error->getMessage()], 500);
@@ -201,7 +202,7 @@ class GrupoFirmaController extends Controller
             return response()->json([
                 'status'    => 'success',
                 'title'     => 'Firmante eliminado con éxito',
-                'data'      => ListGrupoResource::make($grupo)
+                'data'      => GrupoResource::make($grupo)
             ]);
         } catch (\Exception $error) {
             return response()->json(['error' => $error->getMessage()], 500);

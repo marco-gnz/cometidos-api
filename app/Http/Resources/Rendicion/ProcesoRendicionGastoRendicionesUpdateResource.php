@@ -19,7 +19,7 @@ class ProcesoRendicionGastoRendicionesUpdateResource extends JsonResource
             'nombre'                => $this->actividad->nombre,
             'rinde_gasto'           => $this->rinde_gasto ? 1 : 0,
             'mount'                 => $this->mount,
-            'rinde_gastos_servicio' => $this->rinde_gastos_servicio != null ? ($this->rinde_gastos_servicio ? 1 : 0) : null
+            'rinde_gastos_servicio' => $this->rinde_gastos_servicio
         ];
     }
 }

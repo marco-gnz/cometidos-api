@@ -14,4 +14,14 @@ class Departamento extends Model
         'cod_sirh',
         'nombre'
     ];
+
+    public function grupos()
+    {
+        return $this->hasMany(Grupo::class);
+    }
+
+    public function contratos()
+    {
+        return $this->hasMany(Contrato::class);
+    }
 }

@@ -2,11 +2,10 @@
 
 namespace App\Http\Resources\Grupo;
 
-use App\Models\User;
 use Carbon\Carbon;
 use Illuminate\Http\Resources\Json\JsonResource;
 
-class ListGrupoResource extends JsonResource
+class GrupoResource extends JsonResource
 {
     /**
      * Transform the resource into an array.
@@ -16,13 +15,6 @@ class ListGrupoResource extends JsonResource
      */
     public function toArray($request)
     {
-        $n_users = User::whereHas('contratos', function ($q) {
-            $q->where('establecimiento_id', $this->establecimiento->id)
-                ->where('departamento_id', $this->departamento->id)
-                ->where('sub_departamento_id', $this->subdepartamento->id);
-        })
-            ->count();
-
         return [
             'uuid'              => $this->uuid,
             'id'                => $this->id,
@@ -30,9 +22,9 @@ class ListGrupoResource extends JsonResource
             'departamento'      => $this->departamento ? $this->departamento->nombre : null,
             'subdepartamento'   => $this->subdepartamento ? $this->subdepartamento->nombre : null,
             'total_firmantes'   => count($this->firmantes),
+            'firmantes'         => $this->firmantes ? ListFirmantesGrupoResource::collection($this->firmantes) : null,
             'user_by'           => $this->userBy ? $this->userBy->abreNombres() : null,
             'created_at'        => $this->created_at ? Carbon::parse($this->created_at)->format('d-m-Y H:i:s') : null,
-            'n_users'           => $n_users,
             'authorized_to_delete'    => $this->authorizedToDelete(),
             'authorized_to_update'    => $this->authorizedToUpdate()
         ];
