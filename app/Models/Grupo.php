@@ -8,6 +8,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Str;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Gate;
+use Illuminate\Support\Facades\Log;
 
 class Grupo extends Model
 {
@@ -18,6 +19,7 @@ class Grupo extends Model
 
     protected $fillable = [
         'uuid',
+        'codigo',
         'establecimiento_id',
         'departamento_id',
         'sub_departamento_id',
@@ -30,15 +32,67 @@ class Grupo extends Model
     protected static function booted()
     {
         static::creating(function ($grupo) {
-            $grupo->uuid                    = Str::uuid();
+            $grupo->uuid                   = Str::uuid();
             $grupo->user_id_by             = Auth::check() ? Auth::user()->id : null;
-            $grupo->fecha_by_user           = now();
+            $grupo->fecha_by_user          = now();
+        });
+
+        static::created(function ($grupo) {
+            $grupo->codigo                 = self::generateCodigo($grupo);
+            $grupo->save();
+
+            $contratos = Contrato::where('establecimiento_id', $grupo->establecimiento_id)
+                ->where('departamento_id', $grupo->departamento_id)
+                ->where('sub_departamento_id', $grupo->sub_departamento_id)
+                ->whereNull('grupo_id')
+                ->get();
+
+            if (count($contratos) > 0) {
+                $contratos->toQuery()->update([
+                    'grupo_id'    => $grupo->id
+                ]);
+            }
         });
 
         static::updating(function ($grupo) {
             $grupo->user_id_update              = Auth::user()->id;
             $grupo->fecha_by_user_update        = now();
         });
+
+        static::deleting(function ($grupo) {
+            $contratos = $grupo->contratos()->get();
+            if (count($contratos) > 0) {
+                $contratos->toQuery()->update([
+                    'grupo_id'    => NULL
+                ]);
+            }
+        });
+    }
+
+    protected static function generateCodigo($grupo)
+    {
+        $duplicados = Grupo::where('establecimiento_id', $grupo->establecimiento_id)
+            ->where('departamento_id', $grupo->departamento_id)
+            ->where('sub_departamento_id', $grupo->sub_departamento_id)
+            ->where('id', '!=', $grupo->id)
+            ->orderByRaw('CAST(codigo AS UNSIGNED) ASC')
+            ->get();
+
+        $n_duplicados = count($duplicados);
+        if ($n_duplicados > 0) {
+            $first_codigo_duplicado = $duplicados[0]['codigo'];
+            $codigo_duplicado       = preg_replace('/_\d+$/', '', $first_codigo_duplicado);
+            $codigo                 = $codigo_duplicado . '_' . $n_duplicados;
+        } else {
+            $total  = Grupo::whereRaw('codigo NOT REGEXP "_[0-9]+$"')->count();
+            $codigo = $total + 1;
+        }
+        return $codigo;
+    }
+
+    public function contratos()
+    {
+        return $this->hasMany(Contrato::class)->orderBy('id', 'ASC');
     }
 
     public function firmantes()
@@ -122,17 +176,18 @@ class Grupo extends Model
     {
         if ($params)
             return $query->where('id', 'like', '%' . $params . '%')
+                ->orWhere('codigo', 'like', '%' . $params . '%')
                 ->orWhere(function ($query) use ($params) {
                     $query->whereHas('departamento', function ($query) use ($params) {
                         $query->where('nombre', 'like', '%' . $params . '%');
                     });
                 })
-            ->orWhere(function ($query) use ($params) {
-                $query->whereHas('subdepartamento', function ($query) use ($params) {
-                    $query->where('nombre', 'like', '%' . $params . '%');
-                });
-            })
                 ->orWhere(function ($query) use ($params) {
+                    $query->whereHas('subdepartamento', function ($query) use ($params) {
+                        $query->where('nombre', 'like', '%' . $params . '%');
+                    });
+                })
+                /* ->orWhere(function ($query) use ($params) {
                     $query->whereHas('firmantes.funcionario', function ($query) use ($params) {
                         $query->where('rut_completo', 'like', '%' . $params . '%')
                             ->orWhere('rut', 'like', '%' . $params . '%')
@@ -141,6 +196,6 @@ class Grupo extends Model
                             ->orWhere('nombre_completo', 'like', '%' . $params . '%')
                             ->orWhere('email', 'like', '%' . $params . '%');
                     });
-                });
+                }) */;
     }
 }

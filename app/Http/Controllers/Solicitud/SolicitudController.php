@@ -279,6 +279,7 @@ class SolicitudController extends Controller
                 'estamento_id'              => $contrato->estamento_id,
                 'establecimiento_id'        => $contrato->establecimiento_id,
                 'hora_id'                   => $contrato->hora_id,
+                'grupo_id'                  => $contrato->grupo_id,
                 'observacion'               => $request->observacion
             ];
 

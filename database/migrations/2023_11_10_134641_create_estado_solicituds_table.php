@@ -35,10 +35,10 @@ class CreateEstadoSolicitudsTable extends Migration
             $table->foreign('s_role_id')->references('id')->on('roles');
             $table->unsignedBigInteger('s_role_id')->nullable();
 
-            $table->foreign('firmante_id')->references('id')->on('solicitud_firmantes');
+            $table->foreign('firmante_id')->references('id')->on('solicitud_firmantes')->onDelete('cascade');
             $table->unsignedBigInteger('firmante_id')->nullable();
 
-            $table->foreign('s_firmante_id')->references('id')->on('solicitud_firmantes');
+            $table->foreign('s_firmante_id')->references('id')->on('solicitud_firmantes')->onDelete('cascade');
             $table->unsignedBigInteger('s_firmante_id')->nullable();
 
             $table->foreign('r_s_role_id')->references('id')->on('roles');
@@ -47,7 +47,7 @@ class CreateEstadoSolicitudsTable extends Migration
             $table->foreign('r_s_user_id')->references('id')->on('users');
             $table->unsignedBigInteger('r_s_user_id')->nullable(); //r=reasignado s=solicitud
 
-            $table->foreign('r_s_firmante_id')->references('id')->on('solicitud_firmantes');
+            $table->foreign('r_s_firmante_id')->references('id')->on('solicitud_firmantes')->onDelete('cascade');
             $table->unsignedBigInteger('r_s_firmante_id')->nullable(); //r=reasignado s=solicitud
 
             $table->string('ip_address')->nullable();

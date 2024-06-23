@@ -1,5 +1,7 @@
 <?php
 
+use App\Models\Contrato;
+use App\Models\Grupo;
 use App\Models\User;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Route;
@@ -25,27 +27,84 @@ Route::get('/gcf/{uuid}', [App\Http\Controllers\pdf\PdfController::class, 'showG
 Route::get('/resolucion-cometido/{uuid}', [App\Http\Controllers\pdf\PdfController::class, 'showResolucionCometidoFuncional'])->name('resolucioncometidofuncional.show');
 Route::get('/informe/{uuid}', [App\Http\Controllers\pdf\PdfController::class, 'showInformeCometido'])->name('informecometido.show');
 
-Route::get('/test/store-contrato', function () {
+Route::get('/test/grupos/codigos', function () {
+    try {
+        $grupos = Grupo::all();
+        $codigo_incremental = 1;
+        $codigo_asignado = [];
+
+        foreach ($grupos as $key => $grupo) {
+            // Genera el código inicial
+            $codigo_base = (string) $codigo_incremental;
+            $codigo = $codigo_base;
+
+            // Verifica si el grupo ya tiene un código asignado
+            if (isset($codigo_asignado[$grupo->id])) {
+                // Si ya tiene un código asignado, úsalo
+                $codigo = $codigo_asignado[$grupo->id];
+            } else {
+                // Busca duplicados con el mismo establecimiento_id, departamento_id y sub_departamento_id
+                $duplicados = Grupo::where('establecimiento_id', $grupo->establecimiento_id)
+                    ->where('departamento_id', $grupo->departamento_id)
+                    ->where('sub_departamento_id', $grupo->sub_departamento_id)
+                    ->orderBy('id', 'asc')
+                    ->get();
+
+                // Si hay duplicados, asignar el código con sufijos
+                if ($duplicados->isNotEmpty()) {
+                    $max_sufijo = 0;
+                    foreach ($duplicados as $duplicado) {
+                        if ($duplicado->id != $grupo->id) {
+                            $codigo_asignado[$duplicado->id] = $codigo_base . '_' . ++$max_sufijo;
+                        } else {
+                            $codigo_asignado[$grupo->id] = $codigo_base;
+                        }
+                    }
+                } else {
+                    $codigo_asignado[$grupo->id] = $codigo_base;
+                }
+            }
+
+            // Actualiza el registro con el nuevo código
+            $grupo->codigo = $codigo_asignado[$grupo->id];
+            $grupo->save();
+
+            // Incrementa el código base para el próximo grupo
+            $codigo_incremental++;
+        }
+    } catch (\Exception $error) {
+        Log::info($error->getMessage());
+        return $error->getMessage();
+    }
+});
+
+Route::get('/test/sync-contratos', function () {
 
     try {
-        $users = User::all();
+        $contratos = Contrato::all();
 
-        foreach ($users as $user) {
-           $data = [
-                'ley_id'                => $user->ley_id,
-                'estamento_id'          => $user->estamento_id,
-                'grado_id'              => $user->grado_id,
-                'cargo_id'              => $user->cargo_id,
-                'departamento_id'       => $user->departamento_id,
-                'sub_departamento_id'   => $user->sub_departamento_id,
-                'establecimiento_id'    => $user->establecimiento_id,
-                'hora_id'               => $user->hora_id,
-                'calidad_id'            => $user->calidad_id,
-           ];
+        foreach ($contratos as $contrato) {
+            $establecimiento_id  = $contrato->establecimiento_id;
+            $departamento_id     = $contrato->departamento_id;
+            $subDepartamento_id  = $contrato->sub_departamento_id;
+            $user_id             = $contrato->user_id;
 
-            $contrato = new App\Models\Contrato($data);
+            $grupo = Grupo::where('establecimiento_id', $establecimiento_id)
+                ->where('departamento_id', $departamento_id)
+                ->where('sub_departamento_id', $subDepartamento_id)
+                ->whereHas('firmantes', function ($query) {
+                    $query->where('status', true);
+                })
+                ->whereDoesntHave('firmantes', function ($query) use ($user_id) {
+                    $query->where('user_id', $user_id);
+                })
+                ->first();
 
-            $user->contratos()->save($contrato);
+            if ($grupo) {
+                $contrato->update([
+                    'grupo_id'  => $grupo->id
+                ]);
+            }
         }
     } catch (\Exception $error) {
         Log::info($error->getMessage());
@@ -56,10 +115,8 @@ Route::get('/test/store-contrato', function () {
 Route::get('/test/email', function () {
 
     try {
-        $solicitud = App\Models\Solicitud::where('codigo', '10251202400009')->first();
+        $solicitud = App\Models\Solicitud::first();
         $emails = $solicitud->firmantes()->with('funcionario')->get()->pluck('funcionario.email')->toArray();
-
-    return $emails;
 
         $last_status = App\Models\EstadoSolicitud::where('is_reasignado', true)->orderBy('id', 'DESC')->first();
         $proceso_rendicion = App\Models\ProcesoRendicionGasto::first();

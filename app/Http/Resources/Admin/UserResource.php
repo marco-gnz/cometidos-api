@@ -30,6 +30,11 @@ class UserResource extends JsonResource
             'is_rendicion'      => $this->is_rendicion ? true : false,
             'is_subrogante'     => $this->is_subrogante ? true : false,
 
+            'is_solicitud_message'      => $this->is_solicitud ? "Si" : "No",
+            'is_informe_message'        => $this->is_informe ? "Si" : "No",
+            'is_rendicion_message'      => $this->is_rendicion ? "Si" : "No",
+            'is_subrogante_message'     => $this->is_subrogante ? "Si" : "No",
+
             'establecimiento'   => $this->establecimiento ? $this->establecimiento->sigla : null,
             'estamento'         => $this->estamento ? $this->estamento->nombre : null,
             'cargo'             => $this->cargo ? $this->cargo->nombre : null,

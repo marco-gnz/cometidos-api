@@ -110,6 +110,7 @@ Route::group(
         Route::delete('/admin/users/contrato/{uuid}', [UserController::class, 'deleteContrato']);
         Route::post('/admin/users/contrato', [UserController::class, 'storeContrato']);
         Route::put('/admin/users/contrato/{uuid}', [UserController::class, 'updateContrato']);
+        Route::post('/admin/users/contrato/change-grupo', [UserController::class, 'updateGrupoContrato']);
 
         Route::get('/admin/solicitudes', [SolicitudAdminController::class, 'listSolicitudes']);
         Route::get('/admin/solicitudes/{uuid}/{nav}', [SolicitudAdminController::class, 'findSolicitud']);

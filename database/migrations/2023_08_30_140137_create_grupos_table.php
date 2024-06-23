@@ -16,6 +16,7 @@ class CreateGruposTable extends Migration
         Schema::create('grupos', function (Blueprint $table) {
             $table->bigIncrements('id');
             $table->uuid('uuid')->unique()->nullable();
+            $table->string('codigo')->nullable();
             $table->text('detalle')->nullable();
 
             $table->foreign('departamento_id')->references('id')->on('departamentos');

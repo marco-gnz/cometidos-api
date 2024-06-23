@@ -2,6 +2,7 @@
 
 namespace App\Http\Resources\Solicitud;
 
+use App\Http\Resources\Grupo\ListGrupoSelectedResource;
 use App\Models\EstadoSolicitud;
 use Illuminate\Http\Resources\Json\JsonResource;
 use App\Models\Solicitud;
@@ -77,7 +78,9 @@ class ListSolicitudCompleteAdminResource extends JsonResource
             'authorized_to_create_calculo'             => $this->authorizedToCreateCalculo(),
             'authorized_to_create_calculo_ajuste'      => $this->authorizedToCreateCalculoAjuste(),
             'authorized_to_delete_calculo_ajuste'      => $this->authorizedToDeleteCalculoAjuste(),
-            'authorized_to_create_convenio'            => $this->authorizedToCreateConvenio()
+            'authorized_to_create_convenio'            => $this->authorizedToCreateConvenio(),
+            'is_posible_grupos'                        => $this->isPosibleGrupos() ? ListGrupoSelectedResource::collection($this->isPosibleGrupos()) : null,
+            'grupo_id'                                  => $this->grupo ? $this->grupo->id : null
         ];
     }
 }

@@ -13,8 +13,10 @@ use App\Http\Resources\Admin\UserResource;
 use App\Http\Resources\Admin\UserUpdateResource;
 use App\Models\Contrato;
 use App\Models\CuentaBancaria;
+use App\Models\Grupo;
 use App\Models\User;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 
 class UserController extends Controller
@@ -28,7 +30,24 @@ class UserController extends Controller
     {
         try {
             $this->authorize('viewAny', User::class);
-            $users = User::general($request->input)
+            $auth = Auth::user();
+            $establecimientos = $auth->establecimientos->pluck('id')->toArray();
+            $leyes = $auth->leyes->pluck('id')->toArray();
+            $departamentos = $auth->departamentos->pluck('id')->toArray();
+
+            $users = User::leftJoin('contratos', 'users.id', '=', 'contratos.user_id')
+                ->when($establecimientos, function ($query) use ($establecimientos) {
+                    $query->whereIn('contratos.establecimiento_id', $establecimientos);
+                })
+                ->when($leyes, function ($query) use ($leyes) {
+                    $query->whereIn('contratos.ley_id', $leyes);
+                })
+                ->when($departamentos, function ($query) use ($departamentos) {
+                    $query->whereIn('contratos.departamento_id', $departamentos);
+                })
+                ->select('users.*')
+                ->distinct()
+                ->general($request->input)
                 ->establecimiento($request->establecimientos_id)
                 ->depto($request->deptos_id)
                 ->subdepto($request->subdeptos_id)
@@ -37,27 +56,26 @@ class UserController extends Controller
                 ->orderBy('apellidos', 'ASC')
                 ->paginate(50);
 
-            return response()->json(
-                array(
-                    'status'        => 'success',
-                    'title'         => null,
-                    'message'       => null,
-                    'pagination' => [
-                        'total'         => $users->total(),
-                        'total_desc'    => $users->total() > 1 ? "{$users->total()} resultados" : "{$users->total()} resultado",
-                        'current_page'  => $users->currentPage(),
-                        'per_page'      => $users->perPage(),
-                        'last_page'     => $users->lastPage(),
-                        'from'          => $users->firstItem(),
-                        'to'            => $users->lastPage()
-                    ],
-                    'data'          => ListUsersResource::collection($users)
-                )
-            );
+            return response()->json([
+                'status' => 'success',
+                'title' => null,
+                'message' => null,
+                'pagination' => [
+                    'total' => $users->total(),
+                    'total_desc' => $users->total() > 1 ? "{$users->total()} resultados" : "{$users->total()} resultado",
+                    'current_page' => $users->currentPage(),
+                    'per_page' => $users->perPage(),
+                    'last_page' => $users->lastPage(),
+                    'from' => $users->firstItem(),
+                    'to' => $users->lastPage()
+                ],
+                'data' => ListUsersResource::collection($users)
+            ]);
         } catch (\Exception $error) {
             return response()->json(['error' => $error->getMessage()], 500);
         }
     }
+
 
     public function getUser($uuid)
     {
@@ -124,7 +142,7 @@ class UserController extends Controller
                     'calidad_id'            => $request->calidad_id,
                 ];
                 $contrato = Contrato::create($data);
-                if($contrato){
+                if ($contrato) {
                     $user->contratos()->save($contrato);
                     $user = $user->fresh();
                     DB::commit();
@@ -137,7 +155,6 @@ class UserController extends Controller
                         )
                     );
                 }
-
             }
         } catch (\Exception $error) {
             DB::rollback();
@@ -323,7 +340,7 @@ class UserController extends Controller
             $contrato = Contrato::where('uuid', $uuid)->firstOrFail();
             $this->authorize('update', $contrato->funcionario);
             $delete = $contrato->delete();
-            if($delete){
+            if ($delete) {
                 return response()->json(
                     array(
                         'status'        => 'success',
@@ -333,7 +350,6 @@ class UserController extends Controller
                     )
                 );
             }
-
         } catch (\Exception $error) {
             return response()->json(['error' => $error->getMessage()], 500);
         }
@@ -359,7 +375,7 @@ class UserController extends Controller
 
             $existe_contrato = $this->existeContrato($user, $data);
 
-            if($existe_contrato){
+            if ($existe_contrato) {
                 return response()->json([
                     'errors' => ['establecimiento_id' => ['Contrato ya existe.']]
                 ], 422);
@@ -367,7 +383,7 @@ class UserController extends Controller
 
             $contrato = Contrato::create($data);
 
-            if($contrato){
+            if ($contrato) {
                 $user->contratos()->save($contrato);
                 $user = $user->fresh();
                 return response()->json(
@@ -379,8 +395,32 @@ class UserController extends Controller
                     )
                 );
             }
+        } catch (\Exception $error) {
+            return response()->json(['error' => $error->getMessage()], 500);
+        }
+    }
 
+    public function updateGrupoContrato(Request $request)
+    {
+        try {
+            $contrato = Contrato::where('uuid', $request->contrato_uuid)->firstOrFail();
+            $grupo    = Grupo::where('id', $request->grupo_id)->first();
 
+            $update = $contrato->update([
+                'grupo_id'  => $grupo ? $grupo->id : NULL
+            ]);
+
+            if ($update) {
+                $user = $contrato->funcionario->fresh();
+                return response()->json(
+                    array(
+                        'status'        => 'success',
+                        'title'         => "Contrato modificado con éxito.",
+                        'message'       => null,
+                        'data'          => UserResource::make($user)
+                    )
+                );
+            }
         } catch (\Exception $error) {
             return response()->json(['error' => $error->getMessage()], 500);
         }
@@ -402,6 +442,14 @@ class UserController extends Controller
                 'hora_id'               => $request->hora_id,
                 'calidad_id'            => $request->calidad_id,
             ];
+
+            if (
+                $contrato->establecimiento_id !== $request->establecimiento_id ||
+                $contrato->departamento_id !== $request->departamento_id ||
+                $contrato->sub_departamento_id !== $request->sub_departamento_id
+            ) {
+                $data['grupo_id'] = NULL;
+            }
 
             $update = $contrato->update($data);
 

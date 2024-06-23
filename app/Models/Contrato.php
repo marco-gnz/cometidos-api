@@ -26,6 +26,7 @@ class Contrato extends Model
         'establecimiento_id',
         'hora_id',
         'calidad_id',
+        'grupo_id',
         'user_id',
         'usuario_add_id',
         'fecha_add',
@@ -40,6 +41,15 @@ class Contrato extends Model
             $contrato->usuario_add_id        = Auth::check() ? Auth::user()->id : null;
             $contrato->fecha_add            = now();
         });
+    }
+
+    public function isPosibleGrupos()
+    {
+        return Grupo::where('establecimiento_id', $this->establecimiento_id)
+            ->where('departamento_id', $this->departamento_id)
+            ->whereHas('firmantes')
+            ->orderByRaw('CAST(codigo AS UNSIGNED) ASC')
+            ->get();
     }
 
     public function ley()
@@ -90,5 +100,10 @@ class Contrato extends Model
     public function funcionario()
     {
         return $this->belongsTo(User::class, 'user_id');
+    }
+
+    public function grupo()
+    {
+        return $this->belongsTo(Grupo::class, 'grupo_id');
     }
 }

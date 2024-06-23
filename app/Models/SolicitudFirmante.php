@@ -44,6 +44,10 @@ class SolicitudFirmante extends Model
             $firmante->user_id_by             = Auth::user()->id;
             $firmante->fecha_by_user          = now();
         });
+
+        static::deleting(function ($firmante) {
+            $firmante->estados()->delete();
+        });
     }
 
     public function solicitud()

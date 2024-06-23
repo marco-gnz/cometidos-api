@@ -49,6 +49,9 @@ class CreateContratosTable extends Migration
             $table->unsignedBigInteger('calidad_id')->nullable();
             $table->foreign('calidad_id')->references('id')->on('calidads');
 
+            $table->unsignedBigInteger('grupo_id')->nullable();
+            $table->foreign('grupo_id')->references('id')->on('grupos');
+
             $table->unsignedBigInteger('user_id')->nullable();
             $table->foreign('user_id')->references('id')->on('users');
 

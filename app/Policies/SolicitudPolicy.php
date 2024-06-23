@@ -260,8 +260,15 @@ class SolicitudPolicy
             return false;
         }
 
+        $status_disponibles = [
+            EstadoSolicitud::STATUS_INGRESADA,
+            EstadoSolicitud::STATUS_MODIFICADA,
+            EstadoSolicitud::STATUS_PENDIENTE,
+            EstadoSolicitud::STATUS_RECHAZADO
+        ];
+
         $firma = $this->isFirmaDisponibleActionPolicy($solicitud, 'solicitud.datos.sincronizar-grupo');
-        if ((!$solicitud->grupo) && ($firma->is_firma || $user->hasRole('SUPER ADMINISTRADOR'))) {
+        if ((!$solicitud->grupo || in_array($solicitud->last_status, $status_disponibles)) && ($firma->is_firma || $user->hasRole('SUPER ADMINISTRADOR'))) {
             return true;
         }
 

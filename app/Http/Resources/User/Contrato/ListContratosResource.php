@@ -2,6 +2,7 @@
 
 namespace App\Http\Resources\User\Contrato;
 
+use App\Http\Resources\Grupo\ListGrupoSelectedResource;
 use App\Models\Grupo;
 use Illuminate\Http\Resources\Json\JsonResource;
 
@@ -15,14 +16,6 @@ class ListContratosResource extends JsonResource
      */
     public function toArray($request)
     {
-        $grupo = Grupo::where('establecimiento_id', $this->establecimiento_id)
-            ->where('departamento_id', $this->departamento_id)
-            ->where('sub_departamento_id', $this->sub_departamento_id)
-            ->whereDoesntHave('firmantes', function ($q) {
-                $q->where('user_id', $this->user_id);
-            })
-            ->first();
-
         return [
             'uuid'                      => $this->uuid,
             'ley'                       => $this->ley ? $this->ley->nombre : null,
@@ -35,8 +28,9 @@ class ListContratosResource extends JsonResource
             'estamento'                 => $this->estamento ? $this->estamento->nombre : null,
             'hora'                      => $this->hora ? "{$this->hora->nombre} hrs." : null,
             'calidad'                   => $this->calidad ? $this->calidad->nombre : null,
-            'is_grupo'                  => $grupo ? true : false,
-            'grupo_id'                  => $grupo ? $grupo->id : null,
+            'is_grupo'                  => $this->grupo ? true : false,
+            'grupo_id'                  => $this->grupo ? $this->grupo->id : null,
+            'grupo_desc'                => $this->grupo ? ListGrupoSelectedResource::make($this->grupo) : null,
             'ley_id'                    => $this->ley_id,
             'estamento_id'              => $this->estamento_id,
             'grado_id'                  => $this->grado_id,
@@ -46,6 +40,7 @@ class ListContratosResource extends JsonResource
             'establecimiento_id'        => $this->establecimiento_id,
             'hora_id'                   => $this->hora_id,
             'calidad_id'                => $this->calidad_id,
+            'is_posible_grupos'         => ListGrupoSelectedResource::collection($this->isPosibleGrupos())
         ];
     }
 }

@@ -137,41 +137,20 @@ class Solicitud extends Model
         'is_reasignada'
     ];
 
-    public function grupoDepto($solicitud)
-    {
-        $establecimiento_id  = $solicitud->establecimiento_id;
-        $departamento_id     = $solicitud->departamento_id;
-        $subDepartamento_id  = $solicitud->sub_departamento_id;
-        $user_id             = $solicitud->user_id;
-
-        $grupo = Grupo::where('establecimiento_id', $establecimiento_id)
-        ->where('departamento_id', $departamento_id)
-        ->where('sub_departamento_id', $subDepartamento_id)
-        ->whereHas('firmantes', function ($query) {
-            $query->where('status', true);
-        })
-        ->whereDoesntHave('firmantes', function ($query) use ($user_id) {
-            $query->where('user_id', $user_id);
-        })
-        ->first();
-
-        return $grupo;
-    }
-
     public function getItemPresupuestario($solicitud)
     {
         $numero_item = null;
 
-        if($solicitud->calidad_id !== 2){
+        if ($solicitud->calidad_id !== 2) {
             $item = ItemPresupuestarioUser::where('calidad_id', $solicitud->calidad_id)
-            ->where('ley_id', $solicitud->ley_id)
-            ->first();
-        }else{
+                ->where('ley_id', $solicitud->ley_id)
+                ->first();
+        } else {
             $item = ItemPresupuestarioUser::where('calidad_id', $solicitud->calidad_id)
-            ->first();
+                ->first();
         }
 
-        if($item){
+        if ($item) {
             $numero_item = $item->itemNumero;
         }
         return $numero_item;
@@ -204,11 +183,9 @@ class Solicitud extends Model
         static::created(function ($solicitud) {
             $dias_permitidos                = (int)Configuration::obtenerValor('informecometido.dias_atraso', $solicitud->establecimiento_id);
             $vistos                         = Configuration::obtenerValor('info.vistos', $solicitud->establecimiento_id);
-            $grupo                          = self::grupoDepto($solicitud);
             $item                           = self::getItemPresupuestario($solicitud);
             $solicitud->correlativo         = self::generarCorrelativo($solicitud);
             $solicitud->codigo              = self::generarCodigo($solicitud);
-            $solicitud->grupo_id            = $grupo ? $grupo->id : null;
             $solicitud->item_presupuestario_id = $item ? $item->id : NULL;
             $solicitud->tipo_resolucion     = self::RESOLUCION_EXENTA;
             $solicitud->total_firmas        = $solicitud->firmantes()->where('status', true)->count();
@@ -426,6 +403,24 @@ class Solicitud extends Model
     public function getLastCalculo()
     {
         return $this->hasOne(SoliucitudCalculo::class)->latest()->first();
+    }
+
+    public function isPosibleGrupos()
+    {
+        $status_disponibles = [
+            EstadoSolicitud::STATUS_INGRESADA,
+            EstadoSolicitud::STATUS_MODIFICADA,
+            EstadoSolicitud::STATUS_PENDIENTE
+        ];
+
+        if (self::authorizedToSincronizarGrupo()) {
+            return Grupo::where('establecimiento_id', $this->establecimiento_id)
+                ->where('departamento_id', $this->departamento_id)
+                ->whereHas('firmantes')
+                ->orderByRaw('CAST(codigo AS UNSIGNED) ASC')
+                ->get();
+        }
+        return null;
     }
 
     public function totalProcesosRendiciones()

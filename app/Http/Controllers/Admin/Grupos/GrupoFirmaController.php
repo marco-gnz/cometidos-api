@@ -28,7 +28,7 @@ class GrupoFirmaController extends Controller
                 ->searchDepto($request->deptos_id)
                 ->searchSubdepto($request->subdeptos_id)
                 ->searchPerfil($request->perfiles_id)
-                ->orderBy('id', 'ASC')
+                ->orderByRaw('CAST(codigo AS UNSIGNED) ASC')
                 ->paginate(50);
 
             return response()->json(
@@ -83,8 +83,8 @@ class GrupoFirmaController extends Controller
             }
 
             $delete = $grupo->delete();
-
             if ($delete) {
+                $this->resetGrupos();
                 return response()->json(
                     array(
                         'status'        => 'success',
@@ -94,8 +94,68 @@ class GrupoFirmaController extends Controller
                     )
                 );
             }
+            return response()->json(
+                array(
+                    'status'        => 'success',
+                    'title'         => "Grupo eliminado con éxito.",
+                    'message'       => null,
+                    'data'          => null
+                )
+            );
         } catch (\Exception $error) {
             return response()->json(['error' => $error->getMessage()], 500);
+        }
+    }
+
+    private function resetGrupos()
+    {
+        try {
+            $grupos = Grupo::all();
+            $codigo_incremental = 1;
+            $codigo_asignado = [];
+
+            foreach ($grupos as $key => $grupo) {
+                // Genera el código inicial
+                $codigo_base = (string) $codigo_incremental;
+                $codigo = $codigo_base;
+
+                // Verifica si el grupo ya tiene un código asignado
+                if (isset($codigo_asignado[$grupo->id])) {
+                    // Si ya tiene un código asignado, úsalo
+                    $codigo = $codigo_asignado[$grupo->id];
+                } else {
+                    // Busca duplicados con el mismo establecimiento_id, departamento_id y sub_departamento_id
+                    $duplicados = Grupo::where('establecimiento_id', $grupo->establecimiento_id)
+                        ->where('departamento_id', $grupo->departamento_id)
+                        ->where('sub_departamento_id', $grupo->sub_departamento_id)
+                        ->orderBy('id', 'asc')
+                        ->get();
+
+                    // Si hay duplicados, asignar el código con sufijos
+                    if ($duplicados->isNotEmpty()) {
+                        $max_sufijo = 0;
+                        foreach ($duplicados as $duplicado) {
+                            if ($duplicado->id != $grupo->id) {
+                                $codigo_asignado[$duplicado->id] = $codigo_base . '_' . ++$max_sufijo;
+                            } else {
+                                $codigo_asignado[$grupo->id] = $codigo_base;
+                            }
+                        }
+                    } else {
+                        $codigo_asignado[$grupo->id] = $codigo_base;
+                    }
+                }
+
+                // Actualiza el registro con el nuevo código
+                $grupo->codigo = $codigo_asignado[$grupo->id];
+                $grupo->save();
+
+                // Incrementa el código base para el próximo grupo
+                $codigo_incremental++;
+            }
+        } catch (\Exception $error) {
+            Log::info($error->getMessage());
+            return $error->getMessage();
         }
     }
 
@@ -269,17 +329,17 @@ class GrupoFirmaController extends Controller
             foreach ($request->firmantes as $key => $firmante) {
                 $firmante_id        = (int)$firmante['id'];
                 $role_id            = (int)$firmante['role_id'];
-                array_push($firmantes, $firmante_id );
+                array_push($firmantes, $firmante_id);
             }
         }
 
         $existe = false;
 
         $grupos = Grupo::where('establecimiento_id', $request->establecimiento_id)
-        ->where('departamento_id', $request->departamento_id)
-        ->where('sub_departamento_id', $request->sub_departamento_id)
-        ->with('firmantes')
-        ->get();
+            ->where('departamento_id', $request->departamento_id)
+            ->where('sub_departamento_id', $request->sub_departamento_id)
+            ->with('firmantes')
+            ->get();
 
         foreach ($grupos as $grupo) {
             $firmantesGrupo = $grupo->firmantes->pluck('user_id')->toArray();

@@ -84,10 +84,10 @@ class SolicitudAdminController extends Controller
                 $this->filterVerify($query, $auth);
             } elseif ($resultSolicitud === 'all') {
                 $this->filterAll($query, $auth);
-            }else if ($resultSolicitud === 'none'){
+            } else if ($resultSolicitud === 'none') {
                 if ($auth->hasPermissionTo('solicitudes.ver')) {
                     $this->filterRole($query, $auth);
-                }else{
+                } else {
                     $this->filterAll($query, $auth);
                 }
             }
@@ -120,8 +120,8 @@ class SolicitudAdminController extends Controller
         $establecimientos_id    = $auth->establecimientos->pluck('id')->toArray();
         $leyes_id               = $auth->leyes->pluck('id')->toArray();
         $deptos_id              = $auth->departamentos->pluck('id')->toArray();
-        if($establecimientos_id){
-            $query->whereHas('establecimiento', function($q) use($establecimientos_id){
+        if ($establecimientos_id) {
+            $query->whereHas('establecimiento', function ($q) use ($establecimientos_id) {
                 $q->whereIn('id', $establecimientos_id);
             });
         }
@@ -195,14 +195,13 @@ class SolicitudAdminController extends Controller
     {
         $query->whereHas('firmantes', function ($q) use ($auth) {
             $q->where('status', true)
-            ->where('role_id', '!=', 1)
-            ->where('user_id', $auth->id);
-
+                ->where('role_id', '!=', 1)
+                ->where('user_id', $auth->id);
         })->orWhereHas('firmantes.funcionario.ausentismos', function ($q) use ($auth) {
             $q->whereHas('subrogantes', function ($q) use ($auth) {
                 $q->where('users.id', $auth->id);
             })->whereRaw("DATE(solicituds.fecha_by_user) >= ausentismos.fecha_inicio")
-            ->whereRaw("DATE(solicituds.fecha_by_user) <= ausentismos.fecha_termino");
+                ->whereRaw("DATE(solicituds.fecha_by_user) <= ausentismos.fecha_termino");
         })->orWhereHas('reasignaciones', function ($q) use ($auth) {
             $q->where('user_subrogante_id', $auth->id);
         });
@@ -216,50 +215,67 @@ class SolicitudAdminController extends Controller
             $solicitud = Solicitud::where('uuid', $request->solicitud_uuid)->firstOrFail();
             $this->authorize('sincronizargrupo', $solicitud);
 
-            $grupo = Grupo::where('establecimiento_id', $solicitud->establecimiento_id)
-                ->where('departamento_id', $solicitud->departamento_id)
-                ->where('sub_departamento_id', $solicitud->sub_departamento_id)
-                ->whereHas('firmantes', function ($q) {
-                    $q->where('status', true);
-                })
-                ->whereDoesntHave('firmantes', function ($query) use ($solicitud) {
-                    $query->where('user_id', $solicitud->user_id);
-                })
-                ->first();
-
-            if (!$grupo) {
-                return $this->errorResponse("No es posible sincronizar grupo. No existe un grupo de firma dispobile para el funcionario.", 422);
+            $grupo = Grupo::where('id', $request->grupo_id)->first();
+            $firma_funcionario = $solicitud->firmantes()->where('role_id', 1)->first();
+            if ($firma_funcionario) {
+                $firma_funcionario->update([
+                    'is_reasignado' => false,
+                ]);
             }
+            if (!$grupo) {
+                $solicitud->update([
+                    'grupo_id'          => NULL,
+                    'is_reasignada'     => false,
+                    'last_status'       => EstadoSolicitud::STATUS_INGRESADA,
+                    'calculo_aplicado'  => false,
+                    'total_firmas'      => 1
+                ]);
 
-            $solicitud->update([
-                'grupo_id'              => $grupo->id,
-            ]);
-            $solicitud  = $solicitud->fresh();
+                $solicitud->firmantes()->where('role_id', '!=', 1)->delete();
+                $solicitud = $solicitud->fresh();
+            } else {
+                $solicitud->update([
+                    'grupo_id'          => $grupo->id,
+                    'is_reasignada'     => false,
+                    'last_status'       => EstadoSolicitud::STATUS_INGRESADA,
+                    'calculo_aplicado'  => false,
+                    'total_firmas'      => 1
+                ]);
+                $solicitud  = $solicitud->fresh();
 
-            if ($solicitud->grupo) {
-                $firmantes_solicitud = [];
-                $firmantes = $solicitud->grupo->firmantes()->where('status', true)->get();
-                if ($firmantes) {
-                    foreach ($firmantes as $firmante) {
-                        $status = true;
-                        if ($firmante->role_id === 6 || $firmante->role_id === 7) {
-                            $status = true;
-                            if (!$solicitud->derecho_pago) {
-                                $status = false;
-                            }
-                        }
-                        $firmantes_solicitud[] = [
-                            'posicion_firma'    => $firmante->posicion_firma,
-                            'status'            => $firmante->status,
-                            'solicitud_id'      => $solicitud->id,
-                            'grupo_id'          => $firmante->grupo_id,
-                            'user_id'           => $firmante->user_id,
-                            'role_id'           => $firmante->role_id,
-                            'status'            => $status,
-                            'permissions_id'    => $this->getPermissions($firmante->role_id, $solicitud)
-                        ];
+                if ($solicitud->grupo) {
+                    if ($solicitud->firmantes) {
+
+                        $solicitud->firmantes()->where('role_id', '!=', 1)->delete();
                     }
-                    $solicitud->addFirmantes($firmantes_solicitud);
+                    $solicitud = $solicitud->fresh();
+
+                    if (count($solicitud->firmantes) === 1) {
+                        $firmantes_solicitud = [];
+                        $firmantes = $solicitud->grupo->firmantes()->where('status', true)->get();
+                        if ($firmantes) {
+                            foreach ($firmantes as $firmante) {
+                                $status = true;
+                                if ($firmante->role_id === 6 || $firmante->role_id === 7) {
+                                    $status = true;
+                                    if (!$solicitud->derecho_pago) {
+                                        $status = false;
+                                    }
+                                }
+                                $firmantes_solicitud[] = [
+                                    'posicion_firma'    => $firmante->posicion_firma,
+                                    'status'            => $firmante->status,
+                                    'solicitud_id'      => $solicitud->id,
+                                    'grupo_id'          => $firmante->grupo_id,
+                                    'user_id'           => $firmante->user_id,
+                                    'role_id'           => $firmante->role_id,
+                                    'status'            => $status,
+                                    'permissions_id'    => $this->getPermissions($firmante->role_id, $solicitud)
+                                ];
+                            }
+                            $solicitud->addFirmantes($firmantes_solicitud);
+                        }
+                    }
                 }
             }
             $navStatus  = $this->navStatusSolicitud($solicitud);
@@ -1157,7 +1173,7 @@ class SolicitudAdminController extends Controller
                 } else if ($last_status->status === EstadoSolicitud::STATUS_RECHAZADO && in_array($last_status->s_role_id, $ids_roles_rechazado)) {
                     SolicitudChangeStatus::dispatch($solicitud, $last_status, $emails_copy);
                 } else if ($last_status->status === EstadoSolicitud::STATUS_ANULADO) {
-                    if($solicitud->derecho_pago){
+                    if ($solicitud->derecho_pago) {
                         $emails_copy = $solicitud->firmantes()->whereIn('role_id', $ids_roles_anulado)->with('funcionario')->get()->pluck('funcionario.email')->toArray();
                     }
                     SolicitudChangeStatus::dispatch($solicitud, $last_status, $emails_copy);

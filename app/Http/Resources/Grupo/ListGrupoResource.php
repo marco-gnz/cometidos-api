@@ -16,16 +16,12 @@ class ListGrupoResource extends JsonResource
      */
     public function toArray($request)
     {
-        $n_users = User::whereHas('contratos', function ($q) {
-            $q->where('establecimiento_id', $this->establecimiento->id)
-                ->where('departamento_id', $this->departamento->id)
-                ->where('sub_departamento_id', $this->subdepartamento->id);
-        })
-            ->count();
+        $n_users = $this->contratos()->get()->unique('user_id')->count();
 
         return [
             'uuid'              => $this->uuid,
             'id'                => $this->id,
+            'codigo'       => $this->codigo,
             'establecimiento'   => $this->establecimiento ? $this->establecimiento->sigla : null,
             'departamento'      => $this->departamento ? $this->departamento->nombre : null,
             'subdepartamento'   => $this->subdepartamento ? $this->subdepartamento->nombre : null,

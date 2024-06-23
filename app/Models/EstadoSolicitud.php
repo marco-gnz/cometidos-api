@@ -71,6 +71,10 @@ class EstadoSolicitud extends Model
         ['id' => self::RECHAZO_1, 'nombre' => self::RECHAZO_NOM[self::RECHAZO_1], 'desc' => self::RECHAZO_DESC[self::RECHAZO_1]],
         ['id' => self::RECHAZO_2, 'nombre' => self::RECHAZO_NOM[self::RECHAZO_2], 'desc' => self::RECHAZO_DESC[self::RECHAZO_2]],
         ['id' => self::RECHAZO_3, 'nombre' => self::RECHAZO_NOM[self::RECHAZO_3], 'desc' => self::RECHAZO_DESC[self::RECHAZO_3]],
+        ['id' => self::RECHAZO_4, 'nombre' => self::RECHAZO_NOM[self::RECHAZO_4], 'desc' => self::RECHAZO_DESC[self::RECHAZO_4]],
+        ['id' => self::RECHAZO_5, 'nombre' => self::RECHAZO_NOM[self::RECHAZO_5], 'desc' => self::RECHAZO_DESC[self::RECHAZO_5]],
+        ['id' => self::RECHAZO_6, 'nombre' => self::RECHAZO_NOM[self::RECHAZO_6], 'desc' => self::RECHAZO_DESC[self::RECHAZO_6]],
+        ['id' => self::RECHAZO_7, 'nombre' => self::RECHAZO_NOM[self::RECHAZO_7], 'desc' => self::RECHAZO_DESC[self::RECHAZO_7]],
     ];
 
     protected $fillable = [

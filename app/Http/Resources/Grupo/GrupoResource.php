@@ -18,6 +18,7 @@ class GrupoResource extends JsonResource
         return [
             'uuid'              => $this->uuid,
             'id'                => $this->id,
+            'codigo'            => $this->codigo,
             'establecimiento'   => $this->establecimiento ? $this->establecimiento->sigla : null,
             'departamento'      => $this->departamento ? $this->departamento->nombre : null,
             'subdepartamento'   => $this->subdepartamento ? $this->subdepartamento->nombre : null,
