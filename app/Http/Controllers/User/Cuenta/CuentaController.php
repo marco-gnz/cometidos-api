@@ -22,22 +22,15 @@ class CuentaController extends Controller
 
         $user = auth()->user();
 
-        $grupo = Grupo::where('establecimiento_id', $user->establecimiento_id)
-            ->where('departamento_id', $user->departamento_id)
-            ->where('sub_departamento_id', $user->sub_departamento_id)
-            ->whereHas('firmantes', function ($q) {
-                $q->where('status', true);
-            })
-            ->whereDoesntHave('firmantes', function ($query) use ($user) {
-                $query->where('user_id', $user->id);
-            })
+        $contrato = $user->contratos()
+            ->orderBy('id', 'DESC')
             ->first();
 
-        if (!$grupo) {
+        if ($contrato && !$contrato->grupo) {
             return response(["errors" => ["observacion" => ["No registras grupo de firmante. Contacte a Depto. Gestión de las Personas - DSSO"]]], 422);
         }
 
-        $jefe_personal = $grupo->firmantes()->where('role_id', 4)->where('status', true)->first();
+        $jefe_personal = $contrato->grupo->firmantes()->where('role_id', 4)->where('status', true)->first();
         if (!$jefe_personal) {
             return response(["errors" => ["observacion" => ["No registras Jefe de Personal. Contacte a Depto. Gestión de las Personas - DSSO"]]], 422);
         }
