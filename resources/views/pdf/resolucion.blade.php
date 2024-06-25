@@ -478,6 +478,8 @@
                                 </tr>
                             </tfoot>
                         </table>
+                    @else
+                    <p>Sin valorización de cometido.</p>
                     @endif
                     @if ($solicitud->cuentaBancaria)
                         <table class="table-1">
