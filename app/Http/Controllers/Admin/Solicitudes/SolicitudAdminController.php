@@ -142,9 +142,17 @@ class SolicitudAdminController extends Controller
     private function filterNoVerify($query, $auth)
     {
         $query->whereHas('firmantes', function ($q) use ($auth) {
-            $q->where('status', true)->where('is_executed', false)
+            $q->where('status', true)
+                ->where('is_executed', false)
                 ->where('role_id', '!=', 1)
-                ->where('user_id', $auth->id);
+                ->where('user_id', $auth->id)
+                ->where(function ($q) {
+                    $q->whereRaw('solicituds.posicion_firma_actual = solicitud_firmantes.posicion_firma - 1');
+                })
+                ->orWhere(function ($q) {
+                    $q->whereRaw('solicituds.posicion_firma_actual = solicitud_firmantes.posicion_firma')
+                        ->where('is_reasignado', true);
+                });
         })->orWhereHas('firmantes', function ($q) use ($auth) {
             $q->where('is_executed', false)
                 ->whereHas('funcionario.ausentismos', function ($q) use ($auth) {
