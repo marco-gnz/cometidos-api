@@ -414,9 +414,15 @@ class Solicitud extends Model
         ];
 
         if (self::authorizedToSincronizarGrupo()) {
-            return Grupo::where('establecimiento_id', $this->establecimiento_id)
-                ->where('departamento_id', $this->departamento_id)
-                ->whereHas('firmantes')
+            return Grupo::where(function ($q) {
+                $q->where('establecimiento_id', $this->establecimiento_id)
+                    ->where('departamento_id', $this->departamento_id);
+            })->orWhere(function ($q) {
+                $q->whereHas('contratos', function ($query) {
+                    $query->where('establecimiento_id', $this->establecimiento_id)
+                        ->where('user_id', $this->user_id);
+                });
+            })->whereHas('firmantes')
                 ->orderByRaw('CAST(codigo AS UNSIGNED) ASC')
                 ->get();
         }
