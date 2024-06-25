@@ -93,11 +93,12 @@ class PdfController extends Controller
                 return response()->view('errors.404');
             }
 
-            $content = file_get_contents($filePath);
+            $content = Storage::disk('public')->get($documento->url);
+            $safeFileName = str_replace([',', ';', ' '], '_', $documento->nombre);
 
             return response($content)
             ->header('Content-Type', 'application/pdf')
-            ->header('Content-Disposition', "inline; filename={$documento->nombre}; filename*=UTF-8''{$documento->nombre}");
+            ->header('Content-Disposition', "inline; filename={$safeFileName}; filename*=UTF-8''{$safeFileName}");
         } catch (\Exception $error) {
             return response()->json(['error' => $error->getMessage()], 500);
         }
