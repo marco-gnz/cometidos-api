@@ -80,7 +80,9 @@ class ListSolicitudCompleteAdminResource extends JsonResource
             'authorized_to_delete_calculo_ajuste'      => $this->authorizedToDeleteCalculoAjuste(),
             'authorized_to_create_convenio'            => $this->authorizedToCreateConvenio(),
             'is_posible_grupos'                        => $this->isPosibleGrupos() ? ListGrupoSelectedResource::collection($this->isPosibleGrupos()) : null,
-            'grupo_id'                                  => $this->grupo ? $this->grupo->id : null
+            'grupo_id'                                  => $this->grupo ? $this->grupo->id : null,
+            'n_dias_40'                 => $this->n_dias_40,
+            'n_dias_100'                => $this->n_dias_100,
         ];
     }
 }
