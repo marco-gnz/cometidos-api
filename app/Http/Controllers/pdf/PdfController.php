@@ -83,7 +83,6 @@ class PdfController extends Controller
     public function showDocumento($uuid)
     {
         try {
-
             $documento  = Documento::where('uuid', $uuid)->first();
             if (!$documento) {
                 return response()->view('errors.404');
@@ -97,9 +96,8 @@ class PdfController extends Controller
             $content = file_get_contents($filePath);
 
             return response($content)
-                ->header('Content-Type', 'application/pdf')
-                ->header('Content-Disposition', "inline; filename={$documento->nombre}")
-                ->header('Content-Disposition', "inline; filename={$documento->nombre}; filename*=UTF-8\'\'{$documento->nombre}");
+            ->header('Content-Type', 'application/pdf')
+            ->header('Content-Disposition', "inline; filename={$documento->nombre}; filename*=UTF-8''{$documento->nombre}");
         } catch (\Exception $error) {
             return response()->json(['error' => $error->getMessage()], 500);
         }
