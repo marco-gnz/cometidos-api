@@ -248,6 +248,11 @@
                     <td>{{ $solicitud->lastEstadoAprobado() ? $solicitud->lastEstadoAprobado()->funcionario->abreNombres() : '' }}
                     </td>
                 </tr>
+                <tr style="font-size: 8px;">
+                    <th>ÍTEM PRESUPUESTARIO:</th>
+                    <td>{{ $solicitud->itemPresupuestario ? $solicitud->itemPresupuestario->nombre : '' }}
+                    </td>
+                </tr>
             </table>
         </div>
     </header>
