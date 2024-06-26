@@ -141,7 +141,8 @@ class SolicitudAdminController extends Controller
 
     private function filterNoVerify($query, $auth)
     {
-        $query->whereHas('firmantes', function ($q) use ($auth) {
+        $query->where('status', Solicitud::STATUS_EN_PROCESO)
+        ->whereHas('firmantes', function ($q) use ($auth) {
             $q->where(function ($q) use ($auth) {
                 $q->whereRaw('solicituds.posicion_firma_actual = solicitud_firmantes.posicion_firma - 1')
                     ->where('status', true)
