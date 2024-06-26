@@ -195,6 +195,21 @@ class Solicitud extends Model
         });
 
         static::updating(function ($solicitud) {
+            $fecha_inicio                       = Carbon::parse($solicitud->fecha_inicio);
+            $fecha_termino                      = Carbon::parse($solicitud->fecha_termino);
+            $total_dias                         = $fecha_inicio->diffInDays($fecha_termino) + 1;
+            $hora_llegada                       = Carbon::parse($solicitud->hora_llegada)->format('H:i:s');
+            $hora_salida                        = Carbon::parse($solicitud->hora_salida)->format('H:i:s');
+
+            $ini_date_time                      = $fecha_inicio->format('Y-m-d') . ' ' . $hora_llegada;
+            $ter_date_time                      = $fecha_termino->format('Y-m-d') . ' ' . $hora_salida;
+            $ini_date_time                      = Carbon::parse($ini_date_time);
+            $ter_date_time                      = Carbon::parse($ter_date_time);
+            $total_horas_cometido               = $ini_date_time->diffInHours($ter_date_time);
+
+            $solicitud->total_dias_cometido     = $total_dias;
+            $solicitud->total_horas_cometido    = $total_horas_cometido;
+
             $solicitud->codigo              = self::generarCodigoUpdate($solicitud);
             $solicitud->total_firmas        = $solicitud->firmantes()->where('status', true)->count();
         });
