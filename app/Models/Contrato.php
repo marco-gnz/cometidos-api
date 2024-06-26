@@ -45,7 +45,12 @@ class Contrato extends Model
 
     public function isPosibleGrupos()
     {
-        $grupos = Grupo::where('establecimiento_id', $this->establecimiento_id)
+        $grupos = Grupo::whereHas('firmantes', function ($q) {
+            $q->where('role_id', 2);
+        })->whereHas('firmantes', function ($q) {
+            $q->where('role_id', 7);
+        })
+            ->where('establecimiento_id', $this->establecimiento_id)
             ->where('departamento_id', $this->departamento_id)
             ->whereHas('firmantes')
             ->orderByRaw('CAST(codigo AS UNSIGNED) ASC')

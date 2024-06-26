@@ -275,7 +275,8 @@ class GrupoFirmaController extends Controller
             $this->authorize('create', Grupo::class);
             $form = ['establecimiento_id', 'departamento_id', 'sub_departamento_id'];
 
-            $validate_duplicate_grupo_firmantes = $this->validateDuplicateGrupoFirmantes($request);
+            $validate_duplicate_grupo_firmantes     = $this->validateDuplicateGrupoFirmantes($request);
+            $validate_is_ejecutivo_and_finanzas     = $this->validateIsEjecutivoAndFinanzas($request);
             $firmantes          = [];
             if ($validate_duplicate_grupo_firmantes) {
                 $message = "Ya existe un grupo de firma asignado al establecimiento, depto. y subdepto y uno o más firmantes se repiten.";
@@ -287,6 +288,16 @@ class GrupoFirmaController extends Controller
                     ]
                 ], 422);
             }
+
+            if (!$validate_is_ejecutivo_and_finanzas) {
+                $message = "Debe existir un Supervisor de Finanzas y Ejecutivo de RRHH en el flujo de firma.";
+                return response()->json([
+                    'errors' => [
+                        'firmantes'    => [$message]
+                    ]
+                ], 422);
+            }
+
             $grupo = Grupo::create($request->only($form));
 
             if ($grupo) {
@@ -355,5 +366,21 @@ class GrupoFirmaController extends Controller
 
 
         return $existe;
+    }
+
+    private function validateIsEjecutivoAndFinanzas($request)
+    {
+        $roles = [];
+        if ($request->firmantes) {
+            foreach ($request->firmantes as $key => $firmante) {
+                $role_id = (int)$firmante['role_id'];
+                array_push($roles, $role_id);
+            }
+        }
+
+        if (!in_array(2, $roles) || !in_array(7, $roles)) {
+            return false;
+        }
+        return true;
     }
 }

@@ -422,22 +422,21 @@ class Solicitud extends Model
 
     public function isPosibleGrupos()
     {
-        $status_disponibles = [
-            EstadoSolicitud::STATUS_INGRESADA,
-            EstadoSolicitud::STATUS_MODIFICADA,
-            EstadoSolicitud::STATUS_PENDIENTE
-        ];
-
         if (self::authorizedToSincronizarGrupo()) {
-            $grupos = Grupo::where(function ($q) {
-                $q->where('establecimiento_id', $this->establecimiento_id)
-                    ->where('departamento_id', $this->departamento_id);
-            })->orWhere(function ($q) {
-                $q->whereHas('contratos', function ($query) {
-                    $query->where('establecimiento_id', $this->establecimiento_id)
-                        ->where('user_id', $this->user_id);
-                });
+            $grupos = Grupo::whereHas('firmantes', function ($q) {
+                $q->where('role_id', 2);
+            })->whereHas('firmantes', function ($q) {
+                $q->where('role_id', 7);
             })
+                ->where(function ($q) {
+                    $q->where('establecimiento_id', $this->establecimiento_id)
+                        ->where('departamento_id', $this->departamento_id);
+                })->orWhere(function ($q) {
+                    $q->whereHas('contratos', function ($query) {
+                        $query->where('establecimiento_id', $this->establecimiento_id)
+                            ->where('user_id', $this->user_id);
+                    });
+                })
                 ->orderByRaw('CAST(codigo AS UNSIGNED) ASC')
                 ->get();
 
