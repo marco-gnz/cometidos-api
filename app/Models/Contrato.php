@@ -45,11 +45,20 @@ class Contrato extends Model
 
     public function isPosibleGrupos()
     {
-        return Grupo::where('establecimiento_id', $this->establecimiento_id)
+        $grupos = Grupo::where('establecimiento_id', $this->establecimiento_id)
             ->where('departamento_id', $this->departamento_id)
             ->whereHas('firmantes')
             ->orderByRaw('CAST(codigo AS UNSIGNED) ASC')
             ->get();
+
+        $grupos->map(function ($grupo) {
+            if ($grupo) {
+                $existe_en_su_mismo_grupo = $grupo->firmantes()->where('user_id', $this->user_id)->first();
+                $grupo->{'es_su_grupo'} =  $existe_en_su_mismo_grupo ? true : false;
+            }
+            return $grupo;
+        });
+        return $grupos;
     }
 
     public function ley()

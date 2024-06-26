@@ -187,7 +187,7 @@ class Grupo extends Model
                         $query->where('nombre', 'like', '%' . $params . '%');
                     });
                 })
-                /* ->orWhere(function ($query) use ($params) {
+                ->orWhere(function ($query) use ($params) {
                     $query->whereHas('firmantes.funcionario', function ($query) use ($params) {
                         $query->where('rut_completo', 'like', '%' . $params . '%')
                             ->orWhere('rut', 'like', '%' . $params . '%')
@@ -196,6 +196,6 @@ class Grupo extends Model
                             ->orWhere('nombre_completo', 'like', '%' . $params . '%')
                             ->orWhere('email', 'like', '%' . $params . '%');
                     });
-                }) */;
+                });
     }
 }

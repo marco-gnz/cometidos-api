@@ -414,7 +414,7 @@ class Solicitud extends Model
         ];
 
         if (self::authorizedToSincronizarGrupo()) {
-            return Grupo::where(function ($q) {
+            $grupos = Grupo::where(function ($q) {
                 $q->where('establecimiento_id', $this->establecimiento_id)
                     ->where('departamento_id', $this->departamento_id);
             })->orWhere(function ($q) {
@@ -422,9 +422,18 @@ class Solicitud extends Model
                     $query->where('establecimiento_id', $this->establecimiento_id)
                         ->where('user_id', $this->user_id);
                 });
-            })->whereHas('firmantes')
+            })
                 ->orderByRaw('CAST(codigo AS UNSIGNED) ASC')
                 ->get();
+
+            $grupos->map(function ($grupo) {
+                if ($grupo) {
+                    $existe_en_su_mismo_grupo = $grupo->firmantes()->where('user_id', $this->user_id)->first();
+                    $grupo->{'es_su_grupo'} =  $existe_en_su_mismo_grupo ? true : false;
+                }
+                return $grupo;
+            });
+            return $grupos;
         }
         return null;
     }

@@ -26,7 +26,8 @@ class ListGrupoSelectedResource extends JsonResource
             'id'                => $this->id,
             'codigo'            => $this->codigo,
             'total_firmantes'   => count($this->firmantes),
-            'descripcion'       => $descripcion
+            'descripcion'       => $descripcion,
+            'es_su_grupo'       => $this->es_su_grupo
         ];
     }
 }
