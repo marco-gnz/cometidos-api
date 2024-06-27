@@ -31,7 +31,7 @@ trait FirmaDisponibleTrait
         $id_user_ejecuted_firma = null;
 
         $query = $solicitud->firmantes()
-            ->where('status', true)
+            /* ->where('status', true) */
             ->whereJsonContains('permissions_id', $id_permission)
             ->orderBy('posicion_firma', 'ASC');
 
