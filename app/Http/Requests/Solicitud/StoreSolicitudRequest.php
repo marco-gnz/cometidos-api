@@ -46,11 +46,23 @@ class StoreSolicitudRequest extends FormRequest
             'gastos_alimentacion'       => ['required', 'boolean'],
             'gastos_alojamiento'        => ['required', 'boolean'],
             'pernocta_lugar_residencia' => ['required', 'boolean'],
-            'n_dias_40'                 => ['required'],
-            'n_dias_100'                => ['required'],
+            'n_dias_40'                 => ['required', 'integer'],
+            'n_dias_100'                => ['required', 'integer'],
             'observacion_gastos'        => ['nullable'],
             'archivos'                  => ['nullable'],
         ];
+    }
+
+    protected function withValidator($validator)
+    {
+        $validator->after(function ($validator) {
+            if ($this->derecho_pago) {
+                if ($this->n_dias_40 <= 0 && $this->n_dias_100 <= 0) {
+                    $validator->errors()->add('n_dias_40', 'Al menos uno de los días debe ser mayor que 0 cuando es con derecho a pago.');
+                    $validator->errors()->add('n_dias_100', 'Al menos uno de los días debe ser mayor que 0 cuando es con derecho a pago.');
+                }
+            }
+        });
     }
 
     public function messages()
@@ -96,9 +108,9 @@ class StoreSolicitudRequest extends FormRequest
 
             'gastos_alojamiento.required'           => 'El :attribute es obligatorio',
 
-            'n_dias_40.required'                    => 'El :attribute es obligatorio',
+            'n_dias_40.required'                    => 'El :attribute es obligatorio o dejarlo en 0',
 
-            'n_dias_100.required'                   => 'El :attribute es obligatorio',
+            'n_dias_100.required'                   => 'El :attribute es obligatorio o dejarlo en 0',
 
         ];
     }
@@ -125,8 +137,8 @@ class StoreSolicitudRequest extends FormRequest
             'gastos_alimentacion'   => 'gastos de alimentación',
             'gastos_alojamiento'    => 'gastos de alojamiento',
             'actividades'           => 'actividades',
-            'n_dias_40'             => 'n° de días de alojamiento',
-            'n_dias_100'            => 'n° de días diarios',
+            'n_dias_40'             => 'n° de días al 40%',
+            'n_dias_100'            => 'n° de días al 100%',
             'observacion_gastos'    => 'observación de pasajes'
         ];
     }

@@ -44,12 +44,24 @@ class UpdateSolicitudRequest extends FormRequest
             'gastos_alimentacion'       => ['required', 'boolean'],
             'gastos_alojamiento'        => ['required', 'boolean'],
             'pernocta_lugar_residencia' => ['required', 'boolean'],
-            'n_dias_40'                 => ['required'],
-            'n_dias_100'                => ['required'],
+            'n_dias_40'                 => ['required', 'integer'],
+            'n_dias_100'                => ['required', 'integer'],
             'observacion_gastos'        => ['nullable'],
             'archivos'                  => ['nullable'],
             'observacion'               => ['nullable']
         ];
+    }
+
+    protected function withValidator($validator)
+    {
+        $validator->after(function ($validator) {
+            if ($this->derecho_pago) {
+                if ($this->n_dias_40 <= 0 && $this->n_dias_100 <= 0) {
+                    $validator->errors()->add('n_dias_40', 'Al menos uno de los días debe ser mayor que 0 cuando es con derecho a pago.');
+                    $validator->errors()->add('n_dias_100', 'Al menos uno de los días debe ser mayor que 0 cuando es con derecho a pago.');
+                }
+            }
+        });
     }
 
     public function messages()
@@ -95,9 +107,9 @@ class UpdateSolicitudRequest extends FormRequest
 
             'actividades.*.mount.required'          => 'El :attribute es obligatorio',
 
-            'n_dias_40.required'                    => 'El :attribute es obligatorio',
+            'n_dias_40.required'                    => 'El :attribute es obligatorio o dejarlo en 0',
 
-            'n_dias_100.required'                   => 'El :attribute es obligatorio',
+            'n_dias_100.required'                   => 'El :attribute es obligatorio o dejarlo en 0',
 
             'observacion_pasajes.required'          => 'El :attribute es obligatorio',
         ];
@@ -125,8 +137,8 @@ class UpdateSolicitudRequest extends FormRequest
             'actividades'           => 'actividades',
             'actividades.*.mount'   => 'monto',
             'actividades.*.rinde_gastos_servicio' => 'rinde gasto servicio',
-            'n_dias_40'             => 'n° de días de alojamiento',
-            'n_dias_100'            => 'n° de días diarios',
+            'n_dias_40'             => 'n° de días al 40%',
+            'n_dias_100'            => 'n° de días al 100%',
             'observacion_pasajes'   => 'observación de pasajes'
         ];
     }
