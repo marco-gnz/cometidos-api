@@ -59,7 +59,11 @@ class ProcesoRendicionController extends Controller
             if ($resultSolicitud === 'noverify') {
                 $this->filterNoVerify($query, $auth);
             }else if($resultSolicitud === 'none'){
-                $this->filterAll($query, $auth);
+                if ($auth->hasPermissionTo('solicitudes.ver')) {
+                    $this->filterRole($query, $auth);
+                } else {
+                    $this->filterNoVerify($query, $auth);
+                }
             }
 
             $proceso_rendiciones = $query->orderByDesc('n_folio')->paginate(50);
@@ -114,7 +118,7 @@ class ProcesoRendicionController extends Controller
             });
     }
 
-    private function filterAll($query, $auth)
+    private function filterRole($query, $auth)
     {
         $establecimientos_id    = $auth->establecimientos->pluck('id')->toArray();
         $leyes_id               = $auth->leyes->pluck('id')->toArray();
