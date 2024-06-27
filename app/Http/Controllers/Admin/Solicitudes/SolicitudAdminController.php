@@ -142,40 +142,68 @@ class SolicitudAdminController extends Controller
     private function filterNoVerify($query, $auth)
     {
         $query->where('status', Solicitud::STATUS_EN_PROCESO)
-        ->whereHas('firmantes', function ($q) use ($auth) {
-            $q->where(function ($q) use ($auth) {
-                $q->whereRaw('solicituds.posicion_firma_actual = solicitud_firmantes.posicion_firma - 1')
-                    ->where('status', true)
-                    ->where('is_executed', false)
-                    ->where('role_id', '!=', 1)
-                    ->where('user_id', $auth->id);
-            })
-                ->orWhere(function ($q) use ($auth) {
-                    $q->whereRaw('solicituds.posicion_firma_actual = solicitud_firmantes.posicion_firma')
-                        ->where('is_reasignado', true)
-                        ->where('status', true)
-                        ->where('is_executed', false)
-                        ->where('role_id', '!=', 1)
-                        ->where('user_id', $auth->id);
+            ->where(function ($q) use ($auth) {
+                $q->whereHas('firmantes', function ($q) use ($auth) {
+                    $q->where(function ($q) use ($auth) {
+                        $q->whereRaw('solicituds.posicion_firma_actual = solicitud_firmantes.posicion_firma - 1')
+                            ->where('status', true)
+                            ->where('is_executed', false)
+                            ->where('role_id', '!=', 1)
+                            ->where('user_id', $auth->id);
+                    })
+                        ->orWhere(function ($q) use ($auth) {
+                            $q->whereRaw('solicituds.posicion_firma_actual = solicitud_firmantes.posicion_firma')
+                                ->where('is_reasignado', true)
+                                ->where('status', true)
+                                ->where('is_executed', false)
+                                ->where('role_id', '!=', 1)
+                                ->where('user_id', $auth->id);
+                        });
                 });
-        })->orWhereHas('firmantes', function ($q) use ($auth) {
-            $q->where('is_executed', false)
-                ->whereHas('funcionario.ausentismos', function ($q) use ($auth) {
-                    $q->whereHas('subrogantes', function ($q) use ($auth) {
-                        $q->where('users.id', $auth->id);
-                    })->whereRaw("DATE(solicituds.fecha_by_user) >= ausentismos.fecha_inicio")
-                        ->whereRaw("DATE(solicituds.fecha_by_user) <= ausentismos.fecha_termino");
-                });
-        })->orWhere(function ($q) use ($auth) {
-            $q->whereHas('firmantes', function ($q) use ($auth) {
-                $q->where('is_executed', false)
-                    ->whereHas('funcionario.reasignacionAusencias', function ($q) use ($auth) {
-                        $q->where('user_subrogante_id', $auth->id);
+            })->orWhere(function ($q) use ($auth) {
+                $q->whereHas('firmantes', function ($q) use ($auth) {
+                    $q->whereHas('funcionario.ausentismos', function ($q) use ($auth) {
+                        $q->whereHas('subrogantes', function ($q) use ($auth) {
+                            $q->where('users.id', $auth->id);
+                        })
+                            ->whereRaw("DATE(solicituds.fecha_by_user) >= ausentismos.fecha_inicio")
+                            ->whereRaw("DATE(solicituds.fecha_by_user) <= ausentismos.fecha_termino")
+                            ->where(function ($query) {
+                                $query->whereRaw('solicituds.posicion_firma_actual = solicitud_firmantes.posicion_firma - 1')
+                                    ->where('status', true)
+                                    ->where('is_executed', false)
+                                    ->where('role_id', '!=', 1);
+                            })->orWhere(function ($query) {
+                                $query->whereRaw('solicituds.posicion_firma_actual = solicitud_firmantes.posicion_firma')
+                                    ->where('is_reasignado', true)
+                                    ->where('status', true)
+                                    ->where('is_executed', false)
+                                    ->where('role_id', '!=', 1);
+                            });
                     });
-            })->whereHas('reasignaciones', function ($q) use ($auth) {
-                $q->where('user_subrogante_id', $auth->id);
+                });
+            })->orWhere(function ($q) use ($auth) {
+                $q->whereHas('firmantes', function ($q) use ($auth) {
+                    $q->where('is_executed', false)
+                        ->whereHas('funcionario.reasignacionAusencias', function ($q) use ($auth) {
+                            $q->where('user_subrogante_id', $auth->id)
+                                ->where(function ($query) {
+                                    $query->whereRaw('solicituds.posicion_firma_actual = solicitud_firmantes.posicion_firma - 1')
+                                        ->where('status', true)
+                                        ->where('is_executed', false)
+                                        ->where('role_id', '!=', 1);
+                                })->orWhere(function ($query) {
+                                    $query->whereRaw('solicituds.posicion_firma_actual = solicitud_firmantes.posicion_firma')
+                                        ->where('is_reasignado', true)
+                                        ->where('status', true)
+                                        ->where('is_executed', false)
+                                        ->where('role_id', '!=', 1);
+                                });
+                        });
+                })->whereHas('reasignaciones', function ($q) use ($auth) {
+                    $q->where('user_subrogante_id', $auth->id);
+                });
             });
-        });
     }
 
     private function filterVerify($query, $auth)
