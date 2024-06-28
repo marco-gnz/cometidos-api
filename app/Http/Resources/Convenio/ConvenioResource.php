@@ -16,6 +16,7 @@ class ConvenioResource extends JsonResource
      */
     public function toArray($request)
     {
+        $funcionario = $this->funcionario ? "{$this->funcionario->nombre_completo} / {$this->funcionario->rut_completo}" : null;
         return [
             'uuid'                  => $this->uuid,
             'codigo'                => $this->codigo ? $this->codigo : null,
@@ -31,7 +32,9 @@ class ConvenioResource extends JsonResource
             'ley'                   => $this->ley ? $this->ley->nombre : null,
             'establecimiento'       => $this->establecimiento ? $this->establecimiento->nombre : null,
             'ilustre'               => $this->ilustre ? $this->ilustre->nombre : null,
-            'funcionario'           => $this->funcionario ? $this->funcionario->nombre_completo : null,
+            'funcionario'           => $funcionario,
+            'tipo_contrato'         => $this->tipo_contrato ? $this->tipo_contrato : null,
+            'email'                 => $this->email ? $this->email : null,
             'user_by'               => $this->userBy ? $this->userBy->abreNombres() : null,
             'created_at'            => $this->created_at ? Carbon::parse($this->created_at)->format('d-m-Y H:i:s') : null
         ];

@@ -23,9 +23,11 @@ class CreateConveniosTable extends Migration
             $table->string('n_resolucion')->nullable();
             $table->integer('n_viatico_mensual');
             $table->unsignedSmallInteger('tipo_convenio')->nullable();
+            $table->string('tipo_contrato')->nullable();
             $table->year('anio')->nullable();
             $table->text('observacion')->nullable();
             $table->boolean('active')->default(1);
+            $table->string('email')->nullable();
 
             $table->unsignedBigInteger('user_id')->nullable();
             $table->foreign('user_id')->references('id')->on('users');

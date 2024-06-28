@@ -28,8 +28,8 @@ class ConvenioController extends Controller
                 ->establecimiento($request->establecimientos_id)
                 ->ley($request->leys_id)
                 ->ilustre($request->ilustres_id)
-                ->orderBy('codigo', 'DESC')
-                ->paginate(8);
+                ->orderBy('codigo', 'ASC')
+                ->paginate(50);
 
             return response()->json(
                 array(
