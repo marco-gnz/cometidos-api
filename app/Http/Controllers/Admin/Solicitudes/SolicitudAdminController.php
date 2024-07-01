@@ -146,6 +146,7 @@ class SolicitudAdminController extends Controller
                 $q->whereHas('firmantes', function ($q) use ($auth) {
                     $q->where(function ($q) use ($auth) {
                         $q->whereRaw('solicituds.posicion_firma_actual = solicitud_firmantes.posicion_firma - 1')
+                            ->where('solicituds.is_reasignada', 0)
                             ->where('status', true)
                             ->where('is_executed', false)
                             ->where('role_id', '!=', 1)
@@ -153,6 +154,7 @@ class SolicitudAdminController extends Controller
                     })
                         ->orWhere(function ($q) use ($auth) {
                             $q->whereRaw('solicituds.posicion_firma_actual = solicitud_firmantes.posicion_firma')
+                                ->where('solicituds.is_reasignada', 1)
                                 ->where('is_reasignado', true)
                                 ->where('status', true)
                                 ->where('is_executed', false)
@@ -170,11 +172,13 @@ class SolicitudAdminController extends Controller
                             ->whereRaw("DATE(solicituds.fecha_by_user) <= ausentismos.fecha_termino")
                             ->where(function ($query) {
                                 $query->whereRaw('solicituds.posicion_firma_actual = solicitud_firmantes.posicion_firma - 1')
+                                    ->where('solicituds.is_reasignada', 0)
                                     ->where('status', true)
                                     ->where('is_executed', false)
                                     ->where('role_id', '!=', 1);
                             })->orWhere(function ($query) {
                                 $query->whereRaw('solicituds.posicion_firma_actual = solicitud_firmantes.posicion_firma')
+                                    ->where('solicituds.is_reasignada', 1)
                                     ->where('is_reasignado', true)
                                     ->where('status', true)
                                     ->where('is_executed', false)
@@ -189,11 +193,13 @@ class SolicitudAdminController extends Controller
                             $q->where('user_subrogante_id', $auth->id)
                                 ->where(function ($query) {
                                     $query->whereRaw('solicituds.posicion_firma_actual = solicitud_firmantes.posicion_firma - 1')
+                                        ->where('solicituds.is_reasignada', 0)
                                         ->where('status', true)
                                         ->where('is_executed', false)
                                         ->where('role_id', '!=', 1);
                                 })->orWhere(function ($query) {
                                     $query->whereRaw('solicituds.posicion_firma_actual = solicitud_firmantes.posicion_firma')
+                                        ->where('solicituds.is_reasignada', 1)
                                         ->where('is_reasignado', true)
                                         ->where('status', true)
                                         ->where('is_executed', false)
