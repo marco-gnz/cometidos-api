@@ -2,6 +2,7 @@
 
 namespace App\Http\Resources\Solicitud;
 
+use App\Http\Resources\User\InformeCometido\ListInformeCometidoResource;
 use App\Models\EstadoSolicitud;
 use App\Models\Solicitud;
 use Carbon\Carbon;
@@ -35,7 +36,7 @@ class ListSolicitudAdminResource extends JsonResource
             'page_firma'                => $this->pageFirma(),
             'type_page_firma'           => $this->typePageFirma(),
             'is_grupo'                  => $this->isGrupo(),
-            'is_informe'                => $this->informeCometido() ? true : false
+            'informe_cometido'          => $this->informeCometido() ? ListInformeCometidoResource::make($this->informeCometido()) : null
         ];
     }
 }
