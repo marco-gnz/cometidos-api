@@ -48,6 +48,14 @@ class PasswordResetLinkController extends Controller
                 ], 422);
             }
 
+            if (($user) && (!$user->email)) {
+                return response()->json([
+                    'errors' => [
+                        'rut'  => ['Cuenta sin correo electrónico. Contacte a Depto. Gestión de las Personas - DSSO']
+                    ]
+                ], 422);
+            }
+
             $status = Password::sendResetLink([
                 'email' => $user->email
             ]);
