@@ -903,6 +903,29 @@ class SolicitudController extends Controller
                     }
                 }
 
+                if ($request->documentos) {
+                    $documentos = $request->documentos;
+
+                    $documentos_not = $solicitud->documentos()
+                        ->whereNotIn('uuid', $documentos)
+                        ->get();
+
+                    if (count($documentos_not) > 0) {
+                        foreach ($documentos_not as $documento_not) {
+                            $documento_not->delete();
+                        }
+                    }
+                } else {
+                    $documentos = $solicitud->documentos()
+                        ->get();
+
+                    if (count($documentos) > 0) {
+                        foreach ($documentos as $documento) {
+                            $documento->delete();
+                        }
+                    }
+                }
+
                 if ($request->archivos) {
                     foreach ($request->archivos as $file) {
                         $fecha_solicitud    = Carbon::parse($solicitud->fecha_inicio);

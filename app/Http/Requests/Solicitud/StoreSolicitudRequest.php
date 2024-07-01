@@ -49,7 +49,7 @@ class StoreSolicitudRequest extends FormRequest
             'n_dias_40'                 => ['required', 'integer'],
             'n_dias_100'                => ['required', 'integer'],
             'observacion_gastos'        => ['nullable'],
-            'archivos'                  => ['nullable'],
+            'archivos'                  => ['required_if:derecho_pago,1'],
         ];
     }
 
@@ -112,6 +112,7 @@ class StoreSolicitudRequest extends FormRequest
 
             'n_dias_100.required'                   => 'El :attribute es obligatorio o dejarlo en 0',
 
+            'archivos.required_if'                  => 'Debe cargar :attribute al ser un cometido con derecho a pago'
         ];
     }
 
@@ -139,7 +140,8 @@ class StoreSolicitudRequest extends FormRequest
             'actividades'           => 'actividades',
             'n_dias_40'             => 'n° de días al 40%',
             'n_dias_100'            => 'n° de días al 100%',
-            'observacion_gastos'    => 'observación de pasajes'
+            'observacion_gastos'    => 'observación de pasajes',
+            'archivos'              => 'archivos'
         ];
     }
 }

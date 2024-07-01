@@ -47,7 +47,14 @@ class UpdateSolicitudRequest extends FormRequest
             'n_dias_40'                 => ['required', 'integer'],
             'n_dias_100'                => ['required', 'integer'],
             'observacion_gastos'        => ['nullable'],
-            'archivos'                  => ['nullable'],
+            'archivos'                                  => [
+                function ($attribute, $value, $fail) {
+                    if (empty(request()->input('documentos')) && empty($value) && request()->input('derecho_pago') === 1) {
+                        $fail('Debe cargar archivos al ser un cometido con derecho a pago');
+                    }
+                }
+            ],
+            'documentos'                => ['nullable'],
             'observacion'               => ['nullable']
         ];
     }

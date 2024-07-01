@@ -2,6 +2,7 @@
 
 namespace App\Http\Resources\Solicitud;
 
+use App\Models\Documento;
 use Illuminate\Http\Resources\Json\JsonResource;
 
 class UpdateSolicitudResource extends JsonResource
@@ -14,6 +15,7 @@ class UpdateSolicitudResource extends JsonResource
      */
     public function toArray($request)
     {
+        $documentos = $this->documentos()->where('model', Documento::MODEL_SOLICITUD)->get();
         return [
             'codigo'                            => $this->codigo,
             'user_id'                           => $this->funcionario->id,
@@ -42,6 +44,7 @@ class UpdateSolicitudResource extends JsonResource
             'paises_cometido'                   => $this->paises ? $this->paises->pluck('id') : [],
             'dentro_pais'                       => $this->dentro_pais ? 1 : 0,
             'archivos'                          => [],
+            'documentos'                        => $documentos ? ListSolicitudDocumentosResource::collection($documentos) : [],
             'is_update'                         => $this->authorizedToUpdate() || $this->authorizedToUpdateAdmin(),
             'is_store_informe_cometido'         => $this->authorizedToCreateInformeCometido(),
             'dias_permitidos'                   => $this->dias_permitidos,
