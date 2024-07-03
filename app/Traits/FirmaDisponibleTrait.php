@@ -147,8 +147,9 @@ trait FirmaDisponibleTrait
                     $posicion_firma                     = $first_firma_auth->posicion_firma;
                     $name_user                          = $first_firma_auth->funcionario->abreNombres();
                     $id_permission_valorizacion_crear   = $this->idPermission('solicitud.valorizacion.crear');
+                    $id_permission_informe_validar      = $this->idPermission('solicitud.informes.validar');
                     $get_last_calculo                   = $solicitud->getLastCalculo();
-                    $total_informes_aprobados           = $solicitud->informes()->where('last_status', EstadoInformeCometido::STATUS_APROBADO)->count();
+                    $informe_cometido                   = $solicitud->informeCometido();
 
                     if (($solicitud->derecho_pago) && in_array($id_permission_valorizacion_crear, $first_firma_auth->permissions_id) && !$get_last_calculo && isset($status) && $status === EstadoSolicitud::STATUS_APROBADO) {
                         $is_firma   = false;
@@ -162,6 +163,12 @@ trait FirmaDisponibleTrait
                             ->orderBy('posicion_firma', 'ASC')
                             ->first();
 
+                        $message_2 = null;
+
+                        if (in_array($id_permission_informe_validar, $first_firma_auth->permissions_id) && ($informe_cometido) && ($informe_cometido->last_status === EstadoInformeCometido::STATUS_INGRESADA)) {
+                            $message_2 = 'Existe un Informe de Cometido pendiente por verificar. Al aprobar esta Solicitud de Cometido, el Informe de Cometido será aprobado automáticamente con su firma.';
+                        }
+
                         if ($next_firma) {
                             $type       = 'success';
                             $title      = "{$name_user}, si registras firma disponible.";
@@ -171,6 +178,10 @@ trait FirmaDisponibleTrait
                             $title          = "{$name_user}, registras como último firmante.";
                             $estado_finish  = Solicitud::STATUS_NOM[Solicitud::STATUS_PROCESADO];
                             $message        = "Al aprobar finalizará el ciclo de firma y la solicitud será {$estado_finish}";
+                        }
+
+                        if ($message_2) {
+                            $message = "$message **$message_2**";
                         }
                     }
                 } else {
@@ -211,6 +222,7 @@ trait FirmaDisponibleTrait
                         $if_buttom                          = true;
                         $get_last_calculo                   = $solicitud->getLastCalculo();
                         $id_permission_valorizacion_crear   = $this->idPermission('solicitud.valorizacion.crear');
+                        $id_permission_informe_validar      = $this->idPermission('solicitud.informes.validar');
                         if (($solicitud->derecho_pago) && in_array($id_permission_valorizacion_crear, $first_firma_position->permissions_id) && !$get_last_calculo && isset($status) && $status === EstadoSolicitud::STATUS_APROBADO) {
                             $is_firma   = false;
                             $type       = 'warning';
@@ -231,6 +243,12 @@ trait FirmaDisponibleTrait
                                 ->orderBy('posicion_firma', 'ASC')
                                 ->first();
 
+                            $message_2          = null;
+                            $informe_cometido   = $solicitud->informeCometido();
+                            if (in_array($id_permission_informe_validar, $first_firma_position->permissions_id) && ($informe_cometido) && ($informe_cometido->last_status === EstadoInformeCometido::STATUS_INGRESADA)) {
+                                $message_2 = 'Existe un Informe de Cometido pendiente por verificar. Al aprobar esta Solicitud de Cometido, el Informe de Cometido será aprobado automáticamente con su firma.';
+                            }
+
                             if ($next_firma) {
                                 $type       = 'warning';
                                 $title      = "{$name_user}, registras firma disponible como subrogancia.";
@@ -240,6 +258,10 @@ trait FirmaDisponibleTrait
                                 $title          = "{$name_user}, registras como último firmante y subrogante.";
                                 $estado_finish  = Solicitud::STATUS_NOM[Solicitud::STATUS_PROCESADO];
                                 $message        = "Al aprobar finalizará el ciclo de firma y la solicitud será {$estado_finish}";
+                            }
+
+                            if ($message_2) {
+                                $message = "$message **$message_2**";
                             }
                         }
                     } else {

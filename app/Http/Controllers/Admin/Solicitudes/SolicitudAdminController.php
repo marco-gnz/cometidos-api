@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Admin\Solicitudes;
 
+use App\Events\InformeCometidoStatus;
 use App\Events\SolicitudChangeStatus;
 use App\Events\SolicitudReasignada;
 use App\Http\Controllers\Controller;
@@ -28,6 +29,7 @@ use App\Models\Concepto;
 use App\Models\Convenio;
 use App\Models\Escala;
 use App\Models\EstadoCalculoAjuste;
+use App\Models\EstadoInformeCometido;
 use App\Models\EstadoSolicitud;
 use App\Models\Grupo;
 use App\Models\Solicitud;
@@ -1184,8 +1186,14 @@ class SolicitudAdminController extends Controller
                 case 1:
                 case 2:
                 case 3:
-                    $estados         = $this->verificarSolicitud($solicitud, $firma_disponible, $firma_reasignada, $status, $request->observacion, $request->motivo_id);
-                    $create_status   = $solicitud->addEstados($estados);
+                    $estados          = $this->verificarSolicitud($solicitud, $firma_disponible, $firma_reasignada, $status, $request->observacion, $request->motivo_id);
+                    $create_status    = $solicitud->addEstados($estados);
+                    $informe_cometido = $solicitud->informeCometido();
+
+                    if (($informe_cometido) && ($informe_cometido->last_status === EstadoInformeCometido::STATUS_INGRESADA)) {
+                        $this->aprobarInformeCometidoAutomatico($solicitud);
+                    }
+
                     break;
 
                 case 4:
@@ -1244,6 +1252,32 @@ class SolicitudAdminController extends Controller
             );
         } catch (\Exception $error) {
             return $error->getMessage();
+        }
+    }
+
+    private function aprobarInformeCometidoAutomatico($solicitud)
+    {
+        $firma_disponible = $this->isFirmaDisponibleActionPolicy($solicitud, 'solicitud.informes.validar');
+        if ($firma_disponible->is_firma) {
+            $informeCometido                    = $solicitud->informeCometido();
+            $status                             = EstadoInformeCometido::STATUS_APROBADO;
+
+            $estados[] = [
+                'status'                    => $status,
+                'informe_cometido_id'       => $informeCometido->id,
+                'observacion'               => "GECOM: Informe aprobado automáticamente al aprobar cometido N° {$solicitud->codigo}",
+                'is_subrogante'             => $firma_disponible->is_subrogante,
+                'role_id'                   => $firma_disponible->is_firma ? $firma_disponible->firma->role_id : null,
+                'posicion_firma'            => $firma_disponible->is_firma ? $firma_disponible->firma->posicion_firma : null
+            ];
+
+            $create_status      = $informeCometido->addEstados($estados);
+            $informeCometido    = $informeCometido->fresh();
+
+            if ($create_status) {
+                $last_status = $informeCometido->estados()->orderBy('id', 'DESC')->first();
+                InformeCometidoStatus::dispatch($last_status);
+            }
         }
     }
 }
