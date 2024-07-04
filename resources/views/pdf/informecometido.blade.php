@@ -224,7 +224,7 @@
                             <td>{{ $informe->codigo }}</td>
                         </tr>
                         <tr>
-                            <th>N° RESOLUCIÓN :</th>
+                            <th>N° RESOLUCIÓN COMETIDO:</th>
                             <td>{{ $informe->solicitud->codigo }}</td>
                         </tr>
                         <tr>

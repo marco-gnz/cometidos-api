@@ -5,6 +5,7 @@ use App\Http\Controllers\Admin\Conceptos\ConceptosController;
 use App\Http\Controllers\Admin\Configuration\ConfigurationController;
 use App\Http\Controllers\Admin\Convenios\ConvenioController;
 use App\Http\Controllers\Admin\Grupos\GrupoFirmaController;
+use App\Http\Controllers\Admin\Mantenedores\MantenedorAdminController;
 use App\Http\Controllers\Admin\Mantenedores\MantenedorController;
 use App\Http\Controllers\Admin\Perfil\PerfilController;
 use App\Http\Controllers\Admin\Reasignacion\ReasignacionController;
@@ -210,6 +211,10 @@ Route::group(
         Route::get('/ausentismo/list', [AusentismosController::class, 'listAusentismos']);
         Route::post('/ausentismo/store', [AusentismosController::class, 'storeAusentismo']);
         Route::delete('/ausentismo/{uuid}', [AusentismosController::class, 'deleteAusentismo']);
+
+        Route::get('/admin/lugares', [MantenedorAdminController::class, 'getLugares']);
+        Route::post('/admin/lugares', [MantenedorAdminController::class, 'storeLugar']);
+        Route::put('/admin/lugares/{id}', [MantenedorAdminController::class, 'changeStatusLugar']);
     }
 );
 

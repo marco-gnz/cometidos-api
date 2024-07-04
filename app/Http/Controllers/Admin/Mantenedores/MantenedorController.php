@@ -54,8 +54,8 @@ class MantenedorController extends Controller
             }
             $models = ['grupofirma', 'convenio', 'ausentismo', 'funcionario', 'usuarioespecial', 'configuracion', 'perfil', 'solicitudes', 'rendiciones', 'reasignacion'];
             $permissions_aditional = Permission::whereNotIn('id', $permissions)
-            ->whereIn('model', $models)
-            ->get();
+                ->whereIn('model', $models)
+                ->get();
             return response()->json($permissions_aditional);
         } catch (\Exception $error) {
             return response()->json($error->getMessage());
@@ -139,7 +139,7 @@ class MantenedorController extends Controller
     public function getLugares()
     {
         try {
-            $lugares = Lugar::orderBy('nombre', 'ASC')->get();
+            $lugares = Lugar::where('active', true)->orderBy('nombre', 'ASC')->get();
 
             return response()->json($lugares);
         } catch (\Exception $error) {
@@ -175,9 +175,9 @@ class MantenedorController extends Controller
 
     public function getSubdepartamentosToGroup($establecimiento_id, $departamento_id)
     {
-        $grupos = Grupo::where('establecimiento_id', $establecimiento_id )
-        ->where('departamento_id', $departamento_id)
-        ->get();
+        $grupos = Grupo::where('establecimiento_id', $establecimiento_id)
+            ->where('departamento_id', $departamento_id)
+            ->get();
 
         $subdepartamentos = $grupos->map(function ($grupo) {
             return $grupo->subdepartamento;

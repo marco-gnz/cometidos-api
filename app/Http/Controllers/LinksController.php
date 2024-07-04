@@ -136,6 +136,17 @@ class LinksController extends Controller
             );
         }
 
+        if ($user->hasPermissionTo('configuracion.ver')) {
+            $linksUsers[] = Link::create(
+                "list-lugares",
+                "Lugares",
+                "Listado de lugares de cometido",
+                "/admin/otros/lugares",
+                "0e6db8",
+                false
+            );
+        }
+
         return response()->json([
             'links_admin' => $linksAdmin,
             'links_users' => $linksUsers,
