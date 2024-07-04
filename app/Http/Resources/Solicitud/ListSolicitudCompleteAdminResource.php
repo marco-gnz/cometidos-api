@@ -34,6 +34,10 @@ class ListSolicitudCompleteAdminResource extends JsonResource
             'establecimiento'           => $this->establecimiento ? $this->establecimiento->nombre : null,
             'ley'                       => $this->ley ? $this->ley->nombre : null,
             'grado'                     => $this->grado ? $this->grado->nombre : null,
+            'estamento'                 => $this->estamento ? $this->estamento->nombre : null,
+            'cargo'                     => $this->cargo ? $this->cargo->nombre : null,
+            'hora'                      => $this->hora ? $this->hora->nombre : null,
+            'calidad'                   => $this->calidad ? $this->calidad->nombre : null,
             'utiliza_transporte'        => $this->utiliza_transporte ? 'Si' : 'No',
             'derecho_pago_value'        => $this->derecho_pago ? true : false,
             'derecho_pago'              => $this->derecho_pago ? "Si" : "No",
@@ -83,6 +87,8 @@ class ListSolicitudCompleteAdminResource extends JsonResource
             'grupo_id'                                  => $this->grupo ? $this->grupo->id : null,
             'n_dias_40'                 => $this->n_dias_40,
             'n_dias_100'                => $this->n_dias_100,
+            'viaja_acompaniante'              => $this->viaja_acompaniante ? "Si" : "No",
+            'alimentacion_red'              => $this->alimentacion_red ? "Si" : "No",
         ];
     }
 }
