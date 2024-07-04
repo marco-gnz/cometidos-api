@@ -236,20 +236,20 @@
                     </td>
                 </thead>
                 <tr style="font-size: 8px;">
-                    <th>FECHA RECEPCIÓN:</th>
+                    <th>FECHA RECEPCIÓN</th>
                     <td>{{ Carbon\Carbon::parse($solicitud->created_at)->format('d-m-Y') }}</td>
                 </tr>
                 <tr style="font-size: 8px;">
-                    <th>HORA RECEPCIÓN:</th>
+                    <th>HORA RECEPCIÓN</th>
                     <td>{{ Carbon\Carbon::parse($solicitud->created_at)->format('H:i:s') }}</td>
                 </tr>
                 <tr style="font-size: 8px;">
-                    <th>ÚLTIMA APROBACIÓN:</th>
+                    <th>ÚLTIMA APROBACIÓN</th>
                     <td>{{ $solicitud->lastEstadoAprobado() ? $solicitud->lastEstadoAprobado()->funcionario->abreNombres() : '' }}
                     </td>
                 </tr>
                 <tr style="font-size: 8px;">
-                    <th>ÍTEM PRESUPUESTARIO:</th>
+                    <th>ÍTEM PRESUPUESTARIO</th>
                     <td>{{ $solicitud->itemPresupuestario ? $solicitud->itemPresupuestario->nombre : '' }}
                     </td>
                 </tr>
@@ -263,7 +263,7 @@
                 <div class="column">
                 </div>
                 <div class="column">
-                    <p><strong>RESOLUCIÓN EXENTA N°</strong> {{ $solicitud->codigo }}</p>
+                    <p><strong>RESOLUCIÓN {{ App\Models\Solicitud::RESOLUCION_NOM[$solicitud->tipo_resolucion] }} N°</strong> {{ $solicitud->codigo }}/{{ Carbon\Carbon::parse($solicitud->created_at)->format('d-m-Y') }}</p>
                     <p><strong>OSORNO,</strong></p>
                 </div>
             </div>
