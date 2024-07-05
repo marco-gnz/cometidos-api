@@ -64,6 +64,7 @@ class SolicitudAdminController extends Controller
             $resultSolicitud = $params['result'];
             $auth = auth()->user();
             $query          = Solicitud::searchInput($request->input)
+                ->firmantesPendiente($request->firmantes_id)
                 ->periodoSolicitud($request->periodo_cometido)
                 ->periodoIngreso($request->periodo_ingreso)
                 ->periodoInformeCometido($request->periodo_informe_cometido)
@@ -78,7 +79,9 @@ class SolicitudAdminController extends Controller
                 ->medioTransporte($request->medios_transporte)
                 ->tipoComision($request->tipo_comision_id)
                 ->jornada($request->jornadas_id)
-                ->estado($request->estados_id);
+                ->estado($request->estados_id)
+                ->isReasignada($request->is_reasignada)
+                ->isGrupo($request->is_grupo);
 
             if ($resultSolicitud === 'noverify') {
                 $this->filterNoVerify($query, $auth);
@@ -562,11 +565,10 @@ class SolicitudAdminController extends Controller
         try {
             $fecha_inicio       = $solicitud->fecha_inicio;
             $fecha_termino      = $solicitud->fecha_termino;
-            $convenios    = Convenio::where('user_id', $solicitud->funcionario->id)
+            $convenios    = Convenio::where('user_id', $solicitud->user_id)
                 ->where('active', true)
                 ->where('estamento_id', $solicitud->estamento_id)
                 ->where('ley_id', $solicitud->ley_id)
-                ->where('establecimiento_id', $solicitud->establecimiento_id)
                 ->where(function ($query) use ($fecha_inicio, $fecha_termino) {
                     $query->where(function ($query) use ($fecha_inicio, $fecha_termino) {
                         $query->where('fecha_inicio', '<=', $fecha_inicio)

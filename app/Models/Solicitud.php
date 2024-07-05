@@ -640,11 +640,31 @@ class Solicitud extends Model
         return true;
     }
 
+    public function isFirmaPendiente()
+    {
+        if ($this->status !== self::STATUS_EN_PROCESO) {
+            return null;
+        }
+
+        $query = $this->firmantes()
+            ->where('status', true)
+            ->where('is_executed', false);
+
+        if ($this->is_reasignada) {
+            $query->where('is_reasignado', true)
+                ->where('posicion_firma', $this->posicion_firma_actual);
+        } else {
+            $query->where('posicion_firma', $this->posicion_firma_actual + 1);
+        }
+
+        return $query->first();
+    }
+
+
     public function totalFirmasAprobadas()
     {
         return $this->firmantes()->where('role_id', '!=', 1)->where('status', true)->where('is_executed', true)->where('is_success', true)->count();
     }
-
 
     private function totalFirmas()
     {
@@ -984,6 +1004,32 @@ class Solicitud extends Model
                 });
     }
 
+    public function scopeIsReasignada($query, $params)
+    {
+        if ($params) {
+            if (in_array(0, $params) && in_array(1, $params)) {
+                return $query;
+            } elseif (in_array(0, $params)) {
+                return $query->where('is_reasignada', false);
+            } elseif (in_array(1, $params)) {
+                return $query->where('is_reasignada', true);
+            }
+        }
+    }
+
+    public function scopeIsGrupo($query, $params)
+    {
+        if ($params) {
+            if (in_array(0, $params) && in_array(1, $params)) {
+                return $query;
+            } elseif (in_array(0, $params)) {
+                return $query->whereNull('grupo_id');
+            } elseif (in_array(1, $params)) {
+                return $query->whereNotNull('grupo_id');
+            }
+        }
+    }
+
     public function scopePeriodoSolicitud($query, $params)
     {
         if ($params) {
@@ -1118,5 +1164,28 @@ class Solicitud extends Model
     {
         if ($params)
             return $query->whereIn('status', $params);
+    }
+
+    public function scopeFirmantesPendiente($query, $params)
+    {
+        if ($params)
+            return $query->where('status', self::STATUS_EN_PROCESO)
+                ->whereHas('firmantes', function ($q) use ($params) {
+                    $q->whereIn('user_id', $params)
+                        ->where(function ($query) {
+                            $query->whereRaw('solicituds.posicion_firma_actual = solicitud_firmantes.posicion_firma - 1')
+                                ->where('solicituds.is_reasignada', 0)
+                                ->where('status', true)
+                                ->where('is_executed', false)
+                                ->where('role_id', '!=', 1);
+                        })->orWhere(function ($query) {
+                            $query->whereRaw('solicituds.posicion_firma_actual = solicitud_firmantes.posicion_firma')
+                                ->where('solicituds.is_reasignada', 1)
+                                ->where('is_reasignado', true)
+                                ->where('status', true)
+                                ->where('is_executed', false)
+                                ->where('role_id', '!=', 1);
+                        });
+                });
     }
 }

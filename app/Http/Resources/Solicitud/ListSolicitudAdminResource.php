@@ -36,7 +36,8 @@ class ListSolicitudAdminResource extends JsonResource
             'page_firma'                => $this->pageFirma(),
             'type_page_firma'           => $this->typePageFirma(),
             'is_grupo'                  => $this->isGrupo(),
-            'informe_cometido'          => $this->informeCometido() ? ListInformeCometidoResource::make($this->informeCometido()) : null
+            'informe_cometido'          => $this->informeCometido() ? ListInformeCometidoResource::make($this->informeCometido()) : null,
+            'firma_pendiente'           => $this->isFirmaPendiente() ? $this->isFirmaPendiente()->funcionario->abreNombres() : null
         ];
     }
 }
