@@ -36,7 +36,7 @@ class PermissionsSeeder extends Seeder
             ],
             [
                 'model'         => 'solicitud.ajuste',
-                'permissions'   => ['ver', 'crear', 'editar']
+                'permissions'   => ['ver', 'crear', 'editar', 'eliminar']
             ],
             [
                 'model'         => 'solicitud.convenio',

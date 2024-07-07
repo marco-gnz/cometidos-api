@@ -84,6 +84,7 @@ class CicloFirmaSeeder extends Seeder
                                 'solicitud.ajuste.ver',
                                 'solicitud.ajuste.crear',
                                 'solicitud.ajuste.editar',
+                                'solicitud.ajuste.eliminar',
                                 'solicitud.convenio.ver',
                                 'solicitud.convenio.crear',
                                 "solicitud.rendiciones.ver",

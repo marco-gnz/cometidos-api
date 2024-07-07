@@ -3,8 +3,11 @@
 namespace App\Http\Controllers;
 
 use App\Models\Ausentismo;
+use App\Models\EstadoProcesoRendicionGasto;
 use Illuminate\Http\Request;
 use App\Models\Link;
+use App\Models\ProcesoRendicionGasto;
+use App\Models\Solicitud;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
 
@@ -16,41 +19,123 @@ class LinksController extends Controller
 
         $is_show_solicitud = false;
         $is_show_rendicion = false;
-        $firmas = $user->firmas()->where('status', true)->where('role_id', '!=', 1)->count();
+
+        $in_grupo_firma = $user->firmasGrupo()->where('status', true)->count();
+
+        $firmas = Solicitud::where('status', Solicitud::STATUS_EN_PROCESO)
+            ->where(function ($q) use ($user) {
+                $q->whereHas('firmantes', function ($q) use ($user) {
+                    $q->where(function ($q) use ($user) {
+                        $q->whereRaw('solicituds.posicion_firma_actual = solicitud_firmantes.posicion_firma - 1')
+                            ->where('solicituds.is_reasignada', 0)
+                            ->where('status', true)
+                            ->where('is_executed', false)
+                            ->where('role_id', '!=', 1)
+                            ->where('user_id', $user->id);
+                    })
+                        ->orWhere(function ($q) use ($user) {
+                            $q->whereRaw('solicituds.posicion_firma_actual = solicitud_firmantes.posicion_firma')
+                                ->where('solicituds.is_reasignada', 1)
+                                ->where('is_reasignado', true)
+                                ->where('status', true)
+                                ->where('is_executed', false)
+                                ->where('role_id', '!=', 1)
+                                ->where('user_id', $user->id);
+                        });
+                });
+            })->orWhere(function ($q) use ($user) {
+                $q->whereHas('firmantes', function ($q) use ($user) {
+                    $q->whereHas('funcionario.ausentismos', function ($q) use ($user) {
+                        $q->whereHas('subrogantes', function ($q) use ($user) {
+                            $q->where('users.id', $user->id);
+                        })
+                            ->whereRaw("DATE(solicituds.fecha_by_user) >= ausentismos.fecha_inicio")
+                            ->whereRaw("DATE(solicituds.fecha_by_user) <= ausentismos.fecha_termino")
+                            ->where(function ($query) {
+                                $query->whereRaw('solicituds.posicion_firma_actual = solicitud_firmantes.posicion_firma - 1')
+                                    ->where('solicituds.is_reasignada', 0)
+                                    ->where('status', true)
+                                    ->where('is_executed', false)
+                                    ->where('role_id', '!=', 1);
+                            })->orWhere(function ($query) {
+                                $query->whereRaw('solicituds.posicion_firma_actual = solicitud_firmantes.posicion_firma')
+                                    ->where('solicituds.is_reasignada', 1)
+                                    ->where('is_reasignado', true)
+                                    ->where('status', true)
+                                    ->where('is_executed', false)
+                                    ->where('role_id', '!=', 1);
+                            });
+                    });
+                });
+            })->orWhere(function ($q) use ($user) {
+                $q->whereHas('firmantes', function ($q) use ($user) {
+                    $q->where('is_executed', false)
+                        ->whereHas('funcionario.reasignacionAusencias', function ($q) use ($user) {
+                            $q->where('user_subrogante_id', $user->id)
+                                ->where(function ($query) {
+                                    $query->whereRaw('solicituds.posicion_firma_actual = solicitud_firmantes.posicion_firma - 1')
+                                        ->where('solicituds.is_reasignada', 0)
+                                        ->where('status', true)
+                                        ->where('is_executed', false)
+                                        ->where('role_id', '!=', 1);
+                                })->orWhere(function ($query) {
+                                    $query->whereRaw('solicituds.posicion_firma_actual = solicitud_firmantes.posicion_firma')
+                                        ->where('solicituds.is_reasignada', 1)
+                                        ->where('is_reasignado', true)
+                                        ->where('status', true)
+                                        ->where('is_executed', false)
+                                        ->where('role_id', '!=', 1);
+                                });
+                        });
+                })->whereHas('reasignaciones', function ($q) use ($user) {
+                    $q->where('user_subrogante_id', $user->id);
+                });
+            })
+            ->count();
+
+        $status = [
+            EstadoProcesoRendicionGasto::STATUS_ANULADO,
+            EstadoProcesoRendicionGasto::STATUS_APROBADO_S,
+            EstadoProcesoRendicionGasto::STATUS_APROBADO_N,
+            EstadoProcesoRendicionGasto::STATUS_RECHAZADO
+        ];
+
         $reasignaciones = $user->reasignacionAsignadas()->count();
-        $subrogancias = Ausentismo::whereHas('subrogantes', function ($q) use($user) {
+        $subrogancias = Ausentismo::whereHas('subrogantes', function ($q) use ($user) {
             $q->where('users.id', $user->id);
         })->count();
-        if ($firmas > 0 || $subrogancias > 0 || $reasignaciones > 0 || $user->hasRole('SUPER ADMINISTRADOR') || $user->hasPermissionTo('solicitudes.ver')) {
+        if ($in_grupo_firma > 0 || $subrogancias > 0 || $reasignaciones > 0 || $user->hasRole('SUPER ADMINISTRADOR') || $user->hasPermissionTo('solicitudes.ver')) {
             $is_show_solicitud = true;
         }
 
-        if ($firmas > 0 || $subrogancias > 0 || $reasignaciones > 0 || $user->hasRole('SUPER ADMINISTRADOR') || $user->hasPermissionTo('rendiciones.ver')) {
+        if ($in_grupo_firma > 0 || $subrogancias > 0 || $reasignaciones > 0 || $user->hasRole('SUPER ADMINISTRADOR') || $user->hasPermissionTo('rendiciones.ver')) {
             $is_show_rendicion = true;
         }
 
         $linksUsers = [];
         $linksAdmin = [];
 
-        if($is_show_solicitud){
+        if ($is_show_solicitud) {
             $linksAdmin[] = Link::create(
                 "list-solicitudes",
                 "Solicitudes de cometido",
-                "Listado de solicitudes de cometido",
+                "Firma de cometidos",
                 "/firmante/solicitudes",
-                "0e6db8",
-                false
+                "d93c47",
+                false,
+                $firmas
             );
         }
 
-        if($is_show_rendicion){
+        if ($is_show_rendicion) {
             $linksAdmin[] = Link::create(
                 "list-rendicion-gastos",
-                "Rendiciones de gastos",
-                "Listado de rendiciones de gastos",
+                "Rendición de gastos",
+                "Firma de rendición de gastos",
                 "/firmante/rendiciones",
                 "0e6db8",
-                false
+                false,
+                null
             );
         }
 
@@ -62,7 +147,8 @@ class LinksController extends Controller
                 "Listado de grupos de firma",
                 "/admin/grupos",
                 "0e6db8",
-                false
+                false,
+                null
             );
         }
         if ($user->hasPermissionTo('convenio.ver')) {
@@ -72,7 +158,8 @@ class LinksController extends Controller
                 "Convenios de cometido",
                 "/admin/convenios",
                 "0e6db8",
-                false
+                false,
+                null
             );
         }
         if ($user->hasPermissionTo('ausentismo.ver')) {
@@ -82,7 +169,8 @@ class LinksController extends Controller
                 "Listado de ausentismos",
                 "/admin/ausentismos",
                 "0e6db8",
-                false
+                false,
+                null
             );
         }
         if ($user->hasPermissionTo('reasignacion.ver')) {
@@ -92,7 +180,8 @@ class LinksController extends Controller
                 "Listado de reasignaciones",
                 "/admin/reasignaciones",
                 "0e6db8",
-                false
+                false,
+                null
             );
         }
         if ($user->hasPermissionTo('funcionario.ver')) {
@@ -102,7 +191,8 @@ class LinksController extends Controller
                 "Listado de funcionarios",
                 "/admin/funcionarios",
                 "0e6db8",
-                false
+                false,
+                null
             );
         }
         if ($user->hasPermissionTo('usuarioespecial.ver')) {
@@ -112,7 +202,8 @@ class LinksController extends Controller
                 "Usuarios especiales",
                 "/admin/usuarios-especiales",
                 "0e6db8",
-                false
+                false,
+                null
             );
         }
         if ($user->hasPermissionTo('configuracion.ver')) {
@@ -122,7 +213,8 @@ class LinksController extends Controller
                 "Listado de configuraciones",
                 "/admin/configuraciones",
                 "0e6db8",
-                false
+                false,
+                null
             );
         }
         if ($user->hasPermissionTo('perfil.ver')) {
@@ -132,7 +224,8 @@ class LinksController extends Controller
                 "Listado de usuarios con perfiles",
                 "/admin/perfiles",
                 "0e6db8",
-                false
+                false,
+                null
             );
         }
 
@@ -143,7 +236,8 @@ class LinksController extends Controller
                 "Listado de lugares de cometido",
                 "/admin/otros/lugares",
                 "0e6db8",
-                false
+                false,
+                null
             );
         }
 
