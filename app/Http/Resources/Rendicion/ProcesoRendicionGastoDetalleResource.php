@@ -79,6 +79,7 @@ class ProcesoRendicionGastoDetalleResource extends JsonResource
             'observacion'                                   => $this->observacion,
             'estados'                                       => $this->estados ? StatusProcesoRendicionGastoResource::collection($this->estados) : null,
             'documentos_r'                                  => $this->exportarDocumentos(),
+            'documentos_s'                                  => $this->solicitud->exportarDocumentos(),
             'cuenta_bancaria'                               => $this->cuentaBancaria ? CuentaBancariaResource::make($this->cuentaBancaria) : null
         ];
     }
