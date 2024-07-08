@@ -342,7 +342,10 @@
                     </td>
                     <td><strong>Periodo cometido</strong></td>
                     <td>{{ Carbon\Carbon::parse($solicitud->fecha_inicio)->format('d-m-Y') }} /
-                        {{ Carbon\Carbon::parse($solicitud->fecha_termino)->format('d-m-Y') }}</td>
+                        {{ Carbon\Carbon::parse($solicitud->fecha_termino)->format('d-m-Y') }}
+
+                        {{ Carbon\Carbon::parse($solicitud->hora_llegada)->format('H:i') }} a
+                        {{ Carbon\Carbon::parse($solicitud->hora_salida)->format('H:i') }} hrs.</td>
                 </tr>
                 <tr>
                     <td><strong>Total días cometido</strong></td>
@@ -432,6 +435,14 @@
                 </tr>
 
             </table>
+        </div>
+        <div class="seccion">
+            <div class="row">
+                <div class="column-1">
+                    <h4>Actividad realizada</h4>
+                    <p>{{$solicitud->actividad_realizada ? $solicitud->actividad_realizada : ''}}</p>
+                </div>
+            </div>
         </div>
         <div class="seccion">
             <br>
