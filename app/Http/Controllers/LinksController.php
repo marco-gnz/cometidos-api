@@ -118,8 +118,8 @@ class LinksController extends Controller
         if ($is_show_solicitud) {
             $linksAdmin[] = Link::create(
                 "list-solicitudes",
-                "Solicitudes de cometido",
-                "Firma de cometidos",
+                "Cometidos pendientes de firma",
+                "Firma de cometidos e informes",
                 "/firmante/solicitudes",
                 "d93c47",
                 false,
@@ -130,7 +130,7 @@ class LinksController extends Controller
         if ($is_show_rendicion) {
             $linksAdmin[] = Link::create(
                 "list-rendicion-gastos",
-                "Rendición de gastos",
+                "Rendiciones pendientes de firma",
                 "Firma de rendición de gastos",
                 "/firmante/rendiciones",
                 "0e6db8",
