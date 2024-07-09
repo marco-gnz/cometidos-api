@@ -55,7 +55,7 @@ class Grupo extends Model
         });
 
         static::updating(function ($grupo) {
-            $grupo->user_id_update              = Auth::user()->id;
+            $grupo->user_id_update              = Auth::check() ? Auth::user()->id : null;
             $grupo->fecha_by_user_update        = now();
         });
 

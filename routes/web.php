@@ -81,7 +81,7 @@ Route::get('/test/grupos/codigos', function () {
 Route::get('/test/sync-contratos', function () {
 
     try {
-        $contratos = Contrato::all();
+        $contratos = Contrato::where('establecimiento_id', 6)->get();
 
         foreach ($contratos as $contrato) {
             $establecimiento_id  = $contrato->establecimiento_id;
