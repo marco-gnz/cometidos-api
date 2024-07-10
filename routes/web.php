@@ -3,6 +3,7 @@
 use App\Models\Contrato;
 use App\Models\Grupo;
 use App\Models\User;
+use Carbon\Carbon;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Route;
 
@@ -81,7 +82,7 @@ Route::get('/test/grupos/codigos', function () {
 Route::get('/test/sync-contratos', function () {
 
     try {
-        $contratos = Contrato::where('establecimiento_id', 6)->get();
+        $contratos = Contrato::where('establecimiento_id', 2)->get();
 
         foreach ($contratos as $contrato) {
             $establecimiento_id  = $contrato->establecimiento_id;
@@ -130,4 +131,40 @@ Route::get('/test/email', function () {
         return $error->getMessage();
     }
 });
+
+Route::get('/test/check-plazo-informe', function () {
+    // Fecha de habilitación de informe de cometido (cuando termina el cometido)
+    $fecha_termino_cometido = "2024-07-05 17:00:00";
+    $fecha_termino_cometido = Carbon::parse($fecha_termino_cometido);
+    $fecha_termino_cometido_copy     = $fecha_termino_cometido->copy();
+
+    // Fecha de ingreso de cometido
+    $fecha_ingreso_informe          = Carbon::parse("2024-07-09 17:10:00");
+
+
+    // Fines de semana entre fecha de termino de cometido y fecha de ingreso cometido
+    $fds = 0;
+    while ($fecha_termino_cometido->lte($fecha_ingreso_informe)) {
+        if ($fecha_termino_cometido->isSaturday() || $fecha_termino_cometido->isSunday()) {
+            $fds++;
+        }
+        $fecha_termino_cometido->addDay();
+    }
+    $feriados = 0;
+
+    //obtener el plazo que hay para ingresar informe
+    $plazo_dias_ingreso_informe         = 2 + $fds + $feriados;
+    $plazo_total_dias_ingreso_informe   = $plazo_dias_ingreso_informe;
+
+    $plazo  = $fecha_termino_cometido_copy->addDays($plazo_total_dias_ingreso_informe);
+
+    Log::info($plazo);
+    if ($fecha_ingreso_informe->lte($plazo)) {
+        return "STATUS_INGRESO_EN_PLAZO";
+    } else {
+        return "STATUS_INGRESO_TARDIO";
+    }
+
+});
+
 require __DIR__ . '/auth.php';
