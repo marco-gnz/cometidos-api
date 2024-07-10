@@ -166,7 +166,7 @@ class SolicitudController extends Controller
             $status = null;
             $title = null;
             $message = null;
-            if($fecha_inicio->format('Y-m-d') >= $now->format('Y-m-d')){
+            if ($fecha_inicio->format('Y-m-d') >= $now->format('Y-m-d')) {
                 $diff_in_days           = $now->diffInDays($fecha_inicio) + 1;
                 $fecha_termino_f        = $fecha_inicio->copy();
                 $fds                    = $this->getWeekendCount(Carbon::now(), $fecha_termino_f);
@@ -191,8 +191,6 @@ class SolicitudController extends Controller
                     'data'          => null
                 )
             );
-
-
         } catch (\Exception $error) {
             Log::info($error->getMessage());
             return response()->json(['error' => $error->getMessage()], 500);
@@ -349,6 +347,7 @@ class SolicitudController extends Controller
                                     $nuevos_firmantes   = [];
                                     foreach ($firmantes_solicitud as $firmante) {
                                         $nuevos_firmantes[] = $firmante;
+                                        $id_permission_valorizacion_crear   = $this->idPermission('solicitud.valorizacion.crear');
                                         if ($firmante['role_id'] === 2) {
                                             // Crear el nuevo firmante de capacitación
                                             $firmante_capacitacion = [
@@ -362,6 +361,20 @@ class SolicitudController extends Controller
                                             ];
                                             $nuevos_firmantes[] = $firmante_capacitacion;
                                             $posicion_actual++;
+                                        } else {
+                                            if (in_array($id_permission_valorizacion_crear, $firmante['permissions_id'])) {
+                                                $firmante_capacitacion = [
+                                                    'posicion_firma'    => $firmante['posicion_firma'] + 1,
+                                                    'solicitud_id'      => $solicitud->id,
+                                                    'grupo_id'          => $solicitud->grupo_id,
+                                                    'user_id'           => $first_user->id,
+                                                    'role_id'           => 10,
+                                                    'status'            => true,
+                                                    'permissions_id'    => $this->getPermissions(10, $solicitud)
+                                                ];
+                                                $nuevos_firmantes[] = $firmante_capacitacion;
+                                                $posicion_actual++;
+                                            }
                                         }
                                         $nuevos_firmantes[count($nuevos_firmantes) - 1]['posicion_firma'] = $posicion_actual;
                                         $posicion_actual++;
@@ -429,7 +442,7 @@ class SolicitudController extends Controller
                     $message = "¿Requiere ingresar una nueva solicitud de cometido?";
                 }
 
-                 if ($solicitud) {
+                if ($solicitud) {
                     $emails_copy = [];
                     if ($solicitud->tipo_comision_id === 5) {
                         $name = 'CAPACITACIÓN FINANCIAMIENTO CENTRALIZADO';
@@ -454,7 +467,6 @@ class SolicitudController extends Controller
                     )
                 );
             }
-
         } catch (\Exception $error) {
             DB::rollback();
             Log::info($error->getMessage());
@@ -741,7 +753,7 @@ class SolicitudController extends Controller
 
             if (($firma_disponible) && ($firma_disponible->id_user_ejecuted_firma === $solicitud->user_id)) {
                 $this->authorize('update', $solicitud);
-            }else{
+            } else {
                 $this->authorize('updateadmin', $solicitud);
             }
             $is_update_files    = $this->validateUpdateSolicitudFiles($solicitud, $request->archivos);
@@ -983,7 +995,7 @@ class SolicitudController extends Controller
                 $solicitud  = $solicitud->fresh();
                 $estados    = [];
                 $abreNombres        = Auth::user()->abreNombres();
-                if(($firma_disponible) && ($firma_disponible->id_user_ejecuted_firma === $solicitud->user_id)){
+                if (($firma_disponible) && ($firma_disponible->id_user_ejecuted_firma === $solicitud->user_id)) {
                     $estados[] = [
                         'status'                    => EstadoSolicitud::STATUS_MODIFICADA,
                         'is_reasignado'             => false,
@@ -997,8 +1009,8 @@ class SolicitudController extends Controller
                         'is_subrogante'             => $firma_disponible ? $firma_disponible->is_subrogante : false
                     ];
                     $next_url = '/mi-cuenta/solicitudes';
-                }else{
-                    if(($firma_disponible) && ($firma_disponible->posicion_firma === $solicitud->posicion_firma_actual)){
+                } else {
+                    if (($firma_disponible) && ($firma_disponible->posicion_firma === $solicitud->posicion_firma_actual)) {
                         $estados[] = [
                             'status'                    => EstadoSolicitud::STATUS_MODIFICADA,
                             'is_reasignado'             => false,
@@ -1027,7 +1039,7 @@ class SolicitudController extends Controller
                             'is_subrogante'             => $firma_disponible ? $firma_disponible->is_subrogante : false,
                             'observacion'               => "GECOM: $nom_status por usuario {$abreNombres} desde su firma {$firma_disponible->id_firma}."
                         ];
-                    }else{
+                    } else {
                         $firma_funcionario  = $solicitud->firmantes()->where('role_id', 1)->first();
                         $estados[]          = [
                             'status'                    => EstadoSolicitud::STATUS_MODIFICADA,
