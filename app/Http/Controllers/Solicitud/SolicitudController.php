@@ -982,6 +982,7 @@ class SolicitudController extends Controller
 
                 $solicitud  = $solicitud->fresh();
                 $estados    = [];
+                $abreNombres        = Auth::user()->abreNombres();
                 if(($firma_disponible) && ($firma_disponible->id_user_ejecuted_firma === $solicitud->user_id)){
                     $estados[] = [
                         'status'                    => EstadoSolicitud::STATUS_MODIFICADA,
@@ -1008,11 +1009,26 @@ class SolicitudController extends Controller
                             'posicion_firma'            => $firma_disponible ? $firma_disponible->posicion_firma : null,
                             's_firmante_id'             => $firma_disponible ? $firma_disponible->id_firma : null,
                             'user_id'                   => $firma_disponible ? $firma_disponible->id_user_ejecuted_firma : null,
-                            'is_subrogante'             => $firma_disponible ? $firma_disponible->is_subrogante : false
+                            'is_subrogante'             => $firma_disponible ? $firma_disponible->is_subrogante : false,
+                            'observacion'               => "Modificada por usuario {$abreNombres} desde su firma {$firma_disponible->id_firma}."
+                        ];
+
+                        $nom_status = EstadoSolicitud::STATUS_NOM[EstadoSolicitud::STATUS_APROBADO];
+                        $estados[]          = [
+                            'status'                    => EstadoSolicitud::STATUS_APROBADO,
+                            'is_reasignado'             => false,
+                            'posicion_firma_s'          => $firma_disponible ? $firma_disponible->posicion_firma : null,
+                            'history_solicitud_old'     => json_encode($history_solicitud_old),
+                            'history_solicitud_new'     => json_encode($solicitud->only($form)),
+                            'solicitud_id'              => $solicitud->id,
+                            'posicion_firma'            => $firma_disponible ? $firma_disponible->posicion_firma : null,
+                            's_firmante_id'             => $firma_disponible ? $firma_disponible->id_firma : null,
+                            'user_id'                   => $firma_disponible ? $firma_disponible->id_user_ejecuted_firma : null,
+                            'is_subrogante'             => $firma_disponible ? $firma_disponible->is_subrogante : false,
+                            'observacion'               => "GECOM: $nom_status por usuario {$abreNombres} desde su firma {$firma_disponible->id_firma}."
                         ];
                     }else{
                         $firma_funcionario  = $solicitud->firmantes()->where('role_id', 1)->first();
-                        $abreNombres        = Auth::user()->abreNombres();
                         $estados[]          = [
                             'status'                    => EstadoSolicitud::STATUS_MODIFICADA,
                             'is_reasignado'             => false,
