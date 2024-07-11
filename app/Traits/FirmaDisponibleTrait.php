@@ -49,30 +49,32 @@ trait FirmaDisponibleTrait
             $fecha_by_solicitud = Carbon::parse($solicitud->fecha_by_user)->format('Y-m-d');
             $primerFirmante = $solicitud->firmantes()
                 ->whereJsonContains('permissions_id', $id_permission)
-                ->where(function ($q) use ($auth, $fecha_by_solicitud) {
-                    $q->whereHas('funcionario.reasignacionAusencias', function ($q) use ($auth, $fecha_by_solicitud) {
-                        $q->where('user_subrogante_id', $auth->id);
-                    });
-                })
-                ->orWhere(function ($q) use ($auth, $fecha_by_solicitud) {
-                    $q->whereHas('funcionario.ausentismos', function ($q) use ($auth, $fecha_by_solicitud) {
-                        $q->whereHas('subrogantes', function ($q) use ($auth, $fecha_by_solicitud) {
-                            $q->where('users.id', $auth->id);
-                        })->where(function ($q)  use ($fecha_by_solicitud) {
-                            $q->where(function ($query) use ($fecha_by_solicitud) {
-                                $query->where('fecha_inicio', '<=', $fecha_by_solicitud)
-                                    ->where('fecha_termino', '>=', $fecha_by_solicitud);
-                            })->orWhere(function ($query) use ($fecha_by_solicitud) {
-                                $query->where('fecha_inicio', '<=', $fecha_by_solicitud)
-                                    ->where('fecha_termino', '>=', $fecha_by_solicitud);
-                            })->orWhere(function ($query) use ($fecha_by_solicitud) {
-                                $query->where('fecha_inicio', '>=', $fecha_by_solicitud)
-                                    ->where('fecha_termino', '<=', $fecha_by_solicitud);
+                ->where('solicitud_id', $solicitud->id)
+                ->where(function ($query) use($auth, $fecha_by_solicitud) {
+                    $query->where(function ($q) use ($auth, $fecha_by_solicitud) {
+                        $q->whereHas('funcionario.reasignacionAusencias', function ($q) use ($auth, $fecha_by_solicitud) {
+                            $q->where('user_subrogante_id', $auth->id);
+                        });
+                    })
+                        ->orWhere(function ($q) use ($auth, $fecha_by_solicitud) {
+                            $q->whereHas('funcionario.ausentismos', function ($q) use ($auth, $fecha_by_solicitud) {
+                                $q->whereHas('subrogantes', function ($q) use ($auth, $fecha_by_solicitud) {
+                                    $q->where('users.id', $auth->id);
+                                })->where(function ($q)  use ($fecha_by_solicitud) {
+                                    $q->where(function ($query) use ($fecha_by_solicitud) {
+                                        $query->where('fecha_inicio', '<=', $fecha_by_solicitud)
+                                            ->where('fecha_termino', '>=', $fecha_by_solicitud);
+                                    })->orWhere(function ($query) use ($fecha_by_solicitud) {
+                                        $query->where('fecha_inicio', '<=', $fecha_by_solicitud)
+                                            ->where('fecha_termino', '>=', $fecha_by_solicitud);
+                                    })->orWhere(function ($query) use ($fecha_by_solicitud) {
+                                        $query->where('fecha_inicio', '>=', $fecha_by_solicitud)
+                                            ->where('fecha_termino', '<=', $fecha_by_solicitud);
+                                    });
+                                });
                             });
                         });
-                    });
                 })
-                ->where('solicitud_id', $solicitud->id)
                 ->orderBy('posicion_firma', 'ASC')
                 ->first();
 
