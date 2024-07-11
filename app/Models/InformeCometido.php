@@ -8,6 +8,10 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Gate;
+use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Log;
 
 class InformeCometido extends Model
 {
@@ -25,6 +29,11 @@ class InformeCometido extends Model
     public const STATUS_INGRESO_TYPE = [
         self::STATUS_INGRESO_EN_PLAZO   => 'primary',
         self::STATUS_INGRESO_TARDIO     => 'danger'
+    ];
+
+    public const STATUS_INGRESO_INFORME = [
+        ['id' => self::STATUS_INGRESO_EN_PLAZO, 'nombre' => self::STATUS_INGRESO_NOM[self::STATUS_INGRESO_EN_PLAZO]],
+        ['id' => self::STATUS_INGRESO_TARDIO, 'nombre' => self::STATUS_INGRESO_NOM[self::STATUS_INGRESO_TARDIO]]
     ];
 
     protected $fillable = [
@@ -56,49 +65,83 @@ class InformeCometido extends Model
             $dias_permitidos            = self::getDiasPermitidos($informe);
             $informe->codigo            = self::generarCodigo($informe);
             $informe->dias_permitidos   = $dias_permitidos;
-            $informe->status_ingreso    = self::statusIngreso($informe);
+            $informe->status_ingreso    = self::diffPlazoTardioInforme($informe);
             $informe->save();
         });
     }
 
-    public function statusIngreso($informe)
+    private static function feriados($fecha)
     {
-        $dias_permitidos        = self::getDiasPermitidos($informe);
-        $fecha_termino_informe  = "{$informe->fecha_termino} {$informe->hora_termino}";
-        $fecha_termino_informe  = Carbon::parse($fecha_termino_informe);
-        $fecha_ingreso          = Carbon::parse($informe->fecha_by_user);
-        $plazo                  = $fecha_termino_informe->addDays($dias_permitidos);
+        $fecha      = Carbon::parse($fecha);
+        $anio       = $fecha->format('Y');
+        $cacheKey   = "feriados_{$anio}";
+        $feriados   = Cache::get($cacheKey);
+        if ($feriados !== null) {
+            return $feriados;
+        }
 
-        if ($fecha_ingreso->lte($plazo)) {
+        try {
+            $url        = "https://apis.digital.gob.cl/fl/feriados/{$anio}";
+            $response   = Http::get($url);
+            if ($response->successful()) {
+                $apiResponse = $response->body();
+                $feriados = json_decode($apiResponse, true, 512, JSON_UNESCAPED_UNICODE);
+
+                if (is_array($feriados)) {
+                    $fechas = collect($feriados)->pluck('fecha')->toArray();
+                    Cache::put($cacheKey, $fechas, now()->addDays(31));
+                    return $fechas;
+                }
+            }
+            return [];
+        } catch (\Exception $exception) {
+            Log::error("Error al procesar la solicitud de feriados: {$exception->getMessage()}");
+            $feriados = Cache::get($cacheKey);
+            return $feriados !== null ? $feriados : [];
+        }
+    }
+
+    public function diffPlazoTardioInforme($informe)
+    {
+        $fecha_termino_cometido             = "{$informe->solicitud->fecha_termino} {$informe->solicitud->hora_salida}";
+        $fecha_termino_cometido             = Carbon::parse($fecha_termino_cometido);
+        $dias_permitidos                    = self::getDiasPermitidos($informe);
+        $array_fechas_feriados              = self::feriados($fecha_termino_cometido);
+
+        $fechaLimite            = self::calcularFechaLimite($fecha_termino_cometido, $dias_permitidos, $array_fechas_feriados);
+        $fecha_store_informe    = Carbon::parse($informe->fecha_by_user);
+
+        if ($fecha_store_informe->lessThanOrEqualTo($fechaLimite)) {
             return self::STATUS_INGRESO_EN_PLAZO;
         } else {
             return self::STATUS_INGRESO_TARDIO;
         }
     }
 
+    private static function calcularFechaLimite(Carbon $fechaInicio, $diasHabiles, array $feriados)
+    {
+        $fechaLimite = $fechaInicio->copy();
+
+        $feriados = array_filter(array_map(function ($feriado) {
+            $feriadoCarbon = Carbon::parse($feriado);
+            return !$feriadoCarbon->isWeekend() ? $feriadoCarbon : null;
+        }, $feriados));
+
+        while ($diasHabiles > 0) {
+            $fechaLimite->addDay();
+            if (!$fechaLimite->isWeekend() && !in_array($fechaLimite->format('Y-m-d'), array_map(function ($feriado) {
+                return $feriado->format('Y-m-d');
+            }, $feriados))) {
+                $diasHabiles--;
+            }
+        }
+
+        return $fechaLimite;
+    }
+
     protected function getDiasPermitidos($informe)
     {
         return $informe->solicitud->dias_permitidos;
-    }
-
-
-    public function diffPlazoTardioInforme()
-    {
-        if ($this->status_ingreso === self::STATUS_INGRESO_TARDIO) {
-            $dias_permitidos                = (int)$this->dias_permitidos;
-            $fecha_termino_informe          = "{$this->fecha_termino} {$this->hora_termino}";
-            $fecha_termino_informe          = Carbon::parse($fecha_termino_informe);
-            $fecha_ingreso                  = Carbon::parse($this->fecha_by_user);
-            $plazo                          = $fecha_termino_informe->addDays($dias_permitidos);
-            $diferencia                     = $fecha_ingreso->diff($plazo);
-            $dias                           = $diferencia->days;
-            $horas                          = $diferencia->h;
-            $minutos                        = $diferencia->i;
-            $message_dias                   = $dias_permitidos > 1 ? 'días' : 'día';
-            return "El Informe se ingresó después del plazo de $dias_permitidos $message_dias de haber finalizado el cometido. La diferencia es de $dias días, $horas horas y $minutos minutos.";
-        } else {
-            return null;
-        }
     }
 
     private static function generarCodigo($informe)

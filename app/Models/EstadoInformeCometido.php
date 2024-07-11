@@ -33,6 +33,14 @@ class EstadoInformeCometido extends Model
         self::STATUS_MODIFICADO => 'info'
     ];
 
+    public const STATUS_INFORME = [
+        ['id' => self::STATUS_INGRESADA, 'nombre' => self::STATUS_NOM[self::STATUS_INGRESADA]],
+        ['id' => self::STATUS_MODIFICADO, 'nombre' => self::STATUS_NOM[self::STATUS_MODIFICADO]],
+        ['id' => self::STATUS_APROBADO, 'nombre' => self::STATUS_NOM[self::STATUS_APROBADO]],
+        ['id' => self::STATUS_RECHAZADO, 'nombre' => self::STATUS_NOM[self::STATUS_RECHAZADO]]
+
+    ];
+
     public $timestamps = false;
 
     protected $fillable = [

@@ -80,6 +80,8 @@ class SolicitudAdminController extends Controller
                 ->tipoComision($request->tipo_comision_id)
                 ->jornada($request->jornadas_id)
                 ->estado($request->estados_id)
+                ->estadoInformeCometido($request->estados_informe_id)
+                ->estadoIngresoInformeCometido($request->estados_ingreso_informe_id)
                 ->isReasignada($request->is_reasignada)
                 ->isGrupo($request->is_grupo);
 

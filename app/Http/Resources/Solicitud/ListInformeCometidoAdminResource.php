@@ -35,7 +35,6 @@ class ListInformeCometidoAdminResource extends JsonResource
             'transportes'               => $this->transportes ? $this->transportes->pluck('nombre')->implode(', ') : null,
             'status_ingreso_nom'        => InformeCometido::STATUS_INGRESO_NOM[$this->status_ingreso],
             'status_ingreso_type'       => InformeCometido::STATUS_INGRESO_TYPE[$this->status_ingreso],
-            'diff_hours'                => $this->diffPlazoTardioInforme(),
             'estados'                   => $estados ? ListEstadoInformeCometidoAdminResource::collection($estados) : null,
             'authorized_to_aprobar'     => $this->authorizedToAprobar(),
             'authorized_to_rechazar'    => $this->authorizedToRechazar(),

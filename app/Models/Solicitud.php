@@ -1055,6 +1055,22 @@ class Solicitud extends Model
             });
     }
 
+    public function scopeEstadoInformeCometido($query, $params)
+    {
+        if ($params)
+            return $query->whereHas('informes', function ($q) use ($params) {
+                $q->whereIn('last_status', $params);
+            });
+    }
+
+    public function scopeEstadoIngresoInformeCometido($query, $params)
+    {
+        if ($params)
+            return $query->whereHas('informes', function ($q) use ($params) {
+                $q->whereIn('status_ingreso', $params);
+            });
+    }
+
     public function scopeDerechoViatico($query, $params)
     {
         if ($params) {

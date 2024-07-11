@@ -246,6 +246,11 @@
                             <td>{{ $informe->transportes ? $informe->transportes->pluck('nombre')->implode(', ') : '' }}
                             </td>
                         </tr>
+                        <tr>
+                            <th>FECHA INGRESO INFORME:</th>
+                            <td>{{ Carbon\Carbon::parse($informe->created_at)->format('d-m-Y H:i:s') }}
+                            </td>
+                        </tr>
                     </tbody>
                 </table>
             </div>

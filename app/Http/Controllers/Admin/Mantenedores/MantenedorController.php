@@ -12,6 +12,7 @@ use App\Models\Country;
 use App\Models\CuentaBancaria;
 use App\Models\Departamento;
 use App\Models\Establecimiento;
+use App\Models\EstadoInformeCometido;
 use App\Models\EstadoProcesoRendicionGasto;
 use App\Models\EstadoSolicitud;
 use App\Models\Estamento;
@@ -19,6 +20,7 @@ use App\Models\Grado;
 use App\Models\Grupo;
 use App\Models\Hora;
 use App\Models\Ilustre;
+use App\Models\InformeCometido;
 use App\Models\Ley;
 use App\Models\Lugar;
 use App\Models\Motivo;
@@ -77,6 +79,17 @@ class MantenedorController extends Controller
         try {
             $estados = Solicitud::STATUS_COMETIDO;
             return response()->json($estados);
+        } catch (\Exception $error) {
+            return response()->json($error->getMessage());
+        }
+    }
+
+    public function getStatusInforme()
+    {
+        try {
+            $estados        = EstadoInformeCometido::STATUS_INFORME;
+            $estadosIngreso = InformeCometido::STATUS_INGRESO_INFORME;
+            return response()->json(array($estados, $estadosIngreso));
         } catch (\Exception $error) {
             return response()->json($error->getMessage());
         }
