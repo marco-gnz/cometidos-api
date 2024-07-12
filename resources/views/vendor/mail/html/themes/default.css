@@ -154,7 +154,7 @@ img {
 }
 
 .subcopy p {
-    font-size: 14px;
+    font-size: 12px;
 }
 
 /* Footer */
@@ -194,11 +194,12 @@ img {
     border-bottom: 1px solid #edeff2;
     margin: 0;
     padding-bottom: 8px;
+    font-size: 14px;
 }
 
 .table td {
     color: #74787e;
-    font-size: 15px;
+    font-size: 14px;
     line-height: 18px;
     margin: 0;
     padding: 10px 0;
@@ -228,6 +229,7 @@ img {
     display: inline-block;
     overflow: hidden;
     text-decoration: none;
+    font-size: 13px;
 }
 
 .button-blue,
@@ -287,4 +289,19 @@ img {
 
 .break-all {
     word-break: break-all;
+}
+
+.table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.table th,
+.table td {
+    padding: 4px;
+    text-align: left;
+}
+
+.table th {
+    font-weight: bold;
 }

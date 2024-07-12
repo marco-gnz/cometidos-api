@@ -28,7 +28,7 @@ class ProcesoRendicionGastoCreated extends Mailable
      */
     public function build()
     {
-        $subject = env('APP_NAME') . " - " . "Nueva rendición de gasto";
+        $subject = "GECOM - Nueva rendición de gasto";
         return $this->markdown('emails.procesorendiciongasto.procesorendiciongasto-created')->subject($subject)->withSwiftMessage(function ($message) {
             $message->setPriority(\Swift_Message::PRIORITY_HIGHEST);
         });

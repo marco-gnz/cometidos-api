@@ -28,7 +28,7 @@ class SolicitudCreated extends Mailable
      */
     public function build()
     {
-        $subject = env('APP_NAME') . " - " . "Nueva solicitud de cometido";
+        $subject = "GECOM - Nueva solicitud de cometido";
         return $this->markdown('emails.solicitud.solicitud-created')->subject($subject)->withSwiftMessage(function ($message) {
             $message->setPriority(\Swift_Message::PRIORITY_HIGHEST);
         });

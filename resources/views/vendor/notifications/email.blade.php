@@ -11,7 +11,9 @@
 
 @lang('Si no solicitó un restablecimiento de contraseña, favor ignorar este mensaje.')
 
-@lang('Saludos'), {{ config('app.name') }}
+@lang('Saludos'),
+
+{{ config('app.name') }}
 
 @isset($actionText)
     @slot('subcopy')

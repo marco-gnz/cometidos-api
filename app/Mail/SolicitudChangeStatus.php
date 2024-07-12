@@ -33,7 +33,7 @@ class SolicitudChangeStatus extends Mailable
      */
     public function build()
     {
-        $subject = env('APP_NAME') . " - " . "Actualización solicitud de cometido";
+        $subject = "GECOM - Actualización solicitud de cometido";
         return $this->markdown('emails.solicitud.solicitud-change-status')->subject($subject)->withSwiftMessage(function ($message) {
             $message->setPriority(\Swift_Message::PRIORITY_HIGHEST);
         });

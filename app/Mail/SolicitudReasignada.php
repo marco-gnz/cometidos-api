@@ -31,7 +31,7 @@ class SolicitudReasignada extends Mailable
      */
     public function build()
     {
-        $subject = env('APP_NAME') . " - " . "Solicitud de cometido reasignada";
+        $subject = "GECOM - Solicitud de cometido reasignada";
         return $this->markdown('emails.solicitud.solicitud-reasignada')->subject($subject)->withSwiftMessage(function ($message) {
             $message->setPriority(\Swift_Message::PRIORITY_HIGHEST);
         });

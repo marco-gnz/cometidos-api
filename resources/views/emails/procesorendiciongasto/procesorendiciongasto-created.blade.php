@@ -1,13 +1,35 @@
 @component('mail::message')
-    # Nueva rendición de gastos
+# Nuevo Proceso de Rendición de Gastos
 
-    Estimada/o {{ $proceso_rendicion->userBy->abreNombres() }}
+Estimado/a {{ $proceso_rendicion->userBy->nombres}} {{ $proceso_rendicion->userBy->apellidos}},
 
-    Se confirma que su Rendición de Gastos ha sido ingresada correctamente.
+Se confirma que el proceso de rendición de gastos con el número de folio <strong>{{ $proceso_rendicion->n_folio }}</strong>, ha sido ingresado correctamente. A continuación, encontrará un resumen del proceso de rendición de gastos:
 
-    N° de resolución de Cometido: {{ $proceso_rendicion->solicitud->codigo }}
-    N° de folio de Rendición de Gastos: {{ $proceso_rendicion->n_folio }}
+@component('vendor.mail.html.panel')
 
-    Saludos cordiales,
-    {{ config('app.name') }}
+@slot('content')
+    <table class="table">
+        <tr>
+            <th>N° Resolución Cometido</th>
+            <td>{{$proceso_rendicion->solicitud->codigo}}</td>
+        </tr>
+        <tr>
+            <th>Items Rendidos</th>
+            <td>{{$proceso_rendicion->nomRendicionesSolicitadas()}}</td>
+        </tr>
+        <tr>
+            <th>Monto Total Rendido</th>
+            <td>{{$proceso_rendicion->sumRendicionesSolicitadas()}}</td>
+        </tr>
+    </table>
+@endslot
+@endcomponent
+
+@component('mail::button', ['url' => config('app.frontend_url') . '/mi-cuenta/rendiciones', 'color' => 'primary'])
+    Ver Mis Rendiciones de Gasto
+@endcomponent
+
+Saludos cordiales,
+
+{{ config('app.name') }}
 @endcomponent

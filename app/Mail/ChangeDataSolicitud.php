@@ -28,7 +28,7 @@ class ChangeDataSolicitud extends Mailable
      */
     public function build()
     {
-        $subject = env('APP_NAME') . " - " . "Solicitud de modificación de datos";
+        $subject = "GECOM - Solicitud de modificación de datos";
         return $this->markdown('emails.changedata.change-data')->subject($subject)->withSwiftMessage(function ($message) {
             $message->setPriority(\Swift_Message::PRIORITY_HIGHEST);
         });

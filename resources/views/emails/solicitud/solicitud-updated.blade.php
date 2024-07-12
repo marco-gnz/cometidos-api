@@ -1,14 +1,16 @@
 @component('mail::message')
-    # Solicitud de cometido modificada
+# Solicitud de Cometido Modificada
 
-    Estimada/o {{ $solicitud->funcionario->abreNombres() }}
+Estimada/o {{ $solicitud->funcionario->nombres }} {{ $solicitud->funcionario->apellidos }},
 
-    Se confirma que su Solicitud de Cometido ha sido modificada correctamente.
+Se confirma que la solicitud de cometido con el número de resolución <strong>{{ $solicitud->codigo }}</strong>, ha sido modificada correctamente.
+Además, la solicitud se ha modificado a <strong>{{$solicitud->derecho_pago ? 'con derecho' : 'sin derecho'}} a pago</strong>.
 
-    Además, la solicitud se ha modificado a {{$solicitud->derecho_pago ? 'con derecho' : 'sin derecho'}} a pago.
+@component('mail::button', ['url' => config('app.frontend_url') . '/mi-cuenta/solicitudes', 'color' => 'primary'])
+    Ver Mis Solicitudes de Cometido
+@endcomponent
 
-    N° de resolución de cometido: {{ $solicitud->codigo }}
+Saludos cordiales,
 
-    Saludos cordiales,
-    {{ config('app.name') }}
+{{ config('app.name') }}
 @endcomponent

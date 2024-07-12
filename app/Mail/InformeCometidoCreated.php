@@ -28,7 +28,7 @@ class InformeCometidoCreated extends Mailable
      */
     public function build()
     {
-        $subject = env('APP_NAME') . " - " . "Nuevo informe de cometido";
+        $subject = "GECOM - Nuevo informe de cometido";
         return $this->markdown('emails.informecometido.informecometido-created')->subject($subject)->withSwiftMessage(function ($message) {
             $message->setPriority(\Swift_Message::PRIORITY_HIGHEST);
         });

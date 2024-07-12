@@ -1,15 +1,16 @@
 @component('mail::message')
-    # Solicitud de modificación de datos
+# Solicitud de Modificación de Datos
 
-    Estimada/o {{ $history->userSendBy->abreNombres() }}
+Estimada/o {{ $history->userSendBy->abreNombres() }}
 
-    Con fecha {{ \Carbon\Carbon::parse($history->created_at)->format('d-m-Y H:i:s') }}, {{$history->userBy->nombre_completo}} ({{$history->userBy->rut_completo}})
-    ha solicitado la modificación de sus datos de cuenta.
+Con fecha {{ \Carbon\Carbon::parse($history->created_at)->format('d-m-Y H:i:s') }}, {{$history->userBy->nombre_completo}} ({{$history->userBy->rut_completo}})
+ha solicitado la modificación de sus datos de cuenta.
 
-    @if ($history->observacion)
-        Observación: {{ $history->observacion }}
-    @endif
+@if ($history->observacion)
+Observación: {{ $history->observacion }}
+@endif
 
-    Saludos cordiales,
-    {{ config('app.name') }}
+Saludos cordiales,
+
+{{ config('app.name') }}
 @endcomponent
