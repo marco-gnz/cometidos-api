@@ -108,7 +108,7 @@ class MantenedorController extends Controller
     public function getMotivos()
     {
         try {
-            $motivos = Motivo::orderBy('nombre', 'ASC')->get();
+            $motivos = Motivo::where('active', true)->orderBy('nombre', 'ASC')->get();
 
             return response()->json($motivos);
         } catch (\Exception $error) {

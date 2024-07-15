@@ -216,6 +216,10 @@ Route::group(
         Route::get('/admin/lugares', [MantenedorAdminController::class, 'getLugares']);
         Route::post('/admin/lugares', [MantenedorAdminController::class, 'storeLugar']);
         Route::put('/admin/lugares/{id}', [MantenedorAdminController::class, 'changeStatusLugar']);
+
+        Route::get('/admin/motivos', [MantenedorAdminController::class, 'getMotivos']);
+        Route::post('/admin/motivos', [MantenedorAdminController::class, 'storeMotivo']);
+        Route::put('/admin/motivos/{id}', [MantenedorAdminController::class, 'changeStatusMotivo']);
     }
 );
 

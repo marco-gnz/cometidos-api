@@ -27,4 +27,10 @@ class Lugar extends Model
         if ($params)
             return $query->where('nombre', 'like', '%' . $params . '%');
     }
+
+    public function scopeStatus($query, $params)
+    {
+        if ($params)
+            return $query->whereIn('active', $params);
+    }
 }
