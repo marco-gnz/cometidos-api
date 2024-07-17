@@ -449,7 +449,7 @@
             <div class="row">
                 <div class="column">
                     <h4>Valorización de cometido</h4>
-                    @if ($solicitud->ultimoCalculo)
+                    @if ($solicitud->ultimoCalculo && $solicitud->derecho_pago === 1)
                         <table class="table-1">
                             <thead>
                                 <th></th>
@@ -497,7 +497,7 @@
                     @else
                     <p>Sin valorización de cometido.</p>
                     @endif
-                    @if ($solicitud->cuentaBancaria)
+                    @if ($solicitud->cuentaBancaria && $solicitud->ultimoCalculo && $solicitud->derecho_pago === 1)
                         <table class="table-1">
                             <thead>
                                 <th>N° cuenta bancaria</th>
