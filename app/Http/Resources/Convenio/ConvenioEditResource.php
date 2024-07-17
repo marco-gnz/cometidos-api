@@ -31,6 +31,8 @@ class ConvenioEditResource extends JsonResource
             'establecimiento_id'    => $this->establecimiento_id,
             'ilustre_id'            => $this->ilustre_id,
             'funcionario'           => $this->funcionario ? $this->funcionario->nombre_completo : null,
+            'tipo_contrato'         => $this->tipo_contrato ? $this->tipo_contrato : null,
+            'email'                 => $this->email
         ];
     }
 }

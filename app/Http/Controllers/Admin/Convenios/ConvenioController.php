@@ -28,6 +28,7 @@ class ConvenioController extends Controller
                 ->establecimiento($request->establecimientos_id)
                 ->ley($request->leys_id)
                 ->ilustre($request->ilustres_id)
+                ->status($request->status)
                 ->orderBy('codigo', 'ASC')
                 ->paginate(50);
 
@@ -127,7 +128,9 @@ class ConvenioController extends Controller
                 'ley_id',
                 'establecimiento_id',
                 'ilustre_id',
-                'user_id'
+                'user_id',
+                'tipo_contrato',
+                'email'
             ];
             $convenio = Convenio::create($request->only($form));
 
@@ -161,7 +164,9 @@ class ConvenioController extends Controller
                 'estamento_id',
                 'ley_id',
                 'establecimiento_id',
-                'ilustre_id'
+                'ilustre_id',
+                'tipo_contrato',
+                'email'
             ];
             $convenio = Convenio::where('uuid', $uuid)->firstOrFail();
             $this->authorize('update', $convenio);
@@ -179,7 +184,29 @@ class ConvenioController extends Controller
                     )
                 );
             }
-            return $request->only($form);
+        } catch (\Exception $error) {
+            return response()->json(['error' => $error->getMessage()], 500);
+        }
+    }
+
+    public function updateConvenioStatus($uuid)
+    {
+        try {
+            $convenio = Convenio::where('uuid', $uuid)->firstOrFail();
+            $this->authorize('delete', $convenio);
+            $update = $convenio->update(['active' => !$convenio->active]);
+
+            if ($update) {
+                $convenio = $convenio->fresh();
+                return response()->json(
+                    array(
+                        'status'        => 'success',
+                        'title'         => "Convenio modificado con éxito.",
+                        'message'       => null,
+                        'data'          => ListConvenioResource::make($convenio)
+                    )
+                );
+            }
         } catch (\Exception $error) {
             return response()->json(['error' => $error->getMessage()], 500);
         }

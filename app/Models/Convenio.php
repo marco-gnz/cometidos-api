@@ -105,6 +105,8 @@ class Convenio extends Model
         if ($params)
             return $query->where('codigo', 'like', '%' . $params . '%')
                 ->orWhere('n_resolucion', 'like', '%' . $params . '%')
+                ->orWhere('email', 'like', '%' . $params . '%')
+                ->orWhere('tipo_contrato', 'like', '%' . $params . '%')
                 ->orWhere('observacion', 'like', '%' . $params . '%')
                 ->orWhere(function ($query) use ($params) {
                     $query->whereHas('funcionario', function ($query) use ($params) {
@@ -147,6 +149,12 @@ class Convenio extends Model
             return $query->whereHas('ilustre', function ($q) use ($params) {
                 $q->whereIn('id', $params);
             });
+    }
+
+    public function scopeStatus($query, $params)
+    {
+        if ($params)
+            return $query->whereIn('active', $params);
     }
 
     public function authorizedToDelete()

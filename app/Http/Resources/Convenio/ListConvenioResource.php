@@ -19,6 +19,8 @@ class ListConvenioResource extends JsonResource
         return [
             'uuid'                  => $this->uuid,
             'codigo'                => $this->codigo ? $this->codigo : null,
+            'active_value'          => $this->active ? true : false,
+            'active_message'        => $this->active ? 'Habilitado' : 'Deshabilitado',
             'fecha_inicio'          => $this->fecha_inicio ? Carbon::parse($this->fecha_inicio)->format('d-m-Y') : null,
             'fecha_termino'         => $this->fecha_termino ? Carbon::parse($this->fecha_termino)->format('d-m-Y') : null,
             'fecha_resolucion'      => $this->fecha_resolucion ? Carbon::parse($this->fecha_resolucion)->format('d-m-Y') : null,

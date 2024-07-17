@@ -24,6 +24,8 @@ class ConvenioResource extends JsonResource
             'fecha_termino'         => $this->fecha_termino ? Carbon::parse($this->fecha_termino)->format('d-m-Y') : null,
             'fecha_resolucion'      => $this->fecha_resolucion ? Carbon::parse($this->fecha_resolucion)->format('d-m-Y') : null,
             'tipo_convenio'         => Convenio::TYPE_NOM[$this->tipo_convenio],
+            'active_value'          => $this->active ? true : false,
+            'active_message'        => $this->active ? 'Habilitado' : 'Deshabilitado',
             'n_resolucion'          => $this->n_resolucion,
             'anio'                  => $this->anio,
             'n_viatico_mensual'     => $this->n_viatico_mensual,

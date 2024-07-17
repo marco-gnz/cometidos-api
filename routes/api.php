@@ -160,6 +160,7 @@ Route::group(
         Route::get('/admin/convenios/edit/{uuid}', [ConvenioController::class, 'getConvenioEdit']);
         Route::delete('/admin/convenios/{uuid}', [ConvenioController::class, 'deleteConvenio']);
         Route::put('/admin/convenios/{uuid}', [ConvenioController::class, 'updateConvenio']);
+        Route::put('admin/convenios/status/{uuid}', [ConvenioController::class, 'updateConvenioStatus']);
         Route::get('/admin/con-users', [ConvenioController::class, 'getUsers']);
 
         Route::post('/admin/perfil', [PerfilController::class, 'storePerfil']);

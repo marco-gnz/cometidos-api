@@ -35,7 +35,9 @@ class StoreConvenioRequest extends FormRequest
             'ley_id'                => ['required'],
             'establecimiento_id'    => ['required'],
             'ilustre_id'            => ['required'],
-            'user_id'               => ['required']
+            'user_id'               => ['required'],
+            'tipo_contrato'         => ['required'],
+            'email'                 => ['nullable', 'email'],
         ];
     }
 
@@ -63,6 +65,10 @@ class StoreConvenioRequest extends FormRequest
             'ilustre_id.required'     => 'El :attribute es obligatorio',
 
             'user_id.required'     => 'El :attribute es obligatorio',
+
+            'tipo_contrato.required'     => 'El :attribute es obligatorio',
+
+            'email.email'                    => 'El :attribute debe ser un email (Debe incluir @ y punto)',
         ];
     }
 
@@ -80,7 +86,9 @@ class StoreConvenioRequest extends FormRequest
             'ley_id'                => 'ley',
             'establecimiento_id'    => 'establecimiento',
             'ilustre_id'            => 'ilustre',
-            'user_id'               => 'funcionario'
+            'user_id'               => 'funcionario',
+            'tipo_contrato'         => 'tipo de contrato',
+            'email'                 => 'correo de distribución'
         ];
     }
 }
