@@ -30,23 +30,31 @@ class UserController extends Controller
     {
         try {
             $this->authorize('viewAny', User::class);
-            $auth = Auth::user();
-            $establecimientos = $auth->establecimientos->pluck('id')->toArray();
-            $leyes = $auth->leyes->pluck('id')->toArray();
-            $departamentos = $auth->departamentos->pluck('id')->toArray();
+            $auth               = Auth::user();
+            $establecimientos   = $auth->establecimientos->pluck('id')->toArray();
+            $leyes              = $auth->leyes->pluck('id')->toArray();
+            $departamentos      = $auth->departamentos->pluck('id')->toArray();
 
-            $users = User::leftJoin('contratos', 'users.id', '=', 'contratos.user_id')
-                ->when($establecimientos, function ($query) use ($establecimientos) {
-                    $query->whereIn('contratos.establecimiento_id', $establecimientos);
-                })
-                ->when($leyes, function ($query) use ($leyes) {
-                    $query->whereIn('contratos.ley_id', $leyes);
-                })
-                ->when($departamentos, function ($query) use ($departamentos) {
-                    $query->whereIn('contratos.departamento_id', $departamentos);
-                })
-                ->select('users.*')
-                ->distinct()
+            $users = User::where(function ($q) use ($establecimientos, $leyes, $departamentos) {
+                if ($establecimientos) {
+                    $q->whereHas('contratos', function ($query) use ($establecimientos) {
+                        $query->whereIn('establecimiento_id', $establecimientos);
+                    });
+                }
+
+                if ($leyes) {
+                    $q->whereHas('contratos', function ($query) use ($leyes) {
+                        $query->whereIn('ley_id', $leyes);
+                    });
+                }
+
+                if ($departamentos) {
+                    $q->whereHas('contratos', function ($query) use ($departamentos) {
+                        $query->whereIn('departamento_id', $departamentos);
+                    });
+                }
+            })
+                ->orWhereDoesntHave('contratos')
                 ->general($request->input)
                 ->establecimiento($request->establecimientos_id)
                 ->depto($request->deptos_id)
@@ -57,17 +65,17 @@ class UserController extends Controller
                 ->paginate(50);
 
             return response()->json([
-                'status' => 'success',
-                'title' => null,
-                'message' => null,
-                'pagination' => [
-                    'total' => $users->total(),
-                    'total_desc' => $users->total() > 1 ? "{$users->total()} resultados" : "{$users->total()} resultado",
-                    'current_page' => $users->currentPage(),
-                    'per_page' => $users->perPage(),
-                    'last_page' => $users->lastPage(),
-                    'from' => $users->firstItem(),
-                    'to' => $users->lastPage()
+                'status'            => 'success',
+                'title'             => null,
+                'message'           => null,
+                'pagination'        => [
+                    'total'         => $users->total(),
+                    'total_desc'    => $users->total() > 1 ? "{$users->total()} resultados" : "{$users->total()} resultado",
+                    'current_page'  => $users->currentPage(),
+                    'per_page'      => $users->perPage(),
+                    'last_page'     => $users->lastPage(),
+                    'from'          => $users->firstItem(),
+                    'to'            => $users->lastItem()
                 ],
                 'data' => ListUsersResource::collection($users)
             ]);
@@ -75,7 +83,6 @@ class UserController extends Controller
             return response()->json(['error' => $error->getMessage()], 500);
         }
     }
-
 
     public function getUser($uuid)
     {
