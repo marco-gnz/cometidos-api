@@ -28,13 +28,7 @@ RUN echo "upload_max_filesize=10M" >> /usr/local/etc/php/conf.d/uploads.ini \
 
 WORKDIR /var/www
 
-RUN mkdir -p "/etc/supervisor/logs" \
-    && mkdir -p /var/www/storage \
-    && mkdir -p /var/www/bootstrap/cache \
-    && chown -R www-data:www-data /var/www/storage \
-    && chown -R www-data:www-data /var/www/bootstrap/cache \
-    && chmod -R 775 /var/www/storage \
-    && chmod -R 775 /var/www/bootstrap/cache
+RUN mkdir -p "/etc/supervisor/logs"
 
 COPY docker-compose/supervisor/supervisor.conf /etc/supervisor/conf.d/supervisord.conf
 
