@@ -26,6 +26,15 @@ services:
     networks:
       - laravel
 
+  supervisor:
+    image: app
+    networks:
+      - laravel
+    depends_on:
+      - app
+      - nginx
+    command: supervisor
+
   db:
     image: mysql:8
     restart: unless-stopped

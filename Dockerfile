@@ -10,7 +10,8 @@ RUN apt-get update && apt-get install -y \
     libonig-dev \
     libxml2-dev \
     zip \
-    unzip
+    unzip \
+    supervisor
 
 RUN apt-get clean && rm -rf /var/lib/apt/lists/*
 
@@ -22,7 +23,13 @@ RUN useradd -G www-data,root -u $uid -d /home/$user $user
 RUN mkdir -p /home/$user/.composer && \
     chown -R $user:$user /home/$user
 
+RUN echo "upload_max_filesize=10M" >> /usr/local/etc/php/conf.d/uploads.ini \
+    && echo "post_max_size=10M" >> /usr/local/etc/php/conf.d/uploads.ini
+
 WORKDIR /var/www
 
-USER $user
+RUN mkdir -p "/etc/supervisor/logs"
 
+COPY docker-compose/supervisor/supervisor.conf /etc/supervisor/conf.d/supervisord.conf
+
+USER $user
