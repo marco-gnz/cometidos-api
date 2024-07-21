@@ -28,7 +28,7 @@ services:
       - laravel
 
   supervisor:
-    image: app
+    image: laravel-app
     networks:
       - laravel
     depends_on:
