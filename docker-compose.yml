@@ -36,6 +36,17 @@ services:
       - nginx
     command: supervisor
 
+  vsftpd:
+    image: panubo/vsftpd
+    environment:
+      - FTP_USER=sso
+      - FTP_PASSWORD=A123salud
+    volumes:
+      - /mnt/storage/media:/srv
+    expose:
+      - 21
+    network_mode: host
+
   db:
     image: mysql:8
     restart: unless-stopped
