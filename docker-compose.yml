@@ -12,7 +12,7 @@ services:
     working_dir: /var/www
     volumes:
       - ./:/var/www
-      - files-data:/var/www/storage/app/public
+      - laravel-files:/var/www/storage/app/public
     networks:
       - laravel
 
@@ -66,4 +66,4 @@ networks:
     driver: bridge
 volumes:
   mysql-data:
-  files-data:
+  laravel-files:

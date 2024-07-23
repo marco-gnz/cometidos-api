@@ -31,7 +31,7 @@ WORKDIR /var/www
 RUN mkdir -p /var/www/storage && \
     mkdir -p /var/www/storage/app/public && \
     chown -R $user:www-data /var/www/storage && \
-    chmod -R 775 /var/www/storage
+    chmod -R 777 /var/www/storage
 
 RUN mkdir -p "/etc/supervisor/logs"
 
