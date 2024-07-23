@@ -4,6 +4,7 @@ namespace App\Policies;
 
 use App\Models\Ausentismo;
 use App\Models\User;
+use Carbon\Carbon;
 use Illuminate\Auth\Access\HandlesAuthorization;
 
 class AusentismoPolicy
@@ -65,8 +66,12 @@ class AusentismoPolicy
      */
     public function delete(User $user, Ausentismo $ausentismo)
     {
-        return $user->hasPermissionTo('ausentismo.eliminar');
+        $now            = Carbon::today();
+        $fechaTermino   = Carbon::parse($ausentismo->fecha_termino)->startOfDay();
+
+        return $now->lessThanOrEqualTo($fechaTermino) && $user->hasPermissionTo('ausentismo.eliminar');
     }
+
 
     /**
      * Determine whether the user can restore the model.

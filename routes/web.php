@@ -1,7 +1,13 @@
 <?php
 
 use App\Models\Contrato;
+use App\Models\EstadoInformeCometido;
+use App\Models\EstadoProcesoRendicionGasto;
+use App\Models\EstadoSolicitud;
 use App\Models\Grupo;
+use App\Models\InformeCometido;
+use App\Models\ProcesoRendicionGasto;
+use App\Models\Solicitud;
 use App\Models\User;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Log;
@@ -27,6 +33,49 @@ Route::get('/documento/{uuid}', [App\Http\Controllers\pdf\PdfController::class, 
 Route::get('/gcf/{uuid}', [App\Http\Controllers\pdf\PdfController::class, 'showGastosCometidoFuncional'])->name('gastoscometidofuncional.show');
 Route::get('/resolucion-cometido/{uuid}', [App\Http\Controllers\pdf\PdfController::class, 'showResolucionCometidoFuncional'])->name('resolucioncometidofuncional.show');
 Route::get('/informe/{uuid}', [App\Http\Controllers\pdf\PdfController::class, 'showInformeCometido'])->name('informecometido.show');
+
+Route::get('/email/test/{id}', function ($id) {
+    switch ($id) {
+        case 1:
+            $data = Solicitud::orderBy('id', 'DESC')->first();
+            return new \App\Mail\SolicitudCreated($data);
+            break;
+
+        case 2:
+            $data = EstadoSolicitud::where('id', 1690)->orderBy('id', 'DESC')->first();
+            return new \App\Mail\SolicitudChangeStatus($data->solicitud, $data, null);
+            break;
+
+        case 3:
+            $data = InformeCometido::orderBy('id', 'DESC')->first();
+            return new \App\Mail\InformeCometidoCreated($data);
+            break;
+
+        case 4:
+            $data =
+            EstadoInformeCometido::where('status', 1)->whereNotNull('observacion')->first();
+            return new \App\Mail\InformeCometidoStatus($data);
+            break;
+
+        case 5:
+            $data =
+            ProcesoRendicionGasto::orderBy('id', 'DESC')->first();
+            return new \App\Mail\ProcesoRendicionGastoCreated($data);
+            break;
+
+        case 6:
+            $data =
+            EstadoProcesoRendicionGasto::whereIn('status', [6])->orderBy('id', 'DESC')->first();
+            return new \App\Mail\ProcesoRendicionGastoStatus($data);
+            break;
+
+        case 7:
+            $data =
+            EstadoProcesoRendicionGasto::whereIn('status', [2])->orderBy('id', 'DESC')->first();
+            return new \App\Mail\ProcesoRendicionGastoStatus($data);
+            break;
+    }
+});
 
 Route::get('/test/grupos/codigos', function () {
     try {
@@ -79,10 +128,10 @@ Route::get('/test/grupos/codigos', function () {
     }
 });
 
-Route::get('/test/sync-contratos', function () {
+Route::get('/test/sync-contratos/{id_establecimiento}', function ($id_establecimiento) {
 
     try {
-        $contratos = Contrato::where('establecimiento_id', 2)->get();
+        $contratos = Contrato::where('establecimiento_id', $id_establecimiento)->get();
 
         foreach ($contratos as $contrato) {
             $establecimiento_id  = $contrato->establecimiento_id;
@@ -119,7 +168,8 @@ Route::get('/test/email', function () {
         $solicitud = App\Models\Solicitud::first();
         $emails = $solicitud->firmantes()->with('funcionario')->get()->pluck('funcionario.email')->toArray();
 
-        $last_status = App\Models\EstadoSolicitud::where('is_reasignado', true)->orderBy('id', 'DESC')->first();
+        $last_status = App\Models\EstadoSolicitud::where('is_reasignado', true)->whereNotNull('observacion')->orderBy('id', 'ASC')->first();
+        return new \App\Mail\SolicitudUpdated($last_status->solicitud);
         $proceso_rendicion = App\Models\ProcesoRendicionGasto::first();
         $last_status_proceso = App\Models\EstadoProcesoRendicionGasto::find(249);
         $informe = App\Models\InformeCometido::first();
@@ -164,7 +214,6 @@ Route::get('/test/check-plazo-informe', function () {
     } else {
         return "STATUS_INGRESO_TARDIO";
     }
-
 });
 
 require __DIR__ . '/auth.php';
