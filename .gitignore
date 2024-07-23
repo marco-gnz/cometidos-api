@@ -14,3 +14,5 @@ yarn-error.log
 /.idea
 /.vscode
 .DS_Store
+supervisord.log
+supervisord.pid
