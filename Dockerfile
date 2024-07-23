@@ -28,10 +28,13 @@ RUN echo "upload_max_filesize=10M" >> /usr/local/etc/php/conf.d/uploads.ini \
 
 WORKDIR /var/www
 
-RUN mkdir -p /var/www/storage && \
-    mkdir -p /var/www/storage/app/public && \
-    chown -R $user:www-data /var/www/storage && \
-    chmod -R 777 /var/www/storage
+#RUN mkdir -p /var/www/storage && \
+    # mkdir -p /var/www/storage/app/public && \
+    # chown -R $user:www-data /var/www/storage && \
+    # chmod -R 777 /var/www/storage
+
+RUN chown -R $user:www-data /var/www/storage/app/public && \
+    chmod -R 775 /var/www/storage/app/public
 
 RUN mkdir -p "/etc/supervisor/logs"
 
