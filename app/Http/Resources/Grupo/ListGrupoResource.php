@@ -30,7 +30,8 @@ class ListGrupoResource extends JsonResource
             'created_at'        => $this->created_at ? Carbon::parse($this->created_at)->format('d-m-Y H:i:s') : null,
             'n_users'           => $n_users,
             'authorized_to_delete'    => $this->authorizedToDelete(),
-            'authorized_to_update'    => $this->authorizedToUpdate()
+            'authorized_to_update'    => $this->authorizedToUpdate(),
+            'jefatura_directa'          => $this->jefaturaDirecta()
         ];
     }
 }

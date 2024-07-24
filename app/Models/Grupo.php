@@ -90,6 +90,15 @@ class Grupo extends Model
         return $codigo;
     }
 
+    public function jefaturaDirecta()
+    {
+        $j_d = $this->firmantes()->where('role_id', 3)->where('status', true)->first();
+        if ($j_d) {
+            return $j_d->funcionario->abreNombres();
+        }
+        return null;
+    }
+
     public function contratos()
     {
         return $this->hasMany(Contrato::class)->orderBy('id', 'ASC');
