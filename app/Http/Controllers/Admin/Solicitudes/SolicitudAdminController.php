@@ -61,9 +61,29 @@ class SolicitudAdminController extends Controller
                 'result' => 'required|in:none,all,noverify,verify',
             ]);
 
-            $resultSolicitud = $params['result'];
-            $auth = auth()->user();
-            $query          = Solicitud::searchInput($request->input)
+            $resultSolicitud    = $params['result'];
+            $auth               = auth()->user();
+            $query              = Solicitud::query();
+            switch ($resultSolicitud) {
+                case 'noverify':
+                    $this->filterNoVerify($query, $auth);
+                    break;
+                case 'verify':
+                    $this->filterVerify($query, $auth);
+                    break;
+                case 'all':
+                    $this->filterAll($query, $auth);
+                    break;
+                case 'none':
+                    if ($auth->hasPermissionTo('solicitudes.ver')) {
+                        $this->filterRole($query, $auth);
+                    } else {
+                        $this->filterAll($query, $auth);
+                    }
+                    break;
+            }
+
+            $query->searchInput($request->input)
                 ->firmantesPendiente($request->firmantes_id)
                 ->periodoSolicitud($request->periodo_cometido)
                 ->periodoIngreso($request->periodo_ingreso)
@@ -84,20 +104,6 @@ class SolicitudAdminController extends Controller
                 ->estadoIngresoInformeCometido($request->estados_ingreso_informe_id)
                 ->isReasignada($request->is_reasignada)
                 ->isGrupo($request->is_grupo);
-
-            if ($resultSolicitud === 'noverify') {
-                $this->filterNoVerify($query, $auth);
-            } elseif ($resultSolicitud === 'verify') {
-                $this->filterVerify($query, $auth);
-            } elseif ($resultSolicitud === 'all') {
-                $this->filterAll($query, $auth);
-            } else if ($resultSolicitud === 'none') {
-                if ($auth->hasPermissionTo('solicitudes.ver')) {
-                    $this->filterRole($query, $auth);
-                } else {
-                    $this->filterAll($query, $auth);
-                }
-            }
 
             $solicitudes = $query->orderByDesc('fecha_inicio')->paginate(50);
 
