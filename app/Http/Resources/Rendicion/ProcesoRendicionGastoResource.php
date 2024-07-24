@@ -5,6 +5,7 @@ namespace App\Http\Resources\Rendicion;
 use App\Models\EstadoProcesoRendicionGasto;
 use App\Models\EstadoSolicitud;
 use App\Models\ProcesoRendicionGasto;
+use App\Models\Solicitud;
 use Carbon\Carbon;
 use Illuminate\Http\Resources\Json\JsonResource;
 
@@ -30,7 +31,7 @@ class ProcesoRendicionGastoResource extends JsonResource
             'establecimiento'                   => $this->solicitud ? $this->solicitud->establecimiento->sigla : null,
             'mount_rendiciones_solicitadas'     => $this->sumRendicionesSolicitadas(),
             'mount_rendiciones_aprobadas'       => $this->sumRendicionesAprobadas(),
-            'solicitud_estado_nom'              => EstadoSolicitud::STATUS_NOM[$this->solicitud->last_status],
+            'solicitud_estado_nom'              => Solicitud::STATUS_NOM[$this->solicitud->status],
             'solicitud_estado_type'             => $this->solicitud->typeStatus(),
             'solicitud_page_firma'              => $this->solicitud->pageFirma(),
             'solicitud_type_page_firma'         => $this->solicitud->typePageFirma(),

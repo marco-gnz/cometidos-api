@@ -68,7 +68,7 @@ class ProcesoRendicionGastoDetalleResource extends JsonResource
             'documentos'                                    => $this->documentos && count($this->documentos) > 0 ? ListSolicitudDocumentosResource::collection($this->documentos) : null,
             'created_at'                                    => $this->created_at ? Carbon::parse($this->created_at)->format('d-m-Y H:i:s') : null,
             'url_gastos_cometido_funcional'                 => $this->uuid ? route('gastoscometidofuncional.show', ['uuid' => $this->uuid]) : null,
-            'solicitud_estado_nom'                          => EstadoSolicitud::STATUS_NOM[$this->solicitud->last_status],
+            'solicitud_estado_nom'                          => Solicitud::STATUS_NOM[$this->solicitud->status],
             'solicitud_estado_type'                         => $this->solicitud->typeStatus(),
             'solicitud_page_firma'                          => $this->solicitud->pageFirma(),
             'solicitud_type_page_firma'                     => $this->solicitud->typePageFirma(),
