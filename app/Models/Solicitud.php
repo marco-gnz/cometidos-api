@@ -903,16 +903,9 @@ class Solicitud extends Model
             $menu[] = [
                 'code'      => 'datos',
                 'name'      => 'Datos',
-                'extra'     => null
-            ];
-        }
-
-        if (self::authorizedToVerFirmantes() || $user->hasPermissionTo('solicitudes.ver')) {
-            $n_firmantes            = $this->firmantes()->where('posicion_firma', '>', 0)->count();
-            $menu[] = [
-                'code'      => 'firmantes',
-                'name'      => 'Firmantes',
-                'extra'     => "($n_firmantes)"
+                'extra'     => null,
+                'icon_name' => 'Document',
+                'icon_color'    => '#35495e'
             ];
         }
 
@@ -920,8 +913,10 @@ class Solicitud extends Model
             $n_informes_cometido    = $this->informes()->count();
             $menu[] = [
                 'code'      => 'informes',
-                'name'      => 'Informes',
-                'extra'     => "($n_informes_cometido)"
+                'name'      => 'Informe cometido',
+                'extra'     => "($n_informes_cometido)",
+                'icon_name' => 'StarFilled',
+                'icon_color'    => '#fdc109'
             ];
         }
 
@@ -930,16 +925,9 @@ class Solicitud extends Model
             $menu[] = [
                 'code'      => 'calculo',
                 'name'      => 'Valorización',
-                'extra'     => "($is_calculo)"
-            ];
-        }
-
-        if (self::authorizedToVerConvenio() || $user->hasPermissionTo('solicitudes.ver')) {
-            $is_convenio            = $this->convenio ? 'Si' : 'No';
-            $menu[] = [
-                'code'      => 'convenio',
-                'name'      => 'Convenio',
-                'extra'     => "($is_convenio)"
+                'extra'     => "($is_calculo)",
+                'icon_name' => 'Wallet',
+                'icon_color'    => '#35495e'
             ];
         }
 
@@ -948,7 +936,9 @@ class Solicitud extends Model
             $menu[] = [
                 'code'      => 'rendiciones',
                 'name'      => 'Rendiciones',
-                'extra'     => "($n_proceso_rendiciones)"
+                'extra'     => "($n_proceso_rendiciones)",
+                'icon_name' => "WalletFilled",
+                'icon_color'    => '#35495e'
             ];
         }
 
@@ -957,7 +947,31 @@ class Solicitud extends Model
             $menu[] = [
                 'code'      => 'archivos',
                 'name'      => 'Archivos',
-                'extra'     => "($n_documentos)"
+                'extra'     => "($n_documentos)",
+                'icon_name' => "Files",
+                'icon_color'    => '#35495e'
+            ];
+        }
+
+        if (self::authorizedToVerConvenio() || $user->hasPermissionTo('solicitudes.ver')) {
+            $is_convenio            = $this->convenio ? 'Si' : 'No';
+            $menu[] = [
+                'code'      => 'convenio',
+                'name'      => 'Convenio',
+                'extra'     => "($is_convenio)",
+                'icon_name' => 'OfficeBuilding',
+                'icon_color'    => '#35495e'
+            ];
+        }
+
+        if (self::authorizedToVerFirmantes() || $user->hasPermissionTo('solicitudes.ver')) {
+            $n_firmantes            = $this->firmantes()->where('posicion_firma', '>', 0)->count();
+            $menu[] = [
+                'code'      => 'firmantes',
+                'name'      => 'Firmantes',
+                'extra'     => "($n_firmantes)",
+                'icon_name' => 'UserFilled',
+                'icon_color'    => '#35495e'
             ];
         }
 
@@ -966,7 +980,9 @@ class Solicitud extends Model
             $menu[] = [
                 'code'      => 'seguimiento',
                 'name'      => 'Historial',
-                'extra'     => "($n_estados)"
+                'extra'     => "($n_estados)",
+                'icon_name' => "Timer",
+                'icon_color'    => '#35495e'
             ];
         }
         return $menu;
