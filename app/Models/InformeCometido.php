@@ -164,7 +164,7 @@ class InformeCometido extends Model
 
     public function estados()
     {
-        return $this->hasMany(EstadoInformeCometido::class)->orderBy('id', 'DESC');
+        return $this->hasMany(EstadoInformeCometido::class);
     }
 
     public function addEstados(array $estados)

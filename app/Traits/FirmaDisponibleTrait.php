@@ -166,8 +166,8 @@ trait FirmaDisponibleTrait
                             ->first();
 
                         $message_2 = null;
-
-                        if (in_array($id_permission_informe_validar, $first_firma_auth->permissions_id) && ($informe_cometido) && ($informe_cometido->last_status === EstadoInformeCometido::STATUS_INGRESADA)) {
+                        $status_informe_ok = [EstadoInformeCometido::STATUS_INGRESADA, EstadoInformeCometido::STATUS_MODIFICADO];
+                        if (in_array($id_permission_informe_validar, $first_firma_auth->permissions_id) && ($informe_cometido) && (in_array($informe_cometido->last_status, $status_informe_ok))) {
                             $message_2 = 'Existe un Informe de Cometido pendiente por verificar. Al aprobar esta Solicitud de Cometido, el Informe de Cometido será aprobado automáticamente con su firma.';
                         }
 
@@ -245,9 +245,10 @@ trait FirmaDisponibleTrait
                                 ->orderBy('posicion_firma', 'ASC')
                                 ->first();
 
+                            $status_informe_ok = [EstadoInformeCometido::STATUS_INGRESADA, EstadoInformeCometido::STATUS_MODIFICADO];
                             $message_2          = null;
                             $informe_cometido   = $solicitud->informeCometido();
-                            if (in_array($id_permission_informe_validar, $first_firma_position->permissions_id) && ($informe_cometido) && ($informe_cometido->last_status === EstadoInformeCometido::STATUS_INGRESADA)) {
+                            if (in_array($id_permission_informe_validar, $first_firma_position->permissions_id) && ($informe_cometido) && (in_array($informe_cometido->last_status, $status_informe_ok))) {
                                 $message_2 = 'Existe un Informe de Cometido pendiente por verificar. Al aprobar esta Solicitud de Cometido, el Informe de Cometido será aprobado automáticamente con su firma.';
                             }
 

@@ -266,12 +266,16 @@ class SolicitudPolicy
             EstadoSolicitud::STATUS_PENDIENTE,
             EstadoSolicitud::STATUS_RECHAZADO
         ];
+        /* $last_status    = $solicitud->estados()->orderBy('id', 'DESC')->first();
+        $firma          = $this->isFirmaDisponibleActionPolicy($solicitud, 'solicitud.datos.sincronizar-grupo');
+        if((in_array($solicitud->last_status, $status_disponibles) || ($last_status && ($last_status->s_role_id === 3 || $last_status->r_s_role_id === 3))) && ($firma->is_firma || $user->hasPermissionTo('solicitud.datos.sincronizar-grupo'))){
+            return true;
+        } */
 
-        $firma = $this->isFirmaDisponibleActionPolicy($solicitud, 'solicitud.datos.sincronizar-grupo');
-        if ((!$solicitud->grupo || in_array($solicitud->last_status, $status_disponibles)) && ($firma->is_firma || $user->hasRole('SUPER ADMINISTRADOR'))) {
+        $firma          = $this->isFirmaDisponibleActionPolicy($solicitud, 'solicitud.datos.sincronizar-grupo');
+        if ((in_array($solicitud->last_status, $status_disponibles)) && ($firma->is_firma || $user->hasPermissionTo('solicitud.datos.sincronizar-grupo'))) {
             return true;
         }
-
         return false;
     }
 

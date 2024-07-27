@@ -288,7 +288,8 @@ class SolicitudAdminController extends Controller
                     'is_reasignada'     => false,
                     'last_status'       => EstadoSolicitud::STATUS_INGRESADA,
                     'calculo_aplicado'  => false,
-                    'total_firmas'      => 1
+                    'total_firmas'      => 1,
+                    'posicion_firma_actual' => 0
                 ]);
 
                 $solicitud->firmantes()->where('role_id', '!=', 1)->delete();
@@ -299,7 +300,8 @@ class SolicitudAdminController extends Controller
                     'is_reasignada'     => false,
                     'last_status'       => EstadoSolicitud::STATUS_INGRESADA,
                     'calculo_aplicado'  => false,
-                    'total_firmas'      => 1
+                    'total_firmas'      => 1,
+                    'posicion_firma_actual' => 0
                 ]);
                 $solicitud  = $solicitud->fresh();
 
@@ -334,6 +336,16 @@ class SolicitudAdminController extends Controller
                                 ];
                             }
                             $solicitud->addFirmantes($firmantes_solicitud);
+                        }
+                    }
+
+                    $informe_cometido = $solicitud->informeCometido();
+                    if($informe_cometido){
+                        $informe_cometido->estados()->whereIn('status', [EstadoInformeCometido::STATUS_APROBADO, EstadoInformeCometido::STATUS_RECHAZADO])->delete();
+                        $informe_cometido = $informe_cometido->fresh();
+                        $last_status_informe = $informe_cometido->estados()->orderBy('fecha_by_user', 'DESC')->first();
+                        if($last_status_informe){
+                            $informe_cometido->update(['last_status' => $last_status_informe->status]);
                         }
                     }
                 }
@@ -1200,7 +1212,9 @@ class SolicitudAdminController extends Controller
                     $create_status    = $solicitud->addEstados($estados);
                     $informe_cometido = $solicitud->informeCometido();
 
-                    if (($informe_cometido) && ($informe_cometido->last_status === EstadoInformeCometido::STATUS_INGRESADA)) {
+                    $status_informe_ok = [EstadoInformeCometido::STATUS_INGRESADA, EstadoInformeCometido::STATUS_MODIFICADO];
+
+                    if (($informe_cometido) && (in_array($informe_cometido->last_status, $status_informe_ok))) {
                         $this->aprobarInformeCometidoAutomatico($solicitud);
                     }
 
