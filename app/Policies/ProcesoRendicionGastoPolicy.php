@@ -137,7 +137,7 @@ class ProcesoRendicionGastoPolicy
         $status = $procesoRendicionGasto->status;
 
         $firma  = $this->isFirmaDisponibleActionPolicy($procesoRendicionGasto->solicitud, 'rendicion.firma.validar');
-        if (($firma->is_firma) && ($firma->firma->role_id === 3 && $status === EstadoProcesoRendicionGasto::STATUS_INGRESADA || $status === EstadoProcesoRendicionGasto::STATUS_MODIFICADA)) {
+        if (($firma->is_firma) && ($firma->firma->role_id === 3 && ($status === EstadoProcesoRendicionGasto::STATUS_INGRESADA || $status === EstadoProcesoRendicionGasto::STATUS_MODIFICADA))) {
             return true;
         }
 
