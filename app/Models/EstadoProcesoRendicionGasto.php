@@ -82,6 +82,20 @@ class EstadoProcesoRendicionGasto extends Model
             $estado->procesoRendicionGasto->update([
                 'status'    => $estado->status
             ]);
+
+            switch ($estado->status) {
+                case 8:
+                    $estado->procesoRendicionGasto->update([
+                        'posicion_firma_actual' => 0
+                    ]);
+                    break;
+
+                default:
+                    $estado->procesoRendicionGasto->update([
+                        'posicion_firma_actual' => $estado->posicion_firma
+                    ]);
+                    break;
+            }
         });
     }
 

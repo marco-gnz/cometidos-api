@@ -20,10 +20,11 @@ use Illuminate\Http\Client\RequestException;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Http;
+use App\Traits\StatusSolicitudTrait;
 
 class ProcesoRendicionController extends Controller
 {
-    use FirmaDisponibleTrait;
+    use FirmaDisponibleTrait, StatusSolicitudTrait;
 
     public function __construct()
     {
@@ -40,7 +41,8 @@ class ProcesoRendicionController extends Controller
             $resultSolicitud = $params['result'];
 
             $auth = auth()->user();
-            $query = ProcesoRendicionGasto::searchInput($request->input)
+            $query = ProcesoRendicionGasto::query();
+            $query->searchInput($request->input)
                 ->periodoSolicitud($request->periodo_cometido)
                 ->periodoIngresoSolicitud($request->periodo_ingreso_cometido)
                 ->periodoIngresoProceso($request->periodo_ingreso_rendicion)
@@ -66,7 +68,7 @@ class ProcesoRendicionController extends Controller
                 }
             }
 
-            $proceso_rendiciones = $query->orderByDesc('n_folio')->paginate(50);
+            $proceso_rendiciones = $query->orderBy('fecha_by_user', 'DESC')->paginate(50);
 
             return response()->json(
                 array(
@@ -95,16 +97,16 @@ class ProcesoRendicionController extends Controller
         $query
             ->where(function ($q) use ($auth) {
                 $q->whereHas('solicitud.firmantes', function ($q) use ($auth) {
-                     $q->where('role_id', '!=', 1)
+                    $q->where('role_id', '!=', 1)
                     ->where('user_id', $auth->id);
-            })->orWhereHas('solicitud.firmantes', function ($q) use ($auth) {
-                $q->whereIn('is_executed', [true, false])
-                    ->whereHas('funcionario.ausentismos', function ($q) use ($auth) {
-                        $q->whereHas('subrogantes', function ($q) use ($auth) {
-                            $q->where('users.id', $auth->id);
-                        })->whereRaw("DATE(proceso_rendicion_gastos.fecha_by_user) >= ausentismos.fecha_inicio")
+                })->orWhereHas('solicitud.firmantes', function ($q) use ($auth) {
+                    $q->whereIn('is_executed', [true, false])
+                        ->whereHas('funcionario.ausentismos', function ($q) use ($auth) {
+                            $q->whereHas('subrogantes', function ($q) use ($auth) {
+                                $q->where('users.id', $auth->id);
+                            })->whereRaw("DATE(proceso_rendicion_gastos.fecha_by_user) >= ausentismos.fecha_inicio")
                             ->whereRaw("DATE(proceso_rendicion_gastos.fecha_by_user) <= ausentismos.fecha_termino");
-                    });
+                        });
                 });
             })->orWhere(function ($q) use ($auth) {
                 $q->whereHas('solicitud.firmantes', function ($q) use ($auth) {
@@ -147,12 +149,14 @@ class ProcesoRendicionController extends Controller
     {
         try {
             $rendicion = ProcesoRendicionGasto::where('uuid', $uuid)->firstOrFail();
+            $navStatus  = $this->navStatusRendicion($rendicion);
             return response()->json(
                 array(
                     'status'        => 'success',
                     'title'         => null,
                     'message'       => null,
-                    'data'          => ProcesoRendicionGastoDetalleResource::make($rendicion)
+                    'data'          => ProcesoRendicionGastoDetalleResource::make($rendicion),
+                    'nav'           => $navStatus
                 )
             );
         } catch (\Exception $error) {
@@ -183,12 +187,14 @@ class ProcesoRendicionController extends Controller
                     break;
             }
             $proceso_rendicion_gasto = $proceso_rendicion_gasto->fresh();
+            $navStatus  = $this->navStatusRendicion($proceso_rendicion_gasto);
             return response()->json(
                 array(
                     'status'        => 'success',
                     'title'         => 'Rendición modificada con éxito.',
                     'message'       => null,
-                    'data'          => ProcesoRendicionGastoResource::make($proceso_rendicion_gasto)
+                    'data'          => ProcesoRendicionGastoResource::make($proceso_rendicion_gasto),
+                    'nav'           => $navStatus
                 )
             );
         } catch (\Exception $error) {
@@ -234,11 +240,11 @@ class ProcesoRendicionController extends Controller
             $status = EstadoProcesoRendicionGasto::create($estado);
 
             $rendiciones = $proceso_rendicion_gasto->rendiciones()
-            ->where('rinde_gasto', true)
-            ->where('last_status', '!=', RendicionGasto::STATUS_PENDIENTE)
-            ->get();
+                ->where('rinde_gasto', true)
+                ->where('last_status', '!=', RendicionGasto::STATUS_PENDIENTE)
+                ->get();
 
-            if(count($rendiciones) > 0){
+            if (count($rendiciones) > 0) {
                 foreach ($rendiciones as $rendicion) {
                     $rendicion->update([
                         'mount_real'    => $rendicion->mount,
@@ -351,12 +357,14 @@ class ProcesoRendicionController extends Controller
 
                     $rendicion->addStatus($data);
                     $status_proceso_rendicion = EstadoProcesoRendicionGasto::STATUS_NOM[$rendicion->procesoRendicionGasto->status];
+                    $navStatus  = $this->navStatusRendicion($rendicion->procesoRendicionGasto);
                     return response()->json(
                         array(
                             'status'  => 'success',
                             'title'   => "Rendición {$message_status} con éxito",
                             'message' => "Proceso de rendición $status_proceso_rendicion",
-                            'data'    => ProcesoRendicionGastoDetalleResource::make($rendicion->procesoRendicionGasto)
+                            'data'    => ProcesoRendicionGastoDetalleResource::make($rendicion->procesoRendicionGasto),
+                            'nav'     => $navStatus
                         )
                     );
                 }
@@ -430,12 +438,14 @@ class ProcesoRendicionController extends Controller
 
                 if ($update) {
                     $proceso_rendicion_gasto = $proceso_rendicion_gasto->fresh();
+                    $navStatus  = $this->navStatusRendicion($proceso_rendicion_gasto);
                     return response()->json(
                         array(
                             'status'  => 'success',
                             'title'   => "Rendición $proceso_rendicion_gasto->n_folio.",
                             'message' => "Días de pago modificado con éxito",
-                            'data'    => ProcesoRendicionGastoDetalleResource::make($proceso_rendicion_gasto)
+                            'data'    => ProcesoRendicionGastoDetalleResource::make($proceso_rendicion_gasto),
+                            'nav'     => $navStatus
                         )
                     );
                 }
