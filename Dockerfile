@@ -12,7 +12,8 @@ RUN apt-get update && apt-get install -y \
     zip \
     unzip \
     supervisor \
-    cron
+    cron \
+    busybox
 
 RUN apt-get clean && rm -rf /var/lib/apt/lists/*
 
@@ -34,7 +35,7 @@ RUN mkdir -p /var/www/storage && \
     chown -R $user:www-data /var/www/storage && \
     chmod -R 777 /var/www/storage
 
-RUN mkdir -p "/etc/supervisor/logs" && mkdir -p /etc/crontabs
+RUN mkdir -p "/etc/supervisor/logs"
 
 COPY docker-compose/supervisor/supervisor.conf /etc/supervisor/conf.d/supervisord.conf
 

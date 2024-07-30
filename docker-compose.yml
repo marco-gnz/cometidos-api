@@ -68,7 +68,7 @@ services:
       - ./:/var/www
     user: root
     entrypoint: |
-      sh -c "mkdir -p /etc/crontabs && echo '* * * * * cd /var/www && php artisan schedule:run >> /dev/null 2>&1' > /etc/crontabs/root && crond -f"
+      sh -c "mkdir -p /etc/crontabs && echo '* * * * * cd /var/www && php artisan schedule:run >> /dev/null 2>&1' > /etc/crontabs/root && busybox crond -f -l 0"
     networks:
       - laravel
 
