@@ -34,7 +34,7 @@ RUN mkdir -p /var/www/storage && \
     chown -R $user:www-data /var/www/storage && \
     chmod -R 777 /var/www/storage
 
-RUN mkdir -p "/etc/supervisor/logs"
+RUN mkdir -p "/etc/supervisor/logs" && mkdir -p /etc/crontabs
 
 COPY docker-compose/supervisor/supervisor.conf /etc/supervisor/conf.d/supervisord.conf
 
