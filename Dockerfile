@@ -11,9 +11,7 @@ RUN apt-get update && apt-get install -y \
     libxml2-dev \
     zip \
     unzip \
-    supervisor \
-    cron \
-    busybox
+    supervisor
 
 RUN apt-get clean && rm -rf /var/lib/apt/lists/*
 
