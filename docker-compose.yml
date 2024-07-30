@@ -66,6 +66,7 @@ services:
     working_dir: /var/www
     volumes:
       - ./:/var/www
+    user: root
     entrypoint: |
       sh -c "mkdir -p /etc/crontabs && echo '* * * * * cd /var/www && php artisan schedule:run >> /dev/null 2>&1' > /etc/crontabs/root && crond -f"
     networks:
