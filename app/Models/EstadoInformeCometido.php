@@ -61,7 +61,7 @@ class EstadoInformeCometido extends Model
     {
         static::creating(function ($estado) {
             $estado->uuid                    = Str::uuid();
-            $estado->user_id_by              = Auth::user()->id;
+            $estado->user_id_by              = Auth::check() ? Auth::user()->id : $estado->user_id_by;
             $estado->fecha_by_user           = now();
             $estado->ip_address              = Request::ip();
         });
