@@ -340,11 +340,11 @@ class SolicitudAdminController extends Controller
                     }
 
                     $informe_cometido = $solicitud->informeCometido();
-                    if($informe_cometido){
+                    if ($informe_cometido) {
                         $informe_cometido->estados()->whereIn('status', [EstadoInformeCometido::STATUS_APROBADO, EstadoInformeCometido::STATUS_RECHAZADO])->delete();
                         $informe_cometido = $informe_cometido->fresh();
                         $last_status_informe = $informe_cometido->estados()->orderBy('fecha_by_user', 'DESC')->first();
-                        if($last_status_informe){
+                        if ($last_status_informe) {
                             $informe_cometido->update(['last_status' => $last_status_informe->status]);
                         }
                     }
@@ -688,48 +688,32 @@ class SolicitudAdminController extends Controller
 
     private function buscarEscalaSolicitud($solicitud, $fecha_inicio, $fecha_termino)
     {
-        $escala = null;
-        $ley_solicitud = $solicitud->ley->id;
+        $ley_solicitud      = $solicitud->ley->id;
+        $grado_solicitud    = $solicitud->grado->id;
+        $calidad_solicitud  = $solicitud->calidad->id;
 
-        switch ($ley_solicitud) {
-            case 1:
-            case 4:
-                $escala = Escala::where(function ($query) use ($fecha_inicio, $fecha_termino) {
-                    $query->where(function ($query) use ($fecha_inicio, $fecha_termino) {
-                        $query->where('fecha_inicio', '<=', $fecha_inicio)
-                            ->where('fecha_termino', '>=', $fecha_inicio);
-                    })->orWhere(function ($query) use ($fecha_inicio, $fecha_termino) {
-                        $query->where('fecha_inicio', '<=', $fecha_termino)
-                            ->where('fecha_termino', '>=', $fecha_termino);
-                    })->orWhere(function ($query) use ($fecha_inicio, $fecha_termino) {
-                        $query->where('fecha_inicio', '>=', $fecha_inicio)
-                            ->where('fecha_termino', '<=', $fecha_termino);
-                    });
-                })
-                    ->where('ley_id', $solicitud->ley_id)
-                    ->first();
-                break;
+        $escala = Escala::where(function ($query) use ($fecha_inicio, $fecha_termino) {
+            $query->where(function ($query) use ($fecha_inicio, $fecha_termino) {
+                $query->where('fecha_inicio', '<=', $fecha_inicio)
+                    ->where('fecha_termino', '>=', $fecha_inicio);
+            })->orWhere(function ($query) use ($fecha_inicio, $fecha_termino) {
+                $query->where('fecha_inicio', '<=', $fecha_termino)
+                    ->where('fecha_termino', '>=', $fecha_termino);
+            })->orWhere(function ($query) use ($fecha_inicio, $fecha_termino) {
+                $query->where('fecha_inicio', '>=', $fecha_inicio)
+                    ->where('fecha_termino', '<=', $fecha_termino);
+            });
+        });
 
-            default:
-                $escala = Escala::where(function ($query) use ($fecha_inicio, $fecha_termino) {
-                    $query->where(function ($query) use ($fecha_inicio, $fecha_termino) {
-                        $query->where('fecha_inicio', '<=', $fecha_inicio)
-                            ->where('fecha_termino', '>=', $fecha_inicio);
-                    })->orWhere(function ($query) use ($fecha_inicio, $fecha_termino) {
-                        $query->where('fecha_inicio', '<=', $fecha_termino)
-                            ->where('fecha_termino', '>=', $fecha_termino);
-                    })->orWhere(function ($query) use ($fecha_inicio, $fecha_termino) {
-                        $query->where('fecha_inicio', '>=', $fecha_inicio)
-                            ->where('fecha_termino', '<=', $fecha_termino);
-                    });
-                })
-                    ->where('ley_id', $solicitud->ley_id)
-                    ->where('grado_id', $solicitud->grado_id)
-                    ->first();
-                break;
+        if (in_array($ley_solicitud, [1, 4, 5])) {
+            $escala = $escala->where('ley_id', $calidad_solicitud === 2 ? 4 : $ley_solicitud);
+        } else {
+            $escala = $escala->where('ley_id', $calidad_solicitud === 2 ? 4 : $ley_solicitud);
+            if ($calidad_solicitud !== 2) {
+                $escala = $escala->where('grado_id', $grado_solicitud);
+            }
         }
-
-        return $escala;
+        return $escala->first();
     }
 
     private function buscarEscalas($fecha_inicio, $fecha_termino, $solicitud)
