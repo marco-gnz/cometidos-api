@@ -640,6 +640,11 @@ class Solicitud extends Model
         return true;
     }
 
+    public function jefaturaDirecta()
+    {
+        return $this->firmantes()->where('role_id', 3)->where('status', true)->first();
+    }
+
     public function isFirmaPendiente()
     {
         if ($this->status !== self::STATUS_EN_PROCESO) {
@@ -889,7 +894,7 @@ class Solicitud extends Model
         $is_grupo =  $this->grupo ? true : false;
         $data = (object)[
             'value'             => $is_grupo,
-            'message'           =>  !$is_grupo ? 'Sin grupo de firma' : null,
+            'message'           =>  !$is_grupo ? 'S/G' : null,
         ];
 
         return $data;
