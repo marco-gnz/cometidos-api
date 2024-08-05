@@ -49,10 +49,12 @@ La solicitud de cometido con el número de resolución <strong>{{ $solicitud->co
                 <td>{{ $solicitud->transportes ? $solicitud->transportes->pluck('nombre')->implode(', ') : '' }}</td>
             </tr>
         @endif
+        @if ($last_status->funcionario && !$last_status->movimiento_system)
         <tr>
             <th>Movimiento:</th>
             <td>{{ $last_status->perfil ? $last_status->perfil->name : '' }} - {{ $last_status->funcionario->nombre_completo }}</td>
         </tr>
+        @endif
         <tr>
             <th>Fecha Movimiento:</th>
             <td>{{ \Carbon\Carbon::parse($last_status->created_at)->format('d-m-Y H:i:s') }}</td>

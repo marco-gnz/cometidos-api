@@ -18,27 +18,30 @@ class EstadoInformeCometido extends Model
     public const STATUS_APROBADO   = 1;
     public const STATUS_RECHAZADO  = 2;
     public const STATUS_MODIFICADO = 3;
+    public const STATUS_ANULADO    = 4;
 
     public const STATUS_NOM = [
-        self::STATUS_INGRESADA  => 'INGRESADO',
-        self::STATUS_APROBADO   => 'APROBADO',
-        self::STATUS_RECHAZADO  => 'RECHAZADO',
-        self::STATUS_MODIFICADO  => 'MODIFICADO'
+        self::STATUS_INGRESADA      => 'INGRESADO',
+        self::STATUS_APROBADO       => 'APROBADO',
+        self::STATUS_RECHAZADO      => 'RECHAZADO',
+        self::STATUS_MODIFICADO     => 'MODIFICADO',
+        self::STATUS_ANULADO        => 'ANULADO'
     ];
 
     public const STATUS_TYPE = [
         self::STATUS_INGRESADA  => 'info',
         self::STATUS_APROBADO   => 'success',
         self::STATUS_RECHAZADO  => 'danger',
-        self::STATUS_MODIFICADO => 'info'
+        self::STATUS_MODIFICADO => 'info',
+        self::STATUS_ANULADO    => 'danger',
     ];
 
     public const STATUS_INFORME = [
         ['id' => self::STATUS_INGRESADA, 'nombre' => self::STATUS_NOM[self::STATUS_INGRESADA]],
         ['id' => self::STATUS_MODIFICADO, 'nombre' => self::STATUS_NOM[self::STATUS_MODIFICADO]],
         ['id' => self::STATUS_APROBADO, 'nombre' => self::STATUS_NOM[self::STATUS_APROBADO]],
-        ['id' => self::STATUS_RECHAZADO, 'nombre' => self::STATUS_NOM[self::STATUS_RECHAZADO]]
-
+        ['id' => self::STATUS_RECHAZADO, 'nombre' => self::STATUS_NOM[self::STATUS_RECHAZADO]],
+        ['id' => self::STATUS_ANULADO, 'nombre' => self::STATUS_NOM[self::STATUS_ANULADO]]
     ];
 
     public $timestamps = false;

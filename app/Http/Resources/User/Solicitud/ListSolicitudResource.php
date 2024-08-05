@@ -31,6 +31,7 @@ class ListSolicitudResource extends JsonResource
             'fecha_termino'             => $this->fecha_termino ? Carbon::parse($this->fecha_termino)->format('d-m-y') : null,
             'hora_llegada'              => $this->hora_llegada ? Carbon::parse($this->hora_llegada)->format('H:i') : null,
             'hora_salida'               => $this->hora_salida ? Carbon::parse($this->hora_salida)->format('H:i') : null,
+            'derecho_pago_value'        => $this->derecho_pago ? true : false,
             'derecho_pago'              => $this->derecho_pago ? "Si" : "No",
             'n_dias_40'                 => $this->n_dias_40,
             'n_dias_100'                => $this->n_dias_100,

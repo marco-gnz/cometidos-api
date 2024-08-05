@@ -88,6 +88,7 @@ class EstadoSolicitud extends Model
         'history_solicitud_new',
         'is_reasignado',
         'is_subrogante',
+        'movimiento_system',
         'solicitud_id',
         'firmante_id',
         'user_id',
@@ -105,7 +106,7 @@ class EstadoSolicitud extends Model
             $ip_address                 = Request::ip();
             $estado->ip_address         = $ip_address;
 
-            $is_super_admin             =  auth()->user()->hasRole('SUPER ADMINISTRADOR');
+            $is_super_admin             =  Auth::check() ? Auth::user()->hasRole('SUPER ADMINISTRADOR') : null;
             $posicion_firma_s           = $estado->posicion_firma_s;
             $estado->posicion_firma_s   = $posicion_firma_s;
             $estado->posicion_firma     = $posicion_firma_s;
@@ -144,18 +145,25 @@ class EstadoSolicitud extends Model
                     'is_success'    => false
                 ]);
             } else {
-                $estado->firmaActual->update([
-                    'is_executed' => true
-                ]);
-                if ($estado->posicion_firma_s === 0) {
+                if ($estado->firmaActual) {
                     $estado->firmaActual->update([
-                        'is_success'    => true
+                        'is_executed' => true
                     ]);
                 }
+
+                if ($estado->posicion_firma_s === 0) {
+                    if ($estado->firmaActual) {
+                        $estado->firmaActual->update([
+                            'is_success'    => true
+                        ]);
+                    }
+                }
                 if ($estado->status === self::STATUS_APROBADO) {
-                    $estado->firmaActual->update([
-                        'is_success'    => true
-                    ]);
+                    if ($estado->firmaActual) {
+                        $estado->firmaActual->update([
+                            'is_success'    => true
+                        ]);
+                    }
                 }
             }
         });
@@ -189,6 +197,12 @@ class EstadoSolicitud extends Model
                 if (count($procesos_rendicion) > 0) {
                     $procesos_rendicion->toQuery()->update([
                         'status' => EstadoProcesoRendicionGasto::STATUS_ANULADO
+                    ]);
+                }
+                $informes_cometido = $estado->solicitud->informes()->where('last_status', '!=', EstadoInformeCometido::STATUS_RECHAZADO)->get();
+                if (count($informes_cometido) > 0) {
+                    $informes_cometido->toQuery()->update([
+                        'last_status' => EstadoInformeCometido::STATUS_ANULADO
                     ]);
                 }
             }
