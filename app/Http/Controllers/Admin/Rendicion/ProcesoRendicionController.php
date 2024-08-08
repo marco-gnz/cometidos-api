@@ -13,6 +13,7 @@ use App\Models\EstadoProcesoRendicionGasto;
 use App\Models\EstadoRendicionGasto;
 use App\Models\ProcesoRendicionGasto;
 use App\Models\RendicionGasto;
+use App\Models\Solicitud;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use App\Traits\FirmaDisponibleTrait;
@@ -35,13 +36,36 @@ class ProcesoRendicionController extends Controller
     {
         try {
             $params = $request->validate([
-                'result' => 'required|in:none,noverify',
+                'result' => 'required|in:none,all,noverify,verify',
             ]);
 
             $resultSolicitud = $params['result'];
 
             $auth = auth()->user();
             $query = ProcesoRendicionGasto::query();
+
+            switch ($resultSolicitud) {
+                case 'noverify':
+                    $this->filterNoVerify($query, $auth);
+                    break;
+
+                case 'verify':
+                    $this->filterVerify($query, $auth);
+                    break;
+
+                case 'all':
+                    $this->filterAll($query, $auth);
+                    break;
+
+                case 'none':
+                    if ($auth->hasPermissionTo('rendiciones.ver')) {
+                        $this->filterRole($query, $auth);
+                    } else {
+                        $this->filterAll($query, $auth);
+                    }
+                    break;
+            }
+
             $query->searchInput($request->input)
                 ->periodoSolicitud($request->periodo_cometido)
                 ->periodoIngresoSolicitud($request->periodo_ingreso_cometido)
@@ -57,16 +81,6 @@ class ProcesoRendicionController extends Controller
                 ->estado($request->estados_id)
                 ->concepto($request->conceptos_id)
                 ->estadoRendicion($request->estados_rendicion_id);
-
-            if ($resultSolicitud === 'noverify') {
-                $this->filterNoVerify($query, $auth);
-            }else if($resultSolicitud === 'none'){
-                if ($auth->hasPermissionTo('solicitudes.ver')) {
-                    $this->filterRole($query, $auth);
-                } else {
-                    $this->filterNoVerify($query, $auth);
-                }
-            }
 
             $proceso_rendiciones = $query->orderBy('fecha_by_user', 'DESC')->paginate(50);
 
@@ -94,30 +108,117 @@ class ProcesoRendicionController extends Controller
 
     private function filterNoVerify($query, $auth)
     {
-        $query
-            ->where(function ($q) use ($auth) {
-                $q->whereHas('solicitud.firmantes', function ($q) use ($auth) {
+        try {
+            $permissions_rendiciones    = [24, 25, 64];
+            $status_proceso_rendicion   = [
+                EstadoProcesoRendicionGasto::STATUS_APROBADO_N,
+                EstadoProcesoRendicionGasto::STATUS_APROBADO_S,
+                EstadoProcesoRendicionGasto::STATUS_ANULADO,
+                EstadoProcesoRendicionGasto::STATUS_RECHAZADO
+            ];
+            $query->where(function ($query) use ($auth, $permissions_rendiciones) {
+                $query->whereHas('solicitud.firmantes', function ($q) use ($auth, $permissions_rendiciones) {
+                    $q->whereRaw('proceso_rendicion_gastos.posicion_firma_ok = solicitud_firmantes.posicion_firma')
+                        ->where('role_id', '!=', 1)
+                        ->where('user_id', $auth->id);
+                })->orWhereHas('solicitud.firmantes', function ($q) use ($auth) {
+                    $q->whereIn('is_executed', [true, false])
+                        ->whereRaw('proceso_rendicion_gastos.posicion_firma_ok = solicitud_firmantes.posicion_firma')
+                        ->whereHas('funcionario.ausentismos', function ($q) use ($auth) {
+                            $q->whereHas('subrogantes', function ($q) use ($auth) {
+                                $q->where('users.id', $auth->id);
+                            })->whereRaw("DATE(solicituds.fecha_by_user) >= ausentismos.fecha_inicio")
+                                ->whereRaw("DATE(solicituds.fecha_by_user) <= ausentismos.fecha_termino");
+                        });
+                })->orWhere(function ($q) use ($auth) {
+                    $q->whereHas('solicitud.firmantes', function ($q) use ($auth) {
+                        $q->whereIn('is_executed', [true, false])
+                            ->whereRaw('proceso_rendicion_gastos.posicion_firma_ok = solicitud_firmantes.posicion_firma')
+                            ->whereHas('funcionario.reasignacionAusencias', function ($q) use ($auth) {
+                                $q->where('user_subrogante_id', $auth->id);
+                            });
+                    })->whereHas('solicitud.reasignaciones', function ($q) use ($auth) {
+                        $q->where('user_subrogante_id', $auth->id);
+                    });
+                });
+            });
+
+            $query->where(function ($query) use ($status_proceso_rendicion) {
+                $query->whereHas('solicitud', function ($q) use ($status_proceso_rendicion) {
+                    $q->where('status', Solicitud::STATUS_PROCESADO);
+                })->whereNotIn('status', $status_proceso_rendicion);
+            });
+        } catch (\Exception $error) {
+            Log::info($error->getMessage());
+        }
+    }
+
+    private function filterVerify($query, $auth)
+    {
+        try {
+            $permissions_rendiciones    = [24, 25, 64];
+            $query->where(function ($query) use ($auth, $permissions_rendiciones) {
+                $query->whereHas('solicitud.firmantes', function ($q) use ($auth, $permissions_rendiciones) {
                     $q->where('role_id', '!=', 1)
-                    ->where('user_id', $auth->id);
+                        ->where('user_id', $auth->id);
                 })->orWhereHas('solicitud.firmantes', function ($q) use ($auth) {
                     $q->whereIn('is_executed', [true, false])
                         ->whereHas('funcionario.ausentismos', function ($q) use ($auth) {
                             $q->whereHas('subrogantes', function ($q) use ($auth) {
                                 $q->where('users.id', $auth->id);
-                            })->whereRaw("DATE(proceso_rendicion_gastos.fecha_by_user) >= ausentismos.fecha_inicio")
-                            ->whereRaw("DATE(proceso_rendicion_gastos.fecha_by_user) <= ausentismos.fecha_termino");
+                            })->whereRaw("DATE(solicituds.fecha_by_user) >= ausentismos.fecha_inicio")
+                                ->whereRaw("DATE(solicituds.fecha_by_user) <= ausentismos.fecha_termino");
                         });
-                });
-            })->orWhere(function ($q) use ($auth) {
-                $q->whereHas('solicitud.firmantes', function ($q) use ($auth) {
-                    $q->where('is_executed', true)
-                        ->whereHas('funcionario.reasignacionAusencias', function ($q) use ($auth) {
-                            $q->where('user_subrogante_id', $auth->id);
-                        });
-                })->whereHas('solicitud.reasignaciones', function ($q) use ($auth) {
-                    $q->where('user_subrogante_id', $auth->id);
+                })->orWhere(function ($q) use ($auth) {
+                    $q->whereHas('solicitud.firmantes', function ($q) use ($auth) {
+                        $q->whereIn('is_executed', [true, false])
+                            ->whereHas('funcionario.reasignacionAusencias', function ($q) use ($auth) {
+                                $q->where('user_subrogante_id', $auth->id);
+                            });
+                    })->whereHas('solicitud.reasignaciones', function ($q) use ($auth) {
+                        $q->where('user_subrogante_id', $auth->id);
+                    });
                 });
             });
+
+            $query->whereHas('estados', function ($q) use ($auth) {
+                $q->where('user_id_by', $auth->id);
+            });
+        } catch (\Exception $error) {
+            Log::info($error->getMessage());
+        }
+    }
+
+    private function filterAll($query, $auth)
+    {
+        try {
+            $permissions_rendiciones    = [24, 25, 64];
+            $query->where(function ($query) use ($auth, $permissions_rendiciones) {
+                $query->whereHas('solicitud.firmantes', function ($q) use ($auth, $permissions_rendiciones) {
+                    $q->where('role_id', '!=', 1)
+                        ->where('user_id', $auth->id);
+                })->orWhereHas('solicitud.firmantes', function ($q) use ($auth) {
+                    $q->whereIn('is_executed', [true, false])
+                        ->whereHas('funcionario.ausentismos', function ($q) use ($auth) {
+                            $q->whereHas('subrogantes', function ($q) use ($auth) {
+                                $q->where('users.id', $auth->id);
+                            })->whereRaw("DATE(solicituds.fecha_by_user) >= ausentismos.fecha_inicio")
+                                ->whereRaw("DATE(solicituds.fecha_by_user) <= ausentismos.fecha_termino");
+                        });
+                })->orWhere(function ($q) use ($auth) {
+                    $q->whereHas('solicitud.firmantes', function ($q) use ($auth) {
+                        $q->whereIn('is_executed', [true, false])
+                            ->whereHas('funcionario.reasignacionAusencias', function ($q) use ($auth) {
+                                $q->where('user_subrogante_id', $auth->id);
+                            });
+                    })->whereHas('solicitud.reasignaciones', function ($q) use ($auth) {
+                        $q->where('user_subrogante_id', $auth->id);
+                    });
+                });
+            });
+        } catch (\Exception $error) {
+            Log::info($error->getMessage());
+        }
     }
 
     private function filterRole($query, $auth)
@@ -178,6 +279,14 @@ class ProcesoRendicionController extends Controller
 
                 case 2:
                     $this->authorize('aprobar', $proceso_rendicion_gasto);
+                    if ($proceso_rendicion_gasto->status === EstadoProcesoRendicionGasto::STATUS_VERIFICADO) {
+                        $last_cuenta_bancaria = $proceso_rendicion_gasto->solicitud->funcionario->lastCuentaBancaria();
+                        if (!$last_cuenta_bancaria) {
+                            return response()->json([
+                                'errors' =>  [$proceso_rendicion_gasto->solicitud->funcionario->abreNombres() . " no registra cuenta bancaria habilitada o algún medio de pago."]
+                            ], 422);
+                        }
+                    }
                     $this->aprobarProcesoRendicion($proceso_rendicion_gasto, $observacion);
                     break;
 
@@ -238,7 +347,11 @@ class ProcesoRendicionController extends Controller
                 'is_subrogante'         => $firma_disponible->is_subrogante
             ];
             $status = EstadoProcesoRendicionGasto::create($estado);
-
+            if ($status) {
+                $proceso_rendicion_gasto->update([
+                    'posicion_firma_ok' =>  0
+                ]);
+            }
             $rendiciones = $proceso_rendicion_gasto->rendiciones()
                 ->where('rinde_gasto', true)
                 ->where('last_status', '!=', RendicionGasto::STATUS_PENDIENTE)
@@ -261,7 +374,7 @@ class ProcesoRendicionController extends Controller
         }
     }
 
-    private function aprobarProcesoRendicion($proceso_rendicion_gasto, $observacion)
+    public function aprobarProcesoRendicion($proceso_rendicion_gasto, $observacion)
     {
         try {
             if ($proceso_rendicion_gasto->status === EstadoProcesoRendicionGasto::STATUS_VERIFICADO) {
@@ -270,20 +383,23 @@ class ProcesoRendicionController extends Controller
                     $status = EstadoProcesoRendicionGasto::STATUS_APROBADO_S;
                 }
                 $last_cuenta_bancaria = $proceso_rendicion_gasto->solicitud->funcionario->lastCuentaBancaria();
-                if (!$last_cuenta_bancaria) {
-                    return response()->json([
-                        'errors' =>  $proceso_rendicion_gasto->solicitud->funcionario->abreNombres() . " no registra cuenta bancaria habilitada o algún medio de pago."
-                    ], 422);
-                }
 
-                $proceso_rendicion_gasto->update([
-                    'cuenta_bancaria_id'    => $last_cuenta_bancaria->id
-                ]);
+                if ($last_cuenta_bancaria) {
+                    $proceso_rendicion_gasto->update([
+                        'cuenta_bancaria_id'    => $last_cuenta_bancaria->id
+                    ]);
+                }
             } else if ($proceso_rendicion_gasto->status === EstadoProcesoRendicionGasto::STATUS_INGRESADA || $proceso_rendicion_gasto->status === EstadoProcesoRendicionGasto::STATUS_MODIFICADA) {
                 $status = EstadoProcesoRendicionGasto::STATUS_APROBADO_JD;
             }
 
             $firma_disponible = $this->isFirmaDisponibleActionPolicy($proceso_rendicion_gasto->solicitud, 'rendicion.firma.validar');
+            $next_firma_roceso_rendicion = $this->nextFirmaProcesoRendicion(true, $proceso_rendicion_gasto->solicitud, $firma_disponible);
+            if ($next_firma_roceso_rendicion) {
+                $proceso_rendicion_gasto->update([
+                    'posicion_firma_ok' =>  $next_firma_roceso_rendicion->posicion_firma
+                ]);
+            }
             $estado = [
                 'status'                => $status,
                 'observacion'           => $observacion,
@@ -332,6 +448,15 @@ class ProcesoRendicionController extends Controller
                             'is_subrogante'         => $firma_disponible->is_subrogante
                         ];
                         $status_r = EstadoProcesoRendicionGasto::create($estado);
+
+                        if ($status_r) {
+                            $next_firma_roceso_rendicion = $this->nextFirmaProcesoRendicion(true, $rendicion->procesoRendicionGasto->solicitud, $firma_disponible);
+                            if ($next_firma_roceso_rendicion) {
+                                $rendicion->procesoRendicionGasto->update([
+                                    'posicion_firma_ok' =>  $next_firma_roceso_rendicion->posicion_firma
+                                ]);
+                            }
+                        }
                     } else {
                         $total_en_proceso = $rendicion->procesoRendicionGasto->estados()->where('status', EstadoProcesoRendicionGasto::STATUS_EN_PROCESO)->count();
 

@@ -404,4 +404,25 @@ trait FirmaDisponibleTrait
             'message'                   => 'Firma disponible'
         ];
     }
+
+    public function nextFirmaProcesoRendicion($before_or_after, $solicitud, $firma_disponible)
+    {
+        try {
+            $permissions_rendiciones    = [24, 27, 25, 64];
+            $comparison_operator        = $before_or_after ? '>' : '<';
+
+            $posicion_firma = $firma_disponible->is_firma ? $firma_disponible->firma->posicion_firma : 0;
+            return $solicitud->firmantes()
+                ->where('posicion_firma', $comparison_operator, $posicion_firma)
+                ->where(function ($query) use ($permissions_rendiciones) {
+                    foreach ($permissions_rendiciones as $permission_id) {
+                        $query->orWhereJsonContains('permissions_id', $permission_id);
+                    }
+                })
+                ->orderBy('posicion_firma', 'ASC')
+                ->first();
+        } catch (\Exception $error) {
+            Log::info($error->getMessage());
+        }
+    }
 }

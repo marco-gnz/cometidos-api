@@ -644,6 +644,13 @@ class RendicionController extends Controller
                     ];
                     $status = EstadoProcesoRendicionGasto::create($estado);
                 }
+                $next_firma_roceso_rendicion = $this->nextFirmaProcesoRendicion(true, $proceso_rendicion_gasto->solicitud, $firma_disponible);
+
+                if ($next_firma_roceso_rendicion) {
+                    $proceso_rendicion_gasto->update([
+                        'posicion_firma_ok' =>  $next_firma_roceso_rendicion->posicion_firma
+                    ]);
+                }
 
                 $proceso_rendicion_gasto = $proceso_rendicion_gasto->fresh();
 

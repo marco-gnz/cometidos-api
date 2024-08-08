@@ -68,15 +68,11 @@ class DocumentoPolicy
      */
     public function delete(User $user, Documento $documento)
     {
-        if (!$user->id || !$documento->user_id) {
-            return false;
-        }
-
-        if ($documento->model === Documento::MODEL_SOLICITUD && ($documento->solicitud->last_status === EstadoSolicitud::STATUS_INGRESADA || $documento->solicitud->last_status === EstadoSolicitud::STATUS_MODIFICADA)) {
+        if (($user->id === $documento->user_id) && ($documento->model === Documento::MODEL_SOLICITUD) && ($documento->solicitud->last_status === EstadoSolicitud::STATUS_INGRESADA || $documento->solicitud->last_status === EstadoSolicitud::STATUS_MODIFICADA)) {
             return true;
         }
 
-        if ($documento->model === Documento::MODEL_RENDICION && $documento->procesoRendicionGasto && ($documento->procesoRendicionGasto->status === EstadoProcesoRendicionGasto::STATUS_INGRESADA || $documento->procesoRendicionGasto->status === EstadoProcesoRendicionGasto::STATUS_MODIFICADA)) {
+        if (($user->id === $documento->user_id) && ($documento->model === Documento::MODEL_RENDICION) && ($documento->procesoRendicionGasto) && ($documento->procesoRendicionGasto->status === EstadoProcesoRendicionGasto::STATUS_INGRESADA || $documento->procesoRendicionGasto->status === EstadoProcesoRendicionGasto::STATUS_MODIFICADA)) {
             return true;
         }
 

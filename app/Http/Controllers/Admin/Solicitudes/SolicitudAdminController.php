@@ -58,7 +58,7 @@ class SolicitudAdminController extends Controller
     {
         try {
             $params = $request->validate([
-                'result' => 'required|in:none,all,noverify,verify',
+                'result' => 'required|in:none,all,noverify,verify,noverify-informes',
             ]);
 
             $resultSolicitud    = $params['result'];
@@ -80,6 +80,9 @@ class SolicitudAdminController extends Controller
                     } else {
                         $this->filterAll($query, $auth);
                     }
+                    break;
+                case 'noverify-informes':
+                    $this->filterInformesNoVerify($query, $auth);
                     break;
             }
 
@@ -265,6 +268,39 @@ class SolicitudAdminController extends Controller
         })->orWhereHas('reasignaciones', function ($q) use ($auth) {
             $q->where('user_subrogante_id', $auth->id);
         });
+    }
+
+    private function filterInformesNoVerify($query, $auth)
+    {
+        $query->where(function ($q) use ($auth) {
+            $q->whereHas('firmantes', function ($query) use ($auth) {
+                $query->where('status', true)
+                    ->where('role_id', 3)
+                    ->where('user_id', $auth->id);
+            })->orWhereHas('firmantes', function ($query) use ($auth) {
+                $query->where('role_id', 3)
+                    ->whereHas('funcionario.ausentismos', function ($q) use ($auth) {
+                        $q->whereHas('subrogantes', function ($q) use ($auth) {
+                            $q->where('users.id', $auth->id);
+                        })->whereRaw("DATE(solicituds.fecha_by_user) >= ausentismos.fecha_inicio")
+                            ->whereRaw("DATE(solicituds.fecha_by_user) <= ausentismos.fecha_termino");
+                    });
+            })->orWhere(function ($q) use ($auth) {
+                $q->whereHas('firmantes', function ($q) use ($auth) {
+                    $q->where('role_id', 3)
+                        ->whereHas('funcionario.reasignacionAusencias', function ($q) use ($auth) {
+                            $q->where('user_subrogante_id', $auth->id);
+                        });
+                })->whereHas('reasignaciones', function ($q) use ($auth) {
+                    $q->where('user_subrogante_id', $auth->id);
+                });
+            });
+        });
+
+        $query->whereIn('status', [Solicitud::STATUS_EN_PROCESO, Solicitud::STATUS_PROCESADO])
+            ->whereHas('informes', function ($q) {
+                $q->whereIn('last_status', [EstadoInformeCometido::STATUS_INGRESADA, EstadoInformeCometido::STATUS_MODIFICADO]);
+            });
     }
 
 

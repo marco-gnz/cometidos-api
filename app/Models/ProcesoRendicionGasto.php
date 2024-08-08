@@ -23,6 +23,7 @@ class ProcesoRendicionGasto extends Model
         'fecha_pago',
         'status',
         'posicion_firma_actual',
+        'posicion_firma_ok',
         'observacion',
         'solicitud_id',
         'cuenta_bancaria_id',
