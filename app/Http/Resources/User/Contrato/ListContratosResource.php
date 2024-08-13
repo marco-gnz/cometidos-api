@@ -40,7 +40,8 @@ class ListContratosResource extends JsonResource
             'establecimiento_id'        => $this->establecimiento_id,
             'hora_id'                   => $this->hora_id,
             'calidad_id'                => $this->calidad_id,
-            'is_posible_grupos'         => ListGrupoSelectedResource::collection($this->isPosibleGrupos())
+            'is_posible_grupos'         => ListGrupoSelectedResource::collection($this->isPosibleGrupos()),
+            'firmantes'                 => $this->grupo ? ListFirmantesGrupoResource::collection($this->grupo->firmantes()->orderBy('posicion_firma', 'ASC')->get()) : null
         ];
     }
 }
