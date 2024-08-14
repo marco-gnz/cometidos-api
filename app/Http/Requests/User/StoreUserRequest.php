@@ -31,15 +31,16 @@ class StoreUserRequest extends FormRequest
             'nombres'                   => ['required'],
             'apellidos'                 => ['required'],
             'email'                     => ['required', 'email', Rule::unique('users', 'rut')],
-            'establecimiento_id'        => ['required'],
-            'departamento_id'           => ['required'],
-            'sub_departamento_id'       => ['required'],
-            'estamento_id'              => ['required'],
-            'cargo_id'                  => ['required'],
-            'calidad_id'                => ['required'],
-            'hora_id'                   => ['required'],
-            'ley_id'                    => ['required'],
-            'grado_id'                  => ['required_unless:ley_id,4']
+            'is_contrato'               => ['required', 'boolean'],
+            'establecimiento_id'        => ['required_if:is_contrato,true'],
+            'departamento_id'           => ['required_if:is_contrato,true'],
+            'sub_departamento_id'       => ['required_if:is_contrato,true'],
+            'estamento_id'              => ['required_if:is_contrato,true'],
+            'cargo_id'                  => ['required_if:is_contrato,true'],
+            'calidad_id'                => ['required_if:is_contrato,true'],
+            'hora_id'                   => ['required_if:is_contrato,true'],
+            'ley_id'                    => ['required_if:is_contrato,true'],
+            'grado_id'                  => ['required_if:is_contrato,true']
         ];
     }
 
@@ -61,23 +62,23 @@ class StoreUserRequest extends FormRequest
 
             'email.required'                    => 'El :attribute debe ser un email (Debe incluir @ y punto)',
 
-            'establecimiento_id.required'       => 'El :attribute es obligatorio',
+            'establecimiento_id.required_if'       => 'El :attribute es obligatorio',
 
-            'departamento_id.required'          => 'El :attribute es obligatorio',
+            'departamento_id.required_if'          => 'El :attribute es obligatorio',
 
-            'sub_departamento_id.required'      => 'El :attribute es obligatorio',
+            'sub_departamento_id.required_if'      => 'El :attribute es obligatorio',
 
-            'estamento_id.required'             => 'El :attribute es obligatorio',
+            'estamento_id.required_if'             => 'El :attribute es obligatorio',
 
-            'cargo_id.required'                 => 'El :attribute es obligatorio',
+            'cargo_id.required_if'                 => 'El :attribute es obligatorio',
 
-            'calidad_id.required'               => 'La :attribute es obligatoria',
+            'calidad_id.required_if'               => 'La :attribute es obligatoria',
 
-            'hora_id.required'                  => 'La :attribute es obligatoria',
+            'hora_id.required_if'                  => 'La :attribute es obligatoria',
 
-            'ley_id.required'                   => 'La :attribute es obligatoria',
+            'ley_id.required_if'                   => 'La :attribute es obligatoria',
 
-            'grado_id.required_unless'          => 'El :attribute es obligatorio',
+            'grado_id.required_if'                 => 'El :attribute es obligatorio',
         ];
     }
 

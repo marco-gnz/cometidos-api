@@ -137,31 +137,43 @@ class UserController extends Controller
             $user = User::create($data_user);
 
             if ($user) {
-                $data = [
-                    'ley_id'                => $request->ley_id,
-                    'estamento_id'          => $request->estamento_id,
-                    'grado_id'              => $request->grado_id,
-                    'cargo_id'              => $request->cargo_id,
-                    'departamento_id'       => $request->departamento_id,
-                    'sub_departamento_id'   => $request->sub_departamento_id,
-                    'establecimiento_id'    => $request->establecimiento_id,
-                    'hora_id'               => $request->hora_id,
-                    'calidad_id'            => $request->calidad_id,
-                ];
-                $contrato = Contrato::create($data);
-                if ($contrato) {
-                    $user->contratos()->save($contrato);
-                    $user = $user->fresh();
-                    DB::commit();
-                    return response()->json(
-                        array(
-                            'status'        => 'success',
-                            'title'         => "Funcionario ingresado con éxito.",
-                            'message'       => null,
-                            'data'          => ListUsersResource::make($user)
-                        )
-                    );
+                if ($request->is_contrato) {
+                    $data = [
+                        'ley_id'                => $request->ley_id,
+                        'estamento_id'          => $request->estamento_id,
+                        'grado_id'              => $request->grado_id,
+                        'cargo_id'              => $request->cargo_id,
+                        'departamento_id'       => $request->departamento_id,
+                        'sub_departamento_id'   => $request->sub_departamento_id,
+                        'establecimiento_id'    => $request->establecimiento_id,
+                        'hora_id'               => $request->hora_id,
+                        'calidad_id'            => $request->calidad_id,
+                    ];
+                    $contrato = Contrato::create($data);
+                    if ($contrato) {
+                        $user->contratos()->save($contrato);
+                        $user = $user->fresh();
+                        DB::commit();
+                        return response()->json(
+                            array(
+                                'status'        => 'success',
+                                'title'         => "Funcionario ingresado con éxito.",
+                                'message'       => null,
+                                'data'          => ListUsersResource::make($user)
+                            )
+                        );
+                    }
                 }
+                $user = $user->fresh();
+                DB::commit();
+                return response()->json(
+                    array(
+                        'status'        => 'success',
+                        'title'         => "Funcionario ingresado con éxito.",
+                        'message'       => null,
+                        'data'          => ListUsersResource::make($user)
+                    )
+                );
             }
         } catch (\Exception $error) {
             DB::rollback();
