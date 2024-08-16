@@ -802,15 +802,14 @@ class Solicitud extends Model
 
     public function valorTotal()
     {
-        $r_total        = 0;
-        $total_calculo = 0;
-        $calculo = self::getLastCalculo();
+        $total          = 0;
+        $calculo        = self::getLastCalculo();
         if ($calculo) {
-            $total_calculo = $calculo->monto_total;
+            $total = $calculo->valorizacionTotalAjusteMonto()->total_valorizacion;
+            return $total;
         }
-        $total = $r_total + $total_calculo;
         $total = "$" . number_format($total, 0, ",", ".");
-        return $total;
+        return  $total;
     }
 
     public function lastEstadoAprobado()
@@ -1000,6 +999,7 @@ class Solicitud extends Model
                 ->orWhere('actividad_realizada', 'like', '%' . $params . '%')
                 ->orWhere('vistos', 'like', '%' . $params . '%')
                 ->orWhere('observacion_gastos', 'like', '%' . $params . '%')
+                ->orWhere('observacion', 'like', '%' . $params . '%')
                 ->orWhere(function ($query) use ($params) {
                     $query->whereHas('funcionario', function ($query) use ($params) {
                         $query->where('rut_completo', 'like', '%' . $params . '%')

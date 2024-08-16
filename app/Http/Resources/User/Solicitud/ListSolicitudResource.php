@@ -42,13 +42,13 @@ class ListSolicitudResource extends JsonResource
             'type_last_status'          => $this->typeLastStatus(),
             'page_firma'                => $this->pageFirma(),
             'type_page_firma'           => $this->typePageFirma(),
-            'created_at'                => Carbon::parse($this->created_at)->format('d-m-Y H:m'),
+            'created_at'                => Carbon::parse($this->created_at)->format('d-m-Y H:i'),
             'page_firma_ok'             => $this->pageFirmaIsOk(),
             'informe'                   => $informe,
             'is_update'                 => $this->authorizedToUpdate(),
             'valor_total'               => $this->valorTotal(),
             'not_actividad'             => $this->isNotActividad(),
-            'authorized_to_anular'      => $this->authorizedToAnular()
+            'authorized_to_anular'      => $this->authorizedToAnular(),
         ];
     }
 }

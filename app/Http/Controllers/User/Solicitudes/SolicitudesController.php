@@ -40,7 +40,7 @@ class SolicitudesController extends Controller
                 ->periodoSolicitud($request->periodo_cometido)
                 ->periodoIngreso($request->periodo_ingreso)
                 ->estado($request->estados_id)
-                ->orderBy('fecha_by_user', 'DESC')
+                ->orderBy('fecha_inicio', 'DESC')
                 ->paginate(20);
 
             return response()->json(
