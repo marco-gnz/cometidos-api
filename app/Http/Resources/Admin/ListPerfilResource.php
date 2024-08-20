@@ -17,7 +17,7 @@ class ListPerfilResource extends JsonResource
         return [
             'uuid'              => $this->uuid,
             'rut'               => $this->rut_completo,
-            'nombres'           => "{$this->apellidos} {$this->nombres}",
+            'nombres'           => $this->abreNombres(),
             'email'             => $this->email ? $this->email : null,
             'perfiles'          => $this->getRoleNames()->implode(', '),
             'establecimientos'  => $this->establecimientos ? $this->establecimientos->pluck('sigla')->implode(' - ') : null,

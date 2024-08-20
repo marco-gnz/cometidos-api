@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Admin\Perfil;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Perfil\StorePerfilRequest;
+use App\Http\Requests\Perfil\UpdatePerfilRequest;
 use App\Http\Resources\Admin\EditPerfilResource;
 use App\Http\Resources\Admin\ListPerfilResource;
 use App\Models\User;
@@ -108,6 +109,7 @@ class PerfilController extends Controller
                 $user->syncRoles($request->perfiles_id ?? []);
                 $user->establecimientos()->sync($request->establecimientos_id ?? []);
                 $user->leyes()->sync($request->leys_id ?? []);
+                $user->transportes()->sync($request->medios_transporte_id ?? []);
                 $user->departamentos()->sync($request->deptos_id ?? []);
                 $user->syncPermissions($request->permissions_id ?? []);
 
@@ -118,7 +120,7 @@ class PerfilController extends Controller
                         'status'        => 'success',
                         'title'         => "Perfil ingresado con éxito.",
                         'message'       => null,
-                        'perfil'          => ListPerfilResource::make($user)
+                        'perfil'        => ListPerfilResource::make($user)
                     )
                 );
             }
@@ -129,7 +131,7 @@ class PerfilController extends Controller
         }
     }
 
-    public function updatePerfil($uuid, Request $request)
+    public function updatePerfil($uuid, UpdatePerfilRequest $request)
     {
         try {
             $user = User::where('uuid', $uuid)->firstOrFail();
@@ -138,6 +140,7 @@ class PerfilController extends Controller
             $user->establecimientos()->sync($request->establecimientos_id ?? []);
             $user->leyes()->sync($request->leys_id ?? []);
             $user->departamentos()->sync($request->deptos_id ?? []);
+            $user->transportes()->sync($request->medios_transporte_id ?? []);
             $user->syncPermissions($request->permissions_id ?? []);
 
             $user = $user->fresh();
@@ -146,7 +149,7 @@ class PerfilController extends Controller
                     'status'        => 'success',
                     'title'         => "Perfil modificado con éxito.",
                     'message'       => null,
-                    'perfil'          => ListPerfilResource::make($user)
+                    'perfil'        => ListPerfilResource::make($user)
                 )
             );
         } catch (\Exception $error) {
