@@ -227,6 +227,7 @@ class ProcesoRendicionController extends Controller
         $leyes_id               = $auth->leyes->pluck('id')->toArray();
         $deptos_id              = $auth->departamentos->pluck('id')->toArray();
         $transportes_id         = $auth->transportes->pluck('id')->toArray();
+        $tip_comision_id        = $auth->tipoComisiones->pluck('id')->toArray();
 
         if ($establecimientos_id) {
             $query->whereHas('solicitud.establecimiento', function ($q) use ($establecimientos_id) {
@@ -251,6 +252,13 @@ class ProcesoRendicionController extends Controller
                 $q->whereIn('id', $deptos_id);
             });
         }
+
+        if ($tip_comision_id) {
+            $query->whereHas('solicitud.tipoComision', function ($q) use ($tip_comision_id) {
+                $q->whereIn('id', $tip_comision_id);
+            });
+        }
+
     }
 
     public function getProcesoRendicion($uuid)

@@ -21,6 +21,8 @@ class ListPerfilResource extends JsonResource
             'email'             => $this->email ? $this->email : null,
             'perfiles'          => $this->getRoleNames()->implode(', '),
             'establecimientos'  => $this->establecimientos ? $this->establecimientos->pluck('sigla')->implode(' - ') : null,
+            'transportes'       => $this->transportes ? $this->transportes->pluck('nombre')->implode(' - ') : null,
+            'tipo_comisiones'   => $this->tipoComisiones ? $this->tipoComisiones->pluck('nombre')->implode(' - ') : null,
             'ley'               => $this->leyes ? $this->leyes->pluck('nombre')->implode(' - ') : null,
             'deptos'            => $this->departamentos->count(),
             'permisos'          => $this->permissions->count(),

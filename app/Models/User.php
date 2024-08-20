@@ -153,6 +153,11 @@ class User extends Authenticatable
         return $this->belongsToMany(Transporte::class);
     }
 
+    public function tipoComisiones()
+    {
+        return $this->belongsToMany(TipoComision::class);
+    }
+
     public function addCuentas(array $cuentas)
     {
         return $this->cuentas()->createMany($cuentas);

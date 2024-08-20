@@ -29,6 +29,7 @@ class StorePerfilRequest extends FormRequest
             'establecimientos_id'   => ['required', 'array'],
             'leys_id'               => ['required', 'array'],
             'medios_transporte_id'  => ['nullable', 'array'],
+            'tipos_de_comision_id'  => ['nullable', 'array'],
             'deptos_id'             => ['nullable', 'array'],
             'permissions_id'        => ['nullable', 'array']
         ];

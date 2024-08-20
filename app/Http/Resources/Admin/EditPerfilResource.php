@@ -22,6 +22,7 @@ class EditPerfilResource extends JsonResource
             'leys_id'                   => $this->leyes ? $this-> leyes->pluck('id')->toArray() : null,
             'deptos_id'                 => $this->departamentos ? $this->departamentos->pluck('id')->toArray() : null,
             'medios_transporte_id'      => $this->transportes ? $this->transportes->pluck('id')->toArray() : null,
+            'tipos_de_comision_id'      => $this->tipoComisiones ? $this->tipoComisiones->pluck('id')->toArray() : null,
         ];
     }
 }

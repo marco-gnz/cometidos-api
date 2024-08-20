@@ -110,6 +110,7 @@ class PerfilController extends Controller
                 $user->establecimientos()->sync($request->establecimientos_id ?? []);
                 $user->leyes()->sync($request->leys_id ?? []);
                 $user->transportes()->sync($request->medios_transporte_id ?? []);
+                $user->tipoComisiones()->sync($request->tipos_de_comision_id ?? []);
                 $user->departamentos()->sync($request->deptos_id ?? []);
                 $user->syncPermissions($request->permissions_id ?? []);
 
@@ -140,6 +141,7 @@ class PerfilController extends Controller
             $user->establecimientos()->sync($request->establecimientos_id ?? []);
             $user->leyes()->sync($request->leys_id ?? []);
             $user->departamentos()->sync($request->deptos_id ?? []);
+            $user->tipoComisiones()->sync($request->tipos_de_comision_id ?? []);
             $user->transportes()->sync($request->medios_transporte_id ?? []);
             $user->syncPermissions($request->permissions_id ?? []);
 
