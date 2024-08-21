@@ -9,6 +9,9 @@ use Illuminate\Support\Str;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Gate;
 use App\Policies\InformeCometidoPolicy;
+use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Log;
 
 class Solicitud extends Model
 {
@@ -787,17 +790,72 @@ class Solicitud extends Model
 
         if (($last_status) && ($last_status->posicion_firma === 0 && $last_status->is_reasignado)) {
             $dias_atraso_actividad  = (int)Configuration::obtenerValor('solicitud.dias_atraso_actividad', $this->establecimiento_id);
-            $date_status            = Carbon::parse($last_status->created_at);
-            $date_plazo             = $date_status->addDays($dias_atraso_actividad);
+            $last_movimiento_solicitud_date     = Carbon::parse($last_status->created_at);
+            $array_fechas_feriados              = $this->feriados($last_movimiento_solicitud_date);
+            $fechaLimite                        = $this->calcularFechaLimite($last_movimiento_solicitud_date, $dias_atraso_actividad, $array_fechas_feriados);
+            $fechaLimite = $fechaLimite->format('d-m-Y');
+            $motivo_nom  = $last_status->motivo_rechazo !== null ? " (" . EstadoSolicitud::RECHAZO_NOM[$last_status->motivo_rechazo] . ")" : '';
             $data = (object)[
                 'is_not_actividad'  => true,
-                'title'             => '¡Sin actividad!',
-                'message'           => "Se anulará automáticamente el " . $date_plazo->format('d-m-Y') . " por no editar."
+                'title'             => 'Sin actividad',
+                'message'           => "Este cometido se anulará el $fechaLimite por falta de actividad$motivo_nom. Haga clic en Editar solicitud si necesita hacer cambios."
             ];
 
             return $data;
         }
         return $data;
+    }
+
+    private function feriados($fecha)
+    {
+        $fecha      = Carbon::parse($fecha);
+        $anio       = $fecha->format('Y');
+        $cacheKey   = "feriados_{$anio}";
+        $feriados   = Cache::get($cacheKey);
+        if ($feriados !== null) {
+            return $feriados;
+        }
+
+        try {
+            $url        = "https://apis.digital.gob.cl/fl/feriados/{$anio}";
+            $response   = Http::get($url);
+            if ($response->successful()) {
+                $apiResponse = $response->body();
+                $feriados = json_decode($apiResponse, true, 512, JSON_UNESCAPED_UNICODE);
+
+                if (is_array($feriados)) {
+                    $fechas = collect($feriados)->pluck('fecha')->toArray();
+                    Cache::put($cacheKey, $fechas, now()->addDays(31));
+                    return $fechas;
+                }
+            }
+            return [];
+        } catch (\Exception $exception) {
+            Log::error("Error al procesar la solicitud de feriados: {$exception->getMessage()}");
+            $feriados = Cache::get($cacheKey);
+            return $feriados !== null ? $feriados : [];
+        }
+    }
+
+    private function calcularFechaLimite(Carbon $fechaInicio, $diasHabiles, array $feriados)
+    {
+        $fechaLimite = $fechaInicio->copy();
+
+        $feriados = array_filter(array_map(function ($feriado) {
+            $feriadoCarbon = Carbon::parse($feriado);
+            return !$feriadoCarbon->isWeekend() ? $feriadoCarbon : null;
+        }, $feriados));
+
+        while ($diasHabiles > 0) {
+            $fechaLimite->addDay();
+            if (!$fechaLimite->isWeekend() && !in_array($fechaLimite->format('Y-m-d'), array_map(function ($feriado) {
+                return $feriado->format('Y-m-d');
+            }, $feriados))) {
+                $diasHabiles--;
+            }
+        }
+
+        return $fechaLimite;
     }
 
     public function valorTotal()
