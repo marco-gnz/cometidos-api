@@ -26,6 +26,7 @@ use App\Http\Resources\Solicitud\StatusSolicitudResource;
 use App\Http\Resources\User\InformeCometido\ListInformeCometidoResource;
 use App\Models\CalculoAjuste;
 use App\Models\Concepto;
+use App\Models\ConceptoEstablecimiento;
 use App\Models\Convenio;
 use App\Models\Escala;
 use App\Models\EstadoCalculoAjuste;
@@ -191,7 +192,7 @@ class SolicitudAdminController extends Controller
                             ->where('is_executed', false)
                             ->where('role_id', '!=', 1)
                             ->where('user_id', $auth->id)
-                        ->where('solicituds.status', '=', Solicitud::STATUS_EN_PROCESO);
+                            ->where('solicituds.status', '=', Solicitud::STATUS_EN_PROCESO);
                     });
             });
         })->orWhere(function ($q) use ($auth) {
@@ -238,7 +239,7 @@ class SolicitudAdminController extends Controller
                                     ->where('status', true)
                                     ->where('is_executed', false)
                                     ->where('role_id', '!=', 1)
-                            ->where('solicituds.status', '=', Solicitud::STATUS_EN_PROCESO);
+                                    ->where('solicituds.status', '=', Solicitud::STATUS_EN_PROCESO);
                             })->orWhere(function ($query) {
                                 $query->whereRaw('solicituds.posicion_firma_actual = solicitud_firmantes.posicion_firma')
                                     ->where('solicituds.is_reasignada', 1)
@@ -246,7 +247,7 @@ class SolicitudAdminController extends Controller
                                     ->where('status', true)
                                     ->where('is_executed', false)
                                     ->where('role_id', '!=', 1)
-                            ->where('solicituds.status', '=', Solicitud::STATUS_EN_PROCESO);
+                                    ->where('solicituds.status', '=', Solicitud::STATUS_EN_PROCESO);
                             });
                     });
             })->whereHas('reasignaciones', function ($q) use ($auth) {
@@ -400,6 +401,58 @@ class SolicitudAdminController extends Controller
                                     'permissions_id'    => $this->getPermissions($firmante->role_id, $solicitud)
                                 ];
                             }
+
+                            if ($solicitud->tipo_comision_id === 5) {
+                                $conceptoEstablecimiento = ConceptoEstablecimiento::where('establecimiento_id', $solicitud->establecimiento_id)
+                                    ->whereHas('concepto', function ($q) {
+                                        $q->where('nombre', 'CAPACITACIÓN FINANCIAMIENTO CENTRALIZADO');
+                                    })->first();
+
+                                if ($conceptoEstablecimiento) {
+                                    $first_user = $conceptoEstablecimiento->funcionarios()
+                                        ->first();
+
+                                    if ($first_user) {
+                                        $posicion_actual    = 1;
+                                        $nuevos_firmantes   = [];
+
+                                        foreach ($firmantes_solicitud as $firmante) {
+                                            $nuevos_firmantes[] = $firmante;
+                                            $id_permission_valorizacion_crear   = $this->idPermission('solicitud.valorizacion.crear');
+                                            if ($firmante['role_id'] === 2) {
+                                                $firmante_capacitacion = [
+                                                    'posicion_firma'    => $firmante['posicion_firma'] + 1,
+                                                    'solicitud_id'      => $solicitud->id,
+                                                    'grupo_id'          => $solicitud->grupo_id,
+                                                    'user_id'           => $first_user->id,
+                                                    'role_id'           => 10,
+                                                    'status'            => true,
+                                                    'permissions_id'    => $this->getPermissions(10, $solicitud)
+                                                ];
+                                                $nuevos_firmantes[] = $firmante_capacitacion;
+                                                $posicion_actual++;
+                                            }else{
+                                                if (in_array($id_permission_valorizacion_crear, $firmante['permissions_id'])) {
+                                                    $firmante_capacitacion = [
+                                                        'posicion_firma'    => $firmante['posicion_firma'] + 1,
+                                                        'solicitud_id'      => $solicitud->id,
+                                                        'grupo_id'          => $solicitud->grupo_id,
+                                                        'user_id'           => $first_user->id,
+                                                        'role_id'           => 10,
+                                                        'status'            => true,
+                                                        'permissions_id'    => $this->getPermissions(10, $solicitud)
+                                                    ];
+                                                    $nuevos_firmantes[] = $firmante_capacitacion;
+                                                    $posicion_actual++;
+                                                }
+                                            }
+                                            $nuevos_firmantes[count($nuevos_firmantes) - 1]['posicion_firma'] = $posicion_actual;
+                                            $posicion_actual++;
+                                        }
+                                        $firmantes_solicitud = $nuevos_firmantes;
+                                    }
+                                }
+                            }
                             $solicitud->addFirmantes($firmantes_solicitud);
                         }
                     }
@@ -420,7 +473,7 @@ class SolicitudAdminController extends Controller
             return response()->json(
                 array(
                     'status'        => 'success',
-                    'title'         => "Solicitud $solicitud->codigo sincronizada con éxito.",
+                    'title'         => "Grupo de firma modificado con éxito en la solicitud.",
                     'message'       => null,
                     'data'          => ListSolicitudCompleteAdminResource::make($solicitud),
                     'nav'           => $navStatus,
