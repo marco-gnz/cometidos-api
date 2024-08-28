@@ -203,7 +203,7 @@ class MantenedorController extends Controller
     {
         try {
             $solicitud          = Solicitud::where('uuid', $uuid)->firstOrFail();
-            $actividades        = ActividadGasto::orderBy('nombre', 'ASC')->get();
+            $actividades        = ActividadGasto::whereNotIn('id', [3, 12])->orderBy('nombre', 'ASC')->get();
             $transportes_id     = $solicitud->transportes()->pluck('transporte_id')->toArray();
             foreach ($actividades as $actividad) {
                 $actividad->{'rinde_gasto'}             = 0;
