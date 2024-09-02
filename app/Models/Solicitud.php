@@ -1261,6 +1261,54 @@ class Solicitud extends Model
             return $query->whereIn('status', $params);
     }
 
+    public function scopeEstablecimiento($query, $params)
+    {
+        if ($params)
+            return $query->whereHas('establecimiento', function ($q) use ($params) {
+                $q->whereIn('id', $params);
+            });
+    }
+
+    public function scopeDepartamento($query, $params)
+    {
+        if ($params)
+            return $query->whereHas('departamento', function ($q) use ($params) {
+                $q->whereIn('id', $params);
+            });
+    }
+
+    public function scopeSubdepartamento($query, $params)
+    {
+        if ($params)
+            return $query->whereHas('subdepartamento', function ($q) use ($params) {
+                $q->whereIn('id', $params);
+            });
+    }
+
+    public function scopeLey($query, $params)
+    {
+        if ($params)
+            return $query->whereHas('ley', function ($q) use ($params) {
+                $q->whereIn('id', $params);
+            });
+    }
+
+    public function scopeEstamento($query, $params)
+    {
+        if ($params)
+            return $query->whereHas('estamento', function ($q) use ($params) {
+                $q->whereIn('id', $params);
+            });
+    }
+
+    public function scopeCalidad($query, $params)
+    {
+        if ($params)
+            return $query->whereHas('calidad', function ($q) use ($params) {
+                $q->whereIn('id', $params);
+            });
+    }
+
     public function scopeFirmantesPendiente($query, $params)
     {
         if ($params)

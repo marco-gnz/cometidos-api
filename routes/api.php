@@ -10,6 +10,7 @@ use App\Http\Controllers\Admin\Mantenedores\MantenedorController;
 use App\Http\Controllers\Admin\Perfil\PerfilController;
 use App\Http\Controllers\Admin\Reasignacion\ReasignacionController;
 use App\Http\Controllers\Admin\Rendicion\ProcesoRendicionController;
+use App\Http\Controllers\Admin\Reporte\ReporteController;
 use App\Http\Controllers\Admin\Solicitudes\SolicitudAdminController;
 use App\Http\Controllers\Admin\Users\UserController;
 use App\Http\Controllers\Auth\NewPasswordController;
@@ -63,15 +64,19 @@ Route::group(
         Route::post('/admin/mantenedores/permisos-adicionales', [MantenedorController::class, 'getPermisosAdicionales']);
         Route::get('/admin/mantenedores/ilustres', [MantenedorController::class, 'getIlustres']);
         Route::get('/admin/mantenedores/leys', [MantenedorController::class, 'getLeys']);
+        Route::get('/admin/mantenedores/leys/user', [MantenedorController::class, 'getLeysUser']);
         Route::get('/admin/mantenedores/grados', [MantenedorController::class, 'getGrados']);
         Route::get('/admin/mantenedores/motivos', [MantenedorController::class, 'getMotivos']);
         Route::get('/admin/mantenedores/lugares', [MantenedorController::class, 'getLugares']);
         Route::get('/admin/mantenedores/transportes', [MantenedorController::class, 'getTransporte']);
+        Route::get('/admin/mantenedores/transportes/user', [MantenedorController::class, 'getTransporteUser']);
         Route::get('/admin/mantenedores/actividades/{uuid}', [MantenedorController::class, 'getActividades']);
         Route::get('/admin/mantenedores/establecimientos', [MantenedorController::class, 'getEstablecimientos']);
+        Route::get('/admin/mantenedores/establecimientos/user', [MantenedorController::class, 'getEstablecimientosUser']);
         Route::get('/admin/mantenedores/departamentos', [MantenedorController::class, 'getDepartamentos']);
+        Route::get('/admin/mantenedores/departamentos/user', [MantenedorController::class, 'getDepartamentosUser']);
         Route::get('/admin/mantenedores/subdepartamentos', [MantenedorController::class, 'getSubdepartamentos']);
-         Route::get('/admin/mantenedores/departamentos-to-group/{establecimiento_id}', [MantenedorController::class, 'getDepartamentosToGroup']);
+        Route::get('/admin/mantenedores/departamentos-to-group/{establecimiento_id}', [MantenedorController::class, 'getDepartamentosToGroup']);
         Route::get('/admin/mantenedores/subdepartamentos-to-group/{establecimiento_id}/{departamento_id}', [MantenedorController::class, 'getSubdepartamentosToGroup']);
         Route::get('/admin/mantenedores/roles', [MantenedorController::class, 'getRoles']);
         Route::get('/admin/mantenedores/roles/perfil', [MantenedorController::class, 'getRolesPerfil']);
@@ -82,6 +87,7 @@ Route::group(
         Route::get('/admin/mantenedores/estados-informe', [MantenedorController::class, 'getStatusInforme']);
         Route::get('/admin/mantenedores/estados-rendicion', [MantenedorController::class, 'getStatusRendicion']);
         Route::get('/admin/mantenedores/tipo-comisiones', [MantenedorController::class, 'getTipoComisiones']);
+        Route::get('/admin/mantenedores/tipo-comisiones/user', [MantenedorController::class, 'getTipoComisionesUser']);
         Route::get('/admin/mantenedores/jornadas-cometido', [MantenedorController::class, 'getJornadasCometido']);
         Route::get('/admin/mantenedores/paises', [MantenedorController::class, 'getPaises']);
         Route::get('/admin/mantenedores/conceptos-pres', [MantenedorController::class, 'getConceptos']);
@@ -168,6 +174,12 @@ Route::group(
         Route::get('/admin/perfil/edit/{uuid}', [PerfilController::class, 'getPerfilEdit']);
         Route::delete('/admin/perfil/{uuid}', [PerfilController::class, 'deletePerfil']);
         Route::put('/admin/perfil/{uuid}', [PerfilController::class, 'updatePerfil']);
+
+        Route::get('/admin/reporte/count', [ReporteController::class, 'countRegistros']);
+        Route::get('/admin/reporte/columns', [ReporteController::class, 'columnsReporte']);
+        Route::post('/admin/reporte', [ReporteController::class, 'downloadReporte']);
+        Route::get('admin/reporte/check/{filename}', [ReporteController::class, 'checkExportStatus']);
+        Route::post('admin/reporte/download/ok', [ReporteController::class, 'downloadFile']);
     }
 );
 

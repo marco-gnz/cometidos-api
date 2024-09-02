@@ -31,6 +31,7 @@ use App\Models\TipoComision;
 use App\Models\Transporte;
 use App\Models\User;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Spatie\Permission\Models\Role;
 use Spatie\Permission\Models\Permission;
 
@@ -54,7 +55,7 @@ class MantenedorController extends Controller
                     }
                 }
             }
-            $models = ['grupofirma', 'convenio', 'ausentismo', 'funcionario', 'usuarioespecial', 'configuracion', 'perfil', 'solicitudes', 'rendiciones', 'reasignacion', 'solicitud.datos'];
+            $models = ['grupofirma', 'convenio', 'ausentismo', 'funcionario', 'usuarioespecial', 'configuracion', 'perfil', 'solicitudes', 'rendiciones', 'reasignacion', 'solicitud.datos', 'reporte'];
             $permissions_aditional = Permission::whereNotIn('id', $permissions)
                 ->whereIn('model', $models)
                 ->get();
@@ -138,6 +139,23 @@ class MantenedorController extends Controller
         }
     }
 
+    public function getLeysUser()
+    {
+        try {
+            $auth = Auth::user();
+
+            if ($auth && $auth->leyes()->exists()) {
+                $leyes = $auth->leyes()->orderBy('nombre', 'ASC')->get();
+            } else {
+                $leyes = Ley::orderBy('nombre', 'ASC')->get();
+            }
+
+            return response()->json($leyes);
+        } catch (\Exception $error) {
+            return response()->json(['error' => $error->getMessage()], 500);
+        }
+    }
+
     public function getGrados()
     {
         try {
@@ -163,11 +181,28 @@ class MantenedorController extends Controller
     public function getTransporte()
     {
         try {
-            $transportes = Transporte::orderBy('id', 'ASC')->get();
+            $transportes = Transporte::orderBy('nombre', 'ASC')->get();
 
             return response()->json($transportes);
         } catch (\Exception $error) {
             return response()->json($error->getMessage());
+        }
+    }
+
+    public function getTransporteUser()
+    {
+        try {
+            $auth = Auth::user();
+
+            if ($auth && $auth->transportes()->exists()) {
+                $transportes = $auth->transportes()->orderBy('nombre', 'ASC')->get();
+            } else {
+                $transportes = Transporte::orderBy('nombre', 'ASC')->get();
+            }
+
+            return response()->json($transportes);
+        } catch (\Exception $error) {
+            return response()->json(['error' => $error->getMessage()], 500);
         }
     }
 
@@ -230,6 +265,38 @@ class MantenedorController extends Controller
             return response()->json($establecimientos);
         } catch (\Exception $error) {
             return response()->json($error->getMessage());
+        }
+    }
+
+    public function getEstablecimientosUser()
+    {
+        try {
+            $auth = Auth::user();
+
+            if ($auth && $auth->establecimientos()->exists()) {
+                $establecimientos = $auth->establecimientos()->orderBy('nombre', 'ASC')->get();
+            } else {
+                $establecimientos = Establecimiento::orderBy('nombre', 'ASC')->get();
+            }
+            return response()->json($establecimientos);
+        } catch (\Exception $error) {
+            return response()->json(['error' => $error->getMessage()], 500);
+        }
+    }
+
+    public function getDepartamentosUser()
+    {
+        try {
+            $auth = Auth::user();
+
+            if ($auth && $auth->departamentos()->exists()) {
+                $departamentos = $auth->departamentos()->orderBy('nombre', 'ASC')->get();
+            } else {
+                $departamentos = Establecimiento::orderBy('nombre', 'ASC')->get();
+            }
+            return response()->json($departamentos);
+        } catch (\Exception $error) {
+            return response()->json(['error' => $error->getMessage()], 500);
         }
     }
 
@@ -338,6 +405,22 @@ class MantenedorController extends Controller
             return response()->json($tipo_comisiones);
         } catch (\Exception $error) {
             return response()->json($error->getMessage());
+        }
+    }
+
+    public function getTipoComisionesUser()
+    {
+        try {
+            $auth = Auth::user();
+
+            if ($auth && $auth->tipoComisiones()->exists()) {
+                $tipo_comisiones = $auth->tipoComisiones()->orderBy('nombre', 'ASC')->get();
+            } else {
+                $tipo_comisiones = TipoComision::orderBy('nombre', 'ASC')->get();
+            }
+            return response()->json($tipo_comisiones);
+        } catch (\Exception $error) {
+            return response()->json(['error' => $error->getMessage()], 500);
         }
     }
 

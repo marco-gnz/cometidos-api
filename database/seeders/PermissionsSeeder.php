@@ -113,6 +113,10 @@ class PermissionsSeeder extends Seeder
                 'model'         => 'reasignacion',
                 'permissions'   => ['ver','crear', 'editar', 'eliminar']
             ],
+            [
+                'model'         => 'reporte',
+                'permissions'   => ['solicitud', 'rendicion']
+            ],
         ];
 
         foreach ($permissions as $data) {

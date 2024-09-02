@@ -197,6 +197,25 @@ class LinksController extends Controller
             );
         }
 
+        if ($user->hasPermissionTo('reporte.solicitud') || $user->hasPermissionTo('reporte.rendicion')) {
+            if ($user->hasPermissionTo('reporte.rendicion')) {
+                $type = 'rendicion';
+            }
+
+            if ($user->hasPermissionTo('reporte.solicitud')) {
+                $type = 'solicitud';
+            }
+            $linksUsers[] = Link::create(
+                "list-reportes",
+                "Reportes",
+                "Listado de reportes",
+                "/admin/reportes?type={$type}",
+                "0e6db8",
+                false,
+                null
+            );
+        }
+
         return response()->json([
             'links_admin' => $linksAdmin,
             'links_users' => $linksUsers,
