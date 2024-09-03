@@ -107,7 +107,8 @@ class SolicitudAdminController extends Controller
                 ->estadoInformeCometido($request->estados_informe_id)
                 ->estadoIngresoInformeCometido($request->estados_ingreso_informe_id)
                 ->isReasignada($request->is_reasignada)
-                ->isGrupo($request->is_grupo);
+                ->isGrupo($request->is_grupo)
+                ->isLoadSirh($request->is_sirh);
 
             $solicitudes = $query->orderByDesc('fecha_inicio')->paginate(50);
 
@@ -1404,6 +1405,36 @@ class SolicitudAdminController extends Controller
                 $last_status = $informeCometido->estados()->orderBy('id', 'DESC')->first();
                 InformeCometidoStatus::dispatch($last_status);
             }
+        }
+    }
+
+    public function checkLoadSirh($uuid)
+    {
+        try {
+            $solicitud = Solicitud::where('uuid', $uuid)->firstOrFail();
+            $loads[] = [
+                'load_sirh'     => !$solicitud->load_sirh
+            ];
+            $create_loads = $solicitud->addLoads($loads);
+
+            if($create_loads){
+                $solicitud = $solicitud->fresh();
+                $navStatus = $this->navStatusSolicitud($solicitud);
+                return response()->json(
+                    array(
+                        'status'        => 'success',
+                        'title'         => 'Solicitud actualizada con éxito',
+                        'message'       => null,
+                        'data'          => ListSolicitudCompleteAdminResource::make($solicitud),
+                        'nav'           => $navStatus
+                    )
+                );
+            }
+        } catch (\Exception $error) {
+            return response()->json([
+                'status' => 'error',
+                'message' => $error->getMessage(),
+            ], 500);
         }
     }
 }

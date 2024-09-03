@@ -83,7 +83,8 @@ class DatosSolicitudResource extends JsonResource
             'not_actividad'             => $this->isNotActividad(),
             'n_dias_40'                 => $this->n_dias_40,
             'n_dias_100'                => $this->n_dias_100,
-            'informe'                   => $informe
+            'informe'                   => $informe,
+            'is_load_sirh'              => $this->isLoadSirhInfo(),
         ];
     }
 }

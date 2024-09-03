@@ -49,6 +49,7 @@ class CreateSolicitudsTable extends Migration
             $table->integer('posicion_firma_actual')->default(0);
             $table->integer('total_firmas')->default(0)->nullable();
             $table->integer('dias_permitidos')->nullable();
+            $table->boolean('load_sirh')->default(0);
 
             $table->foreign('user_id')->references('id')->on('users');
             $table->unsignedBigInteger('user_id')->nullable();

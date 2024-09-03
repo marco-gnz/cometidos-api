@@ -116,6 +116,7 @@ class Solicitud extends Model
         'valor_total',
         'vistos',
         'total_firmas',
+        'load_sirh',
         'user_id',
         'grupo_id',
         'convenio_id',
@@ -348,6 +349,11 @@ class Solicitud extends Model
         return $this->hasMany(Documento::class)->orderBy('id', 'DESC');
     }
 
+    public function loadsSirh()
+    {
+        return $this->hasMany(SolicitudSirhLoad::class)->orderBy('id', 'DESC');
+    }
+
     public function estados()
     {
         return $this->hasMany(EstadoSolicitud::class)->orderBy('id', 'DESC');
@@ -396,6 +402,11 @@ class Solicitud extends Model
     public function userBy()
     {
         return $this->belongsTo(User::class, 'user_id_by');
+    }
+
+    public function addLoads(array $loads)
+    {
+        return $this->loadsSirh()->createMany($loads);
     }
 
     public function addDocumentos(array $documentos)
@@ -527,6 +538,13 @@ class Solicitud extends Model
         return false;
     }
 
+    public function nResolucionSirh()
+    {
+        $derecho_pago   = $this->derecho_pago ? 1 : 2;
+        $n_res_last     = substr($this->codigo, -5);
+        return "{$derecho_pago}{$n_res_last}";
+    }
+
     public function authorizedToUpdate()
     {
         return Gate::allows('update', $this);
@@ -622,10 +640,29 @@ class Solicitud extends Model
         return Gate::allows('verhistorial', $this);
     }
 
+    public function authorizedToLoadSirh()
+    {
+        return Gate::allows('loadsirh', $this);
+    }
+
     public function authorizedToCreateInformeCometido()
     {
         $policy = resolve(InformeCometidoPolicy::class);
         return $policy->create(auth()->user(), new InformeCometido, $this);
+    }
+
+    public function isLoadSirhInfo()
+    {
+        $data = (object) [
+            'type'      => $this->load_sirh ? 'success' : 'danger',
+            'message'   => $this->load_sirh ? 'Cargado en SIRH' : 'No cargado en SIRH'
+        ];
+        return $data;
+    }
+
+    public function lastMovLoadSirh()
+    {
+        return $this->loadsSirh()->first();
     }
 
     public function isStore()
@@ -664,7 +701,6 @@ class Solicitud extends Model
         } else {
             $query->where('posicion_firma', $this->posicion_firma_actual + 1);
         }
-
         return $query->first();
     }
 
@@ -1106,6 +1142,13 @@ class Solicitud extends Model
             } elseif (in_array(1, $params)) {
                 return $query->whereNotNull('grupo_id');
             }
+        }
+    }
+
+    public function scopeIsLoadSirh($query, $params)
+    {
+        if ($params) {
+            return $query->whereIn('load_sirh', $params);
         }
     }
 

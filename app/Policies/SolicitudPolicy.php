@@ -323,6 +323,23 @@ class SolicitudPolicy
         return false;
     }
 
+    public function loadsirh(User $user, Solicitud $solicitud)
+    {
+        if ($solicitud->status === Solicitud::STATUS_PROCESADO && $user->hasPermissionTo('solicitud.datos.load-sirh')) {
+            return true;
+        }
+
+        return false;
+    }
+
+    public function export(User $user)
+    {
+        if ($user->hasPermissionTo('reporte.solicitud')) {
+            return true;
+        }
+        return false;
+    }
+
     public function delete(User $user, Solicitud $solicitud)
     {
         //

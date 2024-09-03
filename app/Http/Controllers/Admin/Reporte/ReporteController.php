@@ -23,6 +23,7 @@ class ReporteController extends Controller
     public function columnsReporte()
     {
         try {
+            $this->authorize('export', Solicitud::class);
             $columns_cometido = $this->columnsCometido();
             return response()->json(
                 array(
@@ -40,11 +41,11 @@ class ReporteController extends Controller
     public function countRegistros(SolicitudReporteCountRequest $request)
     {
         try {
+            $this->authorize('export', Solicitud::class);
             $solicitudes = Solicitud::whereYear('fecha_inicio', $request->year)
                 ->whereIn(DB::raw('MONTH(fecha_inicio)'), $request->months)
                 ->derechoViatico($request->derecho_viatico)
-                ->valorizacion($request->valorizacion)
-                ->valorizacion($request->valorizacion)
+                ->isLoadSirh($request->is_sirh)
                 ->tipoComision($request->tipo_cometido)
                 ->jornada($request->jornada_cometido)
                 ->medioTransporte($request->medios_transporte)
@@ -78,6 +79,7 @@ class ReporteController extends Controller
     public function downloadReporte(SolicitudReporteRequest $request)
     {
         try {
+            $this->authorize('export', Solicitud::class);
             $columns = $request->input('columns');
 
             $relaciones = collect($columns)->filter(function ($column) {
@@ -93,8 +95,7 @@ class ReporteController extends Controller
                 ->whereYear('fecha_inicio', $request->year)
                 ->whereIn(DB::raw('MONTH(fecha_inicio)'), $request->months)
                 ->derechoViatico($request->derecho_viatico)
-                ->valorizacion($request->valorizacion)
-                ->valorizacion($request->valorizacion)
+                ->isLoadSirh($request->is_sirh)
                 ->tipoComision($request->tipo_cometido)
                 ->jornada($request->jornada_cometido)
                 ->medioTransporte($request->medios_transporte)
@@ -201,6 +202,11 @@ class ReporteController extends Controller
                 (object) [
                     'nombre'    => 'N° resolución',
                     'campo'     => 'codigo',
+                    'code'      => $solicitud
+                ],
+                (object) [
+                    'nombre'    => 'N° resolución SIRH',
+                    'campo'     => 'codigo_sirh',
                     'code'      => $solicitud
                 ],
                 (object) [
@@ -380,6 +386,11 @@ class ReporteController extends Controller
                 (object) [
                     'nombre'    => 'Lugar de cometido',
                     'campo'     => 'lugares.nombre',
+                    'code'      => $solicitud
+                ],
+                (object) [
+                    'nombre'    => 'Estado carga SIRH',
+                    'campo'     => 'load_sirh',
                     'code'      => $solicitud
                 ],
                 (object) [

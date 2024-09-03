@@ -43,6 +43,10 @@ class SolicitudesExport implements FromCollection, WithHeadings
 
     protected function getFieldValue($solicitud, $column)
     {
+        if($column === 'codigo_sirh'){
+            return $solicitud->nResolucionSirh();
+        }
+
         if ($column === 'status') {
             return Solicitud::STATUS_NOM[$solicitud->status] ?? 'Desconocido';
         }
@@ -81,6 +85,10 @@ class SolicitudesExport implements FromCollection, WithHeadings
 
         if ($column === 'pernocta_lugar_residencia') {
             return $solicitud->pernocta_lugar_residencia ? 'Si' : 'No';
+        }
+
+        if ($column === 'load_sirh') {
+            return $solicitud->isLoadSirhInfo()->message;
         }
 
         if ($column === 'firmas') {
@@ -238,6 +246,7 @@ class SolicitudesExport implements FromCollection, WithHeadings
     {
         $map = [
             'codigo'                                        => 'N° de resolución solicitud',
+            'codigo_sirh'                                   => 'N° de resolución SIRH',
             'fecha_inicio'                                  => 'Fecha de inicio',
             'fecha_termino'                                 => 'Fecha de término',
             'hora_llegada'                                  => 'Hora de salida',
@@ -274,6 +283,7 @@ class SolicitudesExport implements FromCollection, WithHeadings
             'status'                                        => 'Estado solicitud',
             'motivos.nombre'                                => 'Motivo de cometido',
             'lugares.nombre'                                => 'Lugar de cometido',
+            'load_sirh'                                     => 'Estado carga SIRH',
             'fecha_by_user'                                 => 'Fecha de ingreso',
             'firmas'                                        => 'Firmas del cometido',
             'informe_cometido_codigo'                       => 'Código informe cometido',
