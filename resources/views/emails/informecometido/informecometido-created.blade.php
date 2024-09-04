@@ -3,7 +3,7 @@
 
 Estimado/a {{ $informe_cometido->userBy->nombres}} {{ $informe_cometido->userBy->apellidos}},
 
-Se confirma que el informe de cometido en la solicitud con número de resolución <strong>{{ $informe_cometido->solicitud->codigo }}</strong>, ha sido ingresado correctamente. A continuación, encontrará un resumen de su informe de cometido:
+Se confirma que el Informe de Cometido en la solicitud con número de resolución <strong>{{ $informe_cometido->solicitud->codigo }}</strong>, ha sido ingresado correctamente. A continuación, encontrará un resumen de su informe de cometido:
 
 @component('vendor.mail.html.panel')
 
@@ -27,9 +27,15 @@ Se confirma que el informe de cometido en la solicitud con número de resolució
                 <td>{{ $informe_cometido->transportes ? $informe_cometido->transportes->pluck('nombre')->implode(', ') : '' }}</td>
             </tr>
         @endif
+        <tr>
+            <th>Actividad Realizada:</th>
+            <td>{{ $informe_cometido->actividad_realizada}}</td>
+        </tr>
     </table>
 @endslot
 @endcomponent
+
+El informe de cometido deberá ser firmado por su jefatura directa, quien ha sido copiado en este mismo correo.
 
 @component('mail::button', ['url' => config('app.frontend_url') . '/mi-cuenta/solicitudes', 'color' => 'primary'])
     Ver Mis Solicitudes de Cometido

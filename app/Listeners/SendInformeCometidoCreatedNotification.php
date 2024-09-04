@@ -28,9 +28,19 @@ class SendInformeCometidoCreatedNotification
      */
     public function handle(InformeCometidoCreated $event)
     {
-        Mail::to($event->informe_cometido->userBy->email)
-            ->queue(
-                new MailInformeCometidoCreated($event->informe_cometido)
-            );
+        $jefatura_directa = $event->informe_cometido->solicitud->jefaturaDirecta();
+
+        if (($jefatura_directa) && ($jefatura_directa->funcionario)) {
+            Mail::to($event->informe_cometido->userBy->email)
+                ->cc($jefatura_directa->funcionario->email)
+                ->queue(
+                    new MailInformeCometidoCreated($event->informe_cometido)
+                );
+        } else {
+            Mail::to($event->informe_cometido->userBy->email)
+                ->queue(
+                    new MailInformeCometidoCreated($event->informe_cometido)
+                );
+        }
     }
 }
