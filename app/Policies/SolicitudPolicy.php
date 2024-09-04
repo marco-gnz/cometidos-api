@@ -3,6 +3,7 @@
 namespace App\Policies;
 
 use App\Models\Configuration;
+use App\Models\EstadoInformeCometido;
 use App\Models\EstadoSolicitud;
 use App\Models\Solicitud;
 use App\Models\User;
@@ -325,7 +326,8 @@ class SolicitudPolicy
 
     public function loadsirh(User $user, Solicitud $solicitud)
     {
-        if ($solicitud->status === Solicitud::STATUS_PROCESADO && $user->hasPermissionTo('solicitud.datos.load-sirh') && $user->id !== $solicitud->user_id) {
+        $informe = $solicitud->informeCometido();
+        if (($solicitud->status === Solicitud::STATUS_PROCESADO && $user->hasPermissionTo('solicitud.datos.load-sirh') && $user->id !== $solicitud->user_id) && ($informe && $informe->last_status === EstadoInformeCometido::STATUS_APROBADO)) {
             return true;
         }
 
