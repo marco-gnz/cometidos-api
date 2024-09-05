@@ -292,7 +292,7 @@ class MantenedorController extends Controller
             if ($auth && $auth->departamentos()->exists()) {
                 $departamentos = $auth->departamentos()->orderBy('nombre', 'ASC')->get();
             } else {
-                $departamentos = Establecimiento::orderBy('nombre', 'ASC')->get();
+                $departamentos = Departamento::orderBy('nombre', 'ASC')->get();
             }
             return response()->json($departamentos);
         } catch (\Exception $error) {

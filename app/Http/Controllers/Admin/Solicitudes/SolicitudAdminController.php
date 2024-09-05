@@ -108,7 +108,13 @@ class SolicitudAdminController extends Controller
                 ->estadoIngresoInformeCometido($request->estados_ingreso_informe_id)
                 ->isReasignada($request->is_reasignada)
                 ->isGrupo($request->is_grupo)
-                ->isLoadSirh($request->is_sirh);
+                ->isLoadSirh($request->is_sirh)
+                ->establecimiento($request->establecimientos_id)
+                ->departamento($request->deptos_id)
+                ->subdepartamento($request->subdeptos_id)
+                ->ley($request->ley_id)
+                ->estamento($request->estamento_id)
+                ->calidad($request->calidad_id);
 
             $solicitudes = $query->orderByDesc('fecha_inicio')->paginate(50);
 
