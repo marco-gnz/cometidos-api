@@ -220,6 +220,26 @@ class ReporteController extends Controller
                     'code'      => $solicitud
                 ],
                 (object) [
+                    'nombre'    => 'Correo electrónico funcionario',
+                    'campo'     => 'funcionario.email',
+                    'code'      => $solicitud
+                ],
+                (object) [
+                    'nombre'    => 'Rut Jefatura Directa',
+                    'campo'     => 'jefatura_directa_rut',
+                    'code'      => $solicitud
+                ],
+                (object) [
+                    'nombre'    => 'Nombres Jefatura Directa',
+                    'campo'     => 'jefatura_directa_nombres',
+                    'code'      => $solicitud
+                ],
+                (object) [
+                    'nombre'    => 'Correo electrónico Jefatura Directa',
+                    'campo'     => 'jefatura_directa_email',
+                    'code'      => $solicitud
+                ],
+                (object) [
                     'nombre'    => 'Fecha de inicio',
                     'campo'     => 'fecha_inicio',
                     'code'      => $solicitud

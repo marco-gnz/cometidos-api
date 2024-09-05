@@ -47,6 +47,27 @@ class SolicitudesExport implements FromCollection, WithHeadings
             return $solicitud->nResolucionSirh();
         }
 
+        if($column === 'jefatura_directa_rut'){
+            $jefatura_directa = $solicitud->jefaturaDirecta();
+            if($jefatura_directa){
+                return $jefatura_directa->funcionario->rut_completo;
+            }
+        }
+
+        if ($column === 'jefatura_directa_nombres') {
+            $jefatura_directa = $solicitud->jefaturaDirecta();
+            if ($jefatura_directa) {
+                return $jefatura_directa->funcionario->nombre_completo;
+            }
+        }
+
+        if ($column === 'jefatura_directa_email') {
+            $jefatura_directa = $solicitud->jefaturaDirecta();
+            if ($jefatura_directa) {
+                return $jefatura_directa->funcionario->email;
+            }
+        }
+
         if ($column === 'status') {
             return Solicitud::STATUS_NOM[$solicitud->status] ?? 'Desconocido';
         }
@@ -269,6 +290,10 @@ class SolicitudesExport implements FromCollection, WithHeadings
             'total_dias_cometido'                           => 'Total días cometido',
             'funcionario.rut_completo'                      => 'Rut funcionario',
             'funcionario.nombre_completo'                   => 'Nombre funcionario',
+            'funcionario.email'                             => 'Correo electrónico funcionario',
+            'jefatura_directa_rut'                          => 'Rut Jefatura Directa',
+            'jefatura_directa_nombres'                      => 'Nombre Jefatura Directa',
+            'jefatura_directa_email'                        => 'Correo electrónico Jefatura Directa',
             'departamento.nombre'                           => 'Departamento',
             'subdepartamento.nombre'                        => 'Subdepartamento',
             'ley.nombre'                                    => 'Ley',
