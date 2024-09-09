@@ -8,9 +8,10 @@ use App\Models\Solicitud;
 use Maatwebsite\Excel\Concerns\FromCollection;
 use Maatwebsite\Excel\Concerns\WithHeadings;
 use App\Traits\StatusSolicitudTrait;
+use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Support\Facades\Log;
 
-class SolicitudesExport implements FromCollection, WithHeadings
+class SolicitudesExport implements FromCollection, WithHeadings, ShouldQueue
 {
     use StatusSolicitudTrait;
 

@@ -39,6 +39,6 @@ class ExportSolicitudesJob implements ShouldQueue
     public function handle()
     {
         ini_set('memory_limit', '512M');
-        Excel::store(new SolicitudesExport($this->solicitudes, $this->columns), $this->filePath);
+        Excel::queue(new SolicitudesExport($this->solicitudes, $this->columns), $this->filePath);
     }
 }

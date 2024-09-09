@@ -25,7 +25,7 @@ class SolicitudReporteCountRequest extends FormRequest
     {
         return [
             'year'          => ['required'],
-            'months'        => ['required']
+            'month'         => ['required']
         ];
     }
 
@@ -34,7 +34,7 @@ class SolicitudReporteCountRequest extends FormRequest
         return [
             'year.required'                         => 'El :attribute es obligatorio',
 
-            'months.required'                       => 'El o los :attribute son obligatorios',
+            'month.required'                        => 'El :attribute es obligatorio',
         ];
     }
 
@@ -42,7 +42,7 @@ class SolicitudReporteCountRequest extends FormRequest
     {
         return [
             'year'              => 'año',
-            'months'            => 'meses'
+            'month'             => 'mes'
         ];
     }
 }

@@ -43,7 +43,7 @@ class ReporteController extends Controller
         try {
             $this->authorize('export', Solicitud::class);
             $solicitudes = Solicitud::whereYear('fecha_inicio', $request->year)
-                ->whereIn(DB::raw('MONTH(fecha_inicio)'), $request->months)
+                ->where(DB::raw('MONTH(fecha_inicio)'), $request->month)
                 ->derechoViatico($request->derecho_viatico)
                 ->isLoadSirh($request->is_sirh)
                 ->tipoComision($request->tipo_cometido)
@@ -93,7 +93,7 @@ class ReporteController extends Controller
                     $query->pluck('nombre');
                 }])
                 ->whereYear('fecha_inicio', $request->year)
-                ->whereIn(DB::raw('MONTH(fecha_inicio)'), $request->months)
+                ->where(DB::raw('MONTH(fecha_inicio)'), $request->month)
                 ->derechoViatico($request->derecho_viatico)
                 ->isLoadSirh($request->is_sirh)
                 ->tipoComision($request->tipo_cometido)

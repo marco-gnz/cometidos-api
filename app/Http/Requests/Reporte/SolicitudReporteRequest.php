@@ -26,7 +26,7 @@ class SolicitudReporteRequest extends FormRequest
         return [
             'columns'       => ['required', 'array'],
             'year'          => ['required'],
-            'months'        => ['required'],
+            'month'         => ['required'],
             'filename'      => ['required']
         ];
     }
@@ -38,7 +38,7 @@ class SolicitudReporteRequest extends FormRequest
 
             'year.required'                         => 'El :attribute es obligatorio',
 
-            'months.required'                       => 'El o los :attribute son obligatorios',
+            'month.required'                        => 'El :attribute es obligatorio',
         ];
     }
 
@@ -47,7 +47,7 @@ class SolicitudReporteRequest extends FormRequest
         return [
             'columns'           => 'columnas',
             'year'              => 'año',
-            'months'            => 'meses'
+            'months'            => 'mes'
         ];
     }
 }
