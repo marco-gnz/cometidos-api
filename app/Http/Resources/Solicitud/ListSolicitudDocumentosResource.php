@@ -18,7 +18,7 @@ class ListSolicitudDocumentosResource extends JsonResource
         return [
             'uuid'                  => $this->uuid,
             'url'                   => $this->url,
-            'nombre'                => mb_substr($this->nombre, 0, 20) . "...",
+            'nombre'                => $this->nombre,
             'nombre_complete'       => $this->nombre,
             'size'                  => $this->size,
             'extension'             => $this->extension,
