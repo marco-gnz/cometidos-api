@@ -45,6 +45,7 @@ use SebastianBergmann\Type\FalseType;
 use Spatie\Permission\Models\Role;
 use App\Traits\StatusSolicitudTrait;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 
 class SolicitudAdminController extends Controller
 {
@@ -438,7 +439,7 @@ class SolicitudAdminController extends Controller
                                                 ];
                                                 $nuevos_firmantes[] = $firmante_capacitacion;
                                                 $posicion_actual++;
-                                            }else{
+                                            } else {
                                                 if (in_array($id_permission_valorizacion_crear, $firmante['permissions_id'])) {
                                                     $firmante_capacitacion = [
                                                         'posicion_firma'    => $firmante['posicion_firma'] + 1,
@@ -1297,6 +1298,7 @@ class SolicitudAdminController extends Controller
     public function actionStatusSolicitud(StatusSolicitudRequest $request)
     {
         try {
+            DB::beginTransaction();
             $solicitud = Solicitud::where('uuid', $request->solicitud_uuid)->firstOrFail();
             if (($solicitud) && ($solicitud->status === Solicitud::STATUS_ANULADO)) {
                 return $this->errorResponse("No es posible ejecutar firma. Solicitud anulada.", 422);
@@ -1340,39 +1342,25 @@ class SolicitudAdminController extends Controller
             $last_status = $solicitud->estados()->orderBy('id', 'DESC')->first();
 
             if (($last_status) && (!$last_status->is_reasignado)) {
-                $ids_roles_aprobado     = [2, 3, 7, 10];
-                $ids_roles_rechazado    = [2, 3, 4, 5, 6, 7, 10];
-                $ids_roles_anulado      = [3, 7, 8];
-                $emails_copy            = [];
-                if ($last_status->status === EstadoSolicitud::STATUS_APROBADO && in_array($last_status->s_role_id, $ids_roles_aprobado)) {
-                    $is_avion = $solicitud->transportes()->where('solicitud_transporte.transporte_id', 1)->exists();
-                    if ($last_status->s_role_id === 3 && $is_avion) {
-                        $name     = 'ABASTECIMIENTO';
-                        $concepto = Concepto::where('nombre', $name)->first();
-                        if ($concepto) {
-                            $conceptoEstablecimiento = $concepto->conceptosEstablecimientos()
-                                ->where('establecimiento_id', $solicitud->establecimiento_id)
-                                ->first();
-
-                            $emails_copy = $conceptoEstablecimiento->funcionarios()->pluck('users.email')->toArray();
-                        }
-                    }
+                if ($last_status->status === EstadoSolicitud::STATUS_APROBADO) {
+                    $emails_copy = $this->emailsCopy($solicitud, $last_status);
                     SolicitudChangeStatus::dispatch($solicitud, $last_status, $emails_copy);
-                } else if ($last_status->status === EstadoSolicitud::STATUS_RECHAZADO && in_array($last_status->s_role_id, $ids_roles_rechazado)) {
+                } else if ($last_status->status === EstadoSolicitud::STATUS_RECHAZADO) {
+                    $emails_copy = $this->emailsCopy($solicitud, $last_status);
                     SolicitudChangeStatus::dispatch($solicitud, $last_status, $emails_copy);
                 } else if ($last_status->status === EstadoSolicitud::STATUS_ANULADO) {
-                    if ($solicitud->derecho_pago) {
-                        $emails_copy = $solicitud->firmantes()->whereIn('role_id', $ids_roles_anulado)->with('funcionario')->get()->pluck('funcionario.email')->toArray();
-                    }
+                    $emails_copy = $this->emailsCopy($solicitud, $last_status);
                     SolicitudChangeStatus::dispatch($solicitud, $last_status, $emails_copy);
                 }
             } else if (($last_status) && ($last_status->is_reasignado)) {
-                SolicitudReasignada::dispatch($solicitud, $last_status);
+                $emails_copy = $this->emailsCopy($solicitud, $last_status);
+                SolicitudReasignada::dispatch($solicitud, $last_status, $emails_copy);
             }
 
-            $navStatus = $this->navStatusSolicitud($solicitud);
-            $title = "Solicitud {$solicitud->codigo} verificada con éxito.";
-            $message = EstadoSolicitud::STATUS_NOM[$solicitud->last_status];
+            $navStatus  = $this->navStatusSolicitud($solicitud);
+            $title      = "Solicitud {$solicitud->codigo} verificada con éxito.";
+            $message    = EstadoSolicitud::STATUS_NOM[$solicitud->last_status];
+            DB::commit();
             return response()->json(
                 array(
                     'status'        => 'success',
@@ -1384,9 +1372,211 @@ class SolicitudAdminController extends Controller
                 )
             );
         } catch (\Exception $error) {
-            return $error->getMessage();
+            DB::rollback();
+            return response()->json(['error' => $error->getMessage()], 500);
         }
     }
+
+    private function emailsCopy($solicitud, $last_status)
+    {
+        $emails = [];
+
+        switch ($last_status->status) {
+            case EstadoSolicitud::STATUS_APROBADO:
+                $emails = $this->handleAprobadoStatus($solicitud, $last_status, $emails);
+                break;
+
+            case EstadoSolicitud::STATUS_RECHAZADO:
+                $emails = $this->handleRechazadoStatus($solicitud, $last_status, $emails);
+                break;
+
+            case EstadoSolicitud::STATUS_ANULADO:
+                $emails = $this->handleAnuladoStatus($solicitud, $last_status, $emails);
+                break;
+        }
+
+        return $emails;
+    }
+
+    private function emailUserFirma($last_status)
+    {
+        return ($last_status && $last_status->funcionario && $last_status->funcionario->email)
+            ? $last_status->funcionario->email
+            : null;
+    }
+
+    private function handleAprobadoStatus($solicitud, $last_status, $emails)
+    {
+        //firma user
+        $firma_user = $this->emailUserFirma($last_status);
+        if ($firma_user) {
+            $emails[] = $firma_user;
+        }
+
+        // Enviar email al siguiente firmante
+        $siguiente_firmante = $this->getSiguienteFirmante($solicitud);
+        if ($siguiente_firmante) {
+            $emails[] = $siguiente_firmante;
+        }
+
+        // Enviar email a capacitacion si aplica
+        if ($this->isCapacitacion($solicitud, $last_status)) {
+            $cap_email = $this->getCapacitacionEmail($solicitud);
+            if ($cap_email) {
+                $emails[] = $cap_email;
+            }
+        }
+
+        // Enviar email a abastecimiento si es avión y fue aprobado por el jefe directo
+        if ($this->isAvion($solicitud) && $last_status->s_role_id === 3) {
+            $emails = array_merge($emails, $this->emailsAbastecimiento($solicitud));
+        }
+
+        return $emails;
+    }
+
+    private function handleRechazadoStatus($solicitud, $last_status, $emails)
+    {
+        try {
+            //firma user
+            $firma_user = $this->emailUserFirma($last_status);
+            if ($firma_user) {
+                $emails[] = $firma_user;
+            }
+
+            // Enviar email a firmante reasignado
+            $email_reasignado = $this->getReasignadoEmail($last_status);
+            if ($email_reasignado) {
+                $emails[] = $email_reasignado;
+            }
+
+            // Enviar email a ejecutivo
+            $ejecutivo_email = $this->getEjecutivoEmail($solicitud, $email_reasignado);
+            if ($ejecutivo_email) {
+                $emails[] = $ejecutivo_email;
+            }
+
+            // Enviar email a capacitacion si aplica
+            if ($solicitud->tipo_comision_id === 5) {
+                $cap_email = $this->getCapacitacionEmail($solicitud);
+                if ($cap_email) {
+                    $emails[] = $cap_email;
+                }
+            }
+
+            // Enviar email a abastecimiento si aplica
+            if ($this->isAvion($solicitud)) {
+                $emails = array_merge($emails, $this->emailsAbastecimiento($solicitud));
+            }
+
+            return $emails;
+        } catch (\Exception $error) {
+            Log::info($error->getMessage());
+        }
+    }
+
+    private function handleAnuladoStatus($solicitud, $last_status, $emails)
+    {
+        //firma user
+        $firma_user = $this->emailUserFirma($last_status);
+        if ($firma_user) {
+            $emails[] = $firma_user;
+        }
+
+        // Enviar email a ejecutivo
+        $ejecutivo_email = $this->getEjecutivoEmail($solicitud, $firma_user);
+        if ($ejecutivo_email) {
+            $emails[] = $ejecutivo_email;
+        }
+
+        // Enviar email a capacitacion si aplica
+        if ($solicitud->tipo_comision_id === 5) {
+            $cap_email = $this->getCapacitacionEmail($solicitud);
+            if ($cap_email) {
+                $emails[] = $cap_email;
+            }
+        }
+
+        // Enviar email a abastecimiento si aplica
+        if ($this->isAvion($solicitud)) {
+            $emails = array_merge($emails, $this->emailsAbastecimiento($solicitud));
+        }
+
+        return $emails;
+    }
+
+    // Funciones de utilidad
+    private function getSiguienteFirmante($solicitud)
+    {
+        $siguiente_firmante = $solicitud->firmantes()
+            ->where('posicion_firma', '>', $solicitud->posicion_firma_actual)
+            ->where('status', true)
+            ->first();
+
+        return ($siguiente_firmante && $siguiente_firmante->funcionario && $siguiente_firmante->funcionario->email)
+            ? $siguiente_firmante->funcionario->email
+            : null;
+    }
+
+    private function isCapacitacion($solicitud, $last_status)
+    {
+        return $solicitud->tipo_comision_id === 5 && $last_status->s_role_id === 3;
+    }
+
+    private function getCapacitacionEmail($solicitud)
+    {
+        $firmante_capacitacion = $solicitud->firmantes()
+            ->where('role_id', 10)
+            ->where('status', true)
+            ->first();
+
+        return ($firmante_capacitacion && $firmante_capacitacion->funcionario && $firmante_capacitacion->funcionario->email)
+            ? $firmante_capacitacion->funcionario->email
+            : null;
+    }
+
+    private function isAvion($solicitud)
+    {
+        return $solicitud->transportes()->where('solicitud_transporte.transporte_id', 1)->exists();
+    }
+
+    private function getReasignadoEmail($last_status)
+    {
+        return (($last_status) && ($last_status->firmaRs) && ($last_status->firmaRs->funcionario) && ($last_status->firmaRs->funcionario->email))
+            ? $last_status->firmaRs->funcionario->email
+            : null;
+    }
+
+    private function getEjecutivoEmail($solicitud, $exclude_email = null)
+    {
+        $ejecutivo = $solicitud->firmantes()
+            ->where('role_id', 2)
+            ->where('status', true)
+            ->first();
+
+        return (($ejecutivo) && ($ejecutivo->funcionario) && ($ejecutivo->funcionario->email) && ($ejecutivo->funcionario->email !== $exclude_email))
+            ? $ejecutivo->funcionario->email
+            : null;
+    }
+
+    private function emailsAbastecimiento($solicitud)
+    {
+        $name     = 'ABASTECIMIENTO';
+        $concepto = Concepto::where('nombre', $name)->first();
+
+        if ($concepto) {
+            $conceptoEstablecimiento = $concepto->conceptosEstablecimientos()
+                ->where('establecimiento_id', $solicitud->establecimiento_id)
+                ->first();
+
+            return $conceptoEstablecimiento
+                ? $conceptoEstablecimiento->funcionarios()->pluck('users.email')->toArray()
+                : [];
+        }
+
+        return [];
+    }
+
 
     private function aprobarInformeCometidoAutomatico($solicitud)
     {
@@ -1423,7 +1613,7 @@ class SolicitudAdminController extends Controller
             ];
             $create_loads = $solicitud->addLoads($loads);
 
-            if($create_loads){
+            if ($create_loads) {
                 $solicitud = $solicitud->fresh();
                 $navStatus = $this->navStatusSolicitud($solicitud);
                 return response()->json(

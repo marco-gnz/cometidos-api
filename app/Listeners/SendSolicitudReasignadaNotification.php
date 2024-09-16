@@ -28,10 +28,19 @@ class SendSolicitudReasignadaNotification
      */
     public function handle(SolicitudReasignada $event)
     {
-        Mail::to($event->last_status->funcionarioRs->email)
-            ->cc($event->last_status->funcionario->email)
-            ->queue(
-                new MailSolicitudReasignada($event->solicitud, $event->last_status)
-            );
+        if ($event->emails_copy) {
+            Mail::to($event->last_status->funcionarioRs->email)
+                ->cc($event->emails_copy)
+                ->queue(
+                    new MailSolicitudReasignada($event->solicitud, $event->last_status, $event->emails_copy)
+                );
+        } else {
+            Mail::to($event->last_status->funcionarioRs->email)
+                ->cc($event->last_status->funcionario->email)
+                ->queue(
+                    new MailSolicitudReasignada($event->solicitud, $event->last_status, $event->emails_copy)
+                );
+        }
+
     }
 }

@@ -444,17 +444,10 @@ class SolicitudController extends Controller
                 }
 
                 if ($solicitud) {
-                    $emails_copy = [];
-                    if ($solicitud->tipo_comision_id === 5) {
-                        $name = 'CAPACITACIÓN FINANCIAMIENTO CENTRALIZADO';
-                        $concepto = Concepto::where('nombre', $name)->first();
-                        if ($concepto) {
-                            $conceptoEstablecimiento = $concepto->conceptosEstablecimientos()
-                                ->where('establecimiento_id', $solicitud->establecimiento_id)
-                                ->first();
-
-                            $emails_copy = $conceptoEstablecimiento->funcionarios()->pluck('users.email')->toArray();
-                        }
+                    $emails_copy        = [];
+                    $siguiente_email    = $this->getSiguienteFirmante($solicitud);
+                    if ($siguiente_email) {
+                        $emails_copy[] = $siguiente_email;
                     }
                     SolicitudCreated::dispatch($solicitud, $emails_copy);
                 }
@@ -473,6 +466,18 @@ class SolicitudController extends Controller
             Log::info($error->getMessage());
             return response()->json($error->getMessage(), 500);
         }
+    }
+
+    private function getSiguienteFirmante($solicitud)
+    {
+        $siguiente_firmante = $solicitud->firmantes()
+            ->where('posicion_firma', '>', $solicitud->posicion_firma_actual)
+            ->where('status', true)
+            ->first();
+
+        return ($siguiente_firmante && $siguiente_firmante->funcionario && $siguiente_firmante->funcionario->email)
+            ? $siguiente_firmante->funcionario->email
+            : null;
     }
 
     private function solicitudInformeEstados($solicitud)
@@ -1062,11 +1067,12 @@ class SolicitudController extends Controller
 
                 $create_status  = $solicitud->addEstados($estados);
 
-                if ($is_update_derecho_pago) {
-                    $firmantes      = $solicitud->firmantes()->whereIn('role_id', [2, 3])->get();
-                    $emails_copy    = $firmantes->pluck('funcionario.email')->toArray();
-                    SolicitudUpdated::dispatch($solicitud, $emails_copy);
+                $emails_copy     = [];
+                $siguiente_email = $this->getSiguienteFirmante($solicitud);
+                if ($siguiente_email) {
+                    $emails_copy[] = $siguiente_email;
                 }
+                SolicitudUpdated::dispatch($solicitud, $emails_copy);
 
                 DB::commit();
                 return response()->json(
