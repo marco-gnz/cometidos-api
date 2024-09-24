@@ -25,7 +25,9 @@ class SolicitudReporteCountRequest extends FormRequest
     {
         return [
             'year'          => ['required'],
-            'month'         => ['required']
+            'month'         => ['required'],
+            'estado'        => ['required'],
+            'establecimiento_id'    => ['required']
         ];
     }
 
@@ -35,6 +37,10 @@ class SolicitudReporteCountRequest extends FormRequest
             'year.required'                         => 'El :attribute es obligatorio',
 
             'month.required'                        => 'El :attribute es obligatorio',
+
+            'estado.required'                       => 'El :attribute es obligatorio',
+
+            'establecimiento_id.required'           => 'El :attribute es obligatorio',
         ];
     }
 
@@ -42,7 +48,9 @@ class SolicitudReporteCountRequest extends FormRequest
     {
         return [
             'year'              => 'año',
-            'month'             => 'mes'
+            'month'             => 'mes',
+            'estado'            => 'estado',
+            'establecimiento_id'    => 'establecimiento'
         ];
     }
 }

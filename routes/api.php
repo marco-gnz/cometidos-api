@@ -178,9 +178,7 @@ Route::group(
 
         Route::get('/admin/reporte/count', [ReporteController::class, 'countRegistros']);
         Route::get('/admin/reporte/columns', [ReporteController::class, 'columnsReporte']);
-        Route::post('/admin/reporte', [ReporteController::class, 'downloadReporte']);
-        Route::get('admin/reporte/check/{filename}', [ReporteController::class, 'checkExportStatus']);
-        Route::post('admin/reporte/download/ok', [ReporteController::class, 'downloadFile']);
+        Route::post('/admin/reporte', [ReporteController::class, 'export']);
     }
 );
 

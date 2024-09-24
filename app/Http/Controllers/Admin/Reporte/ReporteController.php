@@ -6,12 +6,20 @@ use App\Exports\SolicitudesExport;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Reporte\SolicitudReporteCountRequest;
 use App\Http\Requests\Reporte\SolicitudReporteRequest;
-use App\Jobs\ExportSolicitudesJob;
+use App\Jobs\CreateSolicitudExportFile;
+use App\Mail\ExportFailedNotification;
+use App\Mail\SolicitudExportMail;
 use App\Models\Solicitud;
+use Illuminate\Bus\Batch;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Bus;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\Storage;
 use Maatwebsite\Excel\Facades\Excel;
+use Throwable;
 
 class ReporteController extends Controller
 {
@@ -42,33 +50,15 @@ class ReporteController extends Controller
     {
         try {
             $this->authorize('export', Solicitud::class);
-            $solicitudes = Solicitud::whereYear('fecha_inicio', $request->year)
-                ->where(DB::raw('MONTH(fecha_inicio)'), $request->month)
-                ->derechoViatico($request->derecho_viatico)
-                ->isLoadSirh($request->is_sirh)
-                ->tipoComision($request->tipo_cometido)
-                ->jornada($request->jornada_cometido)
-                ->medioTransporte($request->medios_transporte)
-                ->motivo($request->motivo_cometido)
-                ->estado($request->estado)
-                ->estadoInformeCometido($request->estado_informe)
-                ->establecimiento($request->establecimiento_id)
-                ->departamento($request->depto_id)
-                ->subdepartamento($request->subdepto_id)
-                ->ley($request->ley_id)
-                ->estamento($request->estamento_id)
-                ->calidad($request->calidad_id);
 
-            $this->filterRole($solicitudes, $request);
-
-            $solicitudes = $solicitudes->count();
+            $solicitudes = $this->registerAction($request);
 
             return response()->json(
                 array(
                     'status'        => 'success',
                     'title'         => null,
                     'message'       => null,
-                    'total'         => $solicitudes
+                    'total'         => count($solicitudes)
                 )
             );
         } catch (\Exception $error) {
@@ -76,46 +66,87 @@ class ReporteController extends Controller
         }
     }
 
-    public function downloadReporte(SolicitudReporteRequest $request)
+    private function registerAction($request)
+    {
+        $solicitudes = Solicitud::whereYear('fecha_inicio', $request->year)
+            ->where(DB::raw('MONTH(fecha_inicio)'), $request->month)
+            ->derechoViatico($request->derecho_viatico)
+            ->isLoadSirh($request->is_sirh)
+            ->tipoComision($request->tipo_cometido)
+            ->jornada($request->jornada_cometido)
+            ->medioTransporte($request->medios_transporte)
+            ->motivo($request->motivo_cometido)
+            ->estado($request->estado)
+            ->estadoInformeCometido($request->estado_informe)
+            ->establecimiento($request->establecimiento_id)
+            ->departamento($request->depto_id)
+            ->subdepartamento($request->subdepto_id)
+            ->ley($request->ley_id)
+            ->estamento($request->estamento_id)
+            ->calidad($request->calidad_id);
+
+        $this->filterRole($solicitudes, $request);
+
+        return $solicitudes->get();
+    }
+
+    public function export(SolicitudReporteRequest $request)
     {
         try {
-            $this->authorize('export', Solicitud::class);
-            $columns = $request->input('columns');
+            $email_auth     = Auth::user();
+            $folder         = now()->toDateString() . '-' . str_replace(':', '-', now()->toTimeString());
+            $solicitudes    = $this->registerAction($request);
 
-            $relaciones = collect($columns)->filter(function ($column) {
-                return strpos($column, '.') !== false;  // Si es una relación, tiene un '.'
-            })->map(function ($column) {
-                return explode('.', $column)[0];  // Obtiene solo la relación, por ejemplo 'ley'
-            })->unique()->toArray();
+            $filter_all = (object) [
+                'solicitudes'       => (bool)$request->solicitudes,
+                'informes_cometido' => (bool)$request->informes_cometido,
+                'valorizacion'      => (bool)$request->valorizacion,
+            ];
+            $batches = [
+                new CreateSolicitudExportFile($folder, $request->columns, $solicitudes, $filter_all)
+            ];
 
-            $solicitudes = Solicitud::with($relaciones)
-                ->with(['motivos' => function ($query) {
-                    $query->pluck('nombre');
-                }])
-                ->whereYear('fecha_inicio', $request->year)
-                ->where(DB::raw('MONTH(fecha_inicio)'), $request->month)
-                ->derechoViatico($request->derecho_viatico)
-                ->isLoadSirh($request->is_sirh)
-                ->tipoComision($request->tipo_cometido)
-                ->jornada($request->jornada_cometido)
-                ->medioTransporte($request->medios_transporte)
-                ->motivo($request->motivo_cometido)
-                ->estado($request->estado)
-                ->estadoInformeCometido($request->estado_informe);
+            Bus::batch($batches)
+                ->name('Export Solicitudes')
+                ->then(function (Batch $batch) use ($folder) {
+                    $path = "exports/{$folder}/solicitudes.xlsx";
+                    $file = storage_path("app/{$folder}/solicitudes.xlsx");
+                    if (file_exists($file)) {
+                        Storage::disk('public')->put($path, file_get_contents($file));
+                    }
+                })
+                ->catch(function (Batch $batch, Throwable $e) use ($email_auth, $folder) {
+                    Log::info("Error en la exportación: " . $e->getMessage());
 
-            $this->filterRole($solicitudes, $request);
-
-            $solicitudes = $solicitudes->get();
-
-            $filePath = 'exports/solicitudes_' . $request->filename . '.xlsx';
-            ExportSolicitudesJob::dispatch($solicitudes, $columns, $filePath);
+                    $file = storage_path("app/{$folder}/solicitudes.xlsx");
+                    if (file_exists($file)) {
+                        if ($email_auth) {
+                            Mail::to($email_auth->email)->send(new SolicitudExportMail($file));
+                        }
+                        Storage::disk('local')->delete("{$folder}/solicitudes.xlsx");
+                    }
+                    Storage::disk('local')->deleteDirectory($folder);
+                    if ($email_auth) {
+                        Mail::to($email_auth->email)->send(new ExportFailedNotification($e->getMessage()));
+                    }
+                })
+                ->finally(function (Batch $batch) use ($folder, $email_auth) {
+                    $file = storage_path("app/{$folder}/solicitudes.xlsx");
+                    if (file_exists($file)) {
+                        if ($email_auth) {
+                            Mail::to($email_auth->email)->send(new SolicitudExportMail($file));
+                        }
+                        Storage::disk('local')->delete("{$folder}/solicitudes.xlsx");
+                        Storage::disk('local')->deleteDirectory($folder);
+                    }
+                })
+                ->dispatch();
 
             return response()->json(
                 [
                     'status'        => 'success',
                     'title'         => 'Generando archivo',
-                    'message'       => 'La exportación está en proceso. Recibirás el archivo pronto.',
-                    'filePath'      => $request->filename
+                    'message'       => 'La exportación está en proceso. Recibirás el archivo en tu correo.',
                 ],
                 200
             );
@@ -163,33 +194,6 @@ class ReporteController extends Controller
             });
         }
     }
-
-    public function checkExportStatus($id)
-    {
-        $filename = 'solicitudes_' . $id . '.xlsx';
-        $filePath = storage_path("app/exports/{$filename}");
-
-        if (file_exists($filePath)) {
-            return response()->json(['ready' => true, 'filename' => $filename]);
-        } else {
-            return response()->json(['ready' => false]);
-        }
-    }
-
-    public function downloadFile(Request $request)
-    {
-        $filename = 'solicitudes_' . $request->filename . '.xlsx';
-        $filePath = storage_path("app/exports/{$filename}");
-
-        if (file_exists($filePath)) {
-            return response()->download($filePath, $filename, [
-                'Content-Type' => 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
-            ])->deleteFileAfterSend(true);
-        } else {
-            return response()->json(['error' => 'Archivo no encontrado.'], 404);
-        }
-    }
-
 
     private function columnsCometido()
     {

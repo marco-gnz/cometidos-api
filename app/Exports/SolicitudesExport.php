@@ -8,20 +8,21 @@ use App\Models\Solicitud;
 use Maatwebsite\Excel\Concerns\FromCollection;
 use Maatwebsite\Excel\Concerns\WithHeadings;
 use App\Traits\StatusSolicitudTrait;
-use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Support\Facades\Log;
 
-class SolicitudesExport implements FromCollection, WithHeadings, ShouldQueue
+class SolicitudesExport implements FromCollection, WithHeadings
 {
     use StatusSolicitudTrait;
 
     protected $solicitudes;
     protected $columns;
+    protected $filter_all;
 
-    public function __construct($solicitudes, $columns)
+    public function __construct($solicitudes, $columns, $filter_all)
     {
         $this->solicitudes = $solicitudes;
         $this->columns = $columns;
+        $this->filter_all = $filter_all;
     }
 
     public function collection()
@@ -42,38 +43,40 @@ class SolicitudesExport implements FromCollection, WithHeadings, ShouldQueue
         }, $this->columns);
     }
 
-    protected function getFieldValue($solicitud, $column)
+    public function getFieldValue($solicitud, $column)
     {
-        if($column === 'codigo_sirh'){
+
+        $jefatura_directa   = $solicitud->jefaturaDirecta();
+        $informe_cometido   = null;
+        $calculo            = null;
+
+        if ($this->filter_all->informes_cometido) {
+            $informe_cometido   = $solicitud->informeCometido();
+        }
+
+        if ($this->filter_all->valorizacion) {
+            $calculo            = $solicitud->getLastCalculo();
+        }
+
+        if ($column === 'codigo_sirh') {
             return $solicitud->nResolucionSirh();
         }
 
-        if($column === 'jefatura_directa_rut'){
-            $jefatura_directa = $solicitud->jefaturaDirecta();
-            if($jefatura_directa){
-                return $jefatura_directa->funcionario->rut_completo;
-            }
+        if ($column === 'jefatura_directa_rut' && $jefatura_directa) {
+            return $jefatura_directa->funcionario->rut_completo;
         }
-
-        if ($column === 'jefatura_directa_nombres') {
-            $jefatura_directa = $solicitud->jefaturaDirecta();
-            if ($jefatura_directa) {
-                return $jefatura_directa->funcionario->nombre_completo;
-            }
+        if ($column === 'jefatura_directa_nombres' && $jefatura_directa) {
+            return $jefatura_directa->funcionario->nombre_completo;
         }
-
-        if ($column === 'jefatura_directa_email') {
-            $jefatura_directa = $solicitud->jefaturaDirecta();
-            if ($jefatura_directa) {
-                return $jefatura_directa->funcionario->email;
-            }
+        if ($column === 'jefatura_directa_email' && $jefatura_directa) {
+            return $jefatura_directa->funcionario->email;
         }
 
         if ($column === 'status') {
             return Solicitud::STATUS_NOM[$solicitud->status] ?? 'Desconocido';
         }
 
-        if($column === 'derecho_pago'){
+        if ($column === 'derecho_pago') {
             return $solicitud->derecho_pago ? 'Si' : 'No';
         }
 
@@ -114,137 +117,109 @@ class SolicitudesExport implements FromCollection, WithHeadings, ShouldQueue
         }
 
         if ($column === 'firmas') {
-            $estados = $solicitud->estados()->orderBy('created_at', 'ASC')->get();
-
-            $firmas = collect($estados)->map(function($estado){
+            $estados = $solicitud->estados; // precargado
+            return collect($estados)->map(function ($estado) {
                 return "{$estado->perfil->name}_{$estado->created_at}";
             })->implode('; ');
-
-            return $firmas;
         }
 
-        if ($column === 'informe_cometido_codigo') {
-            $informe = $solicitud->informeCometido();
-            return optional($informe)->codigo;
+        if ($column === 'informe_cometido_codigo' && $informe_cometido) {
+            return optional($informe_cometido)->codigo;
         }
 
-        if ($column === 'informe_cometido_estado') {
-            $informe = $solicitud->informeCometido();
-            return $informe ? InformeCometido::STATUS_INGRESO_NOM[$informe->status_ingreso] : '';
+        if ($column === 'informe_cometido_estado' && $informe_cometido) {
+            return $informe_cometido ? InformeCometido::STATUS_INGRESO_NOM[$informe_cometido->status_ingreso] : '';
         }
 
-        if ($column === 'informe_cometido_fecha_inicio') {
-            $informe = $solicitud->informeCometido();
-            return optional($informe)->fecha_inicio;
+        if ($column === 'informe_cometido_fecha_inicio' && $informe_cometido) {
+            return optional($informe_cometido)->fecha_inicio;
         }
 
-        if ($column === 'informe_cometido_fecha_termino') {
-            $informe = $solicitud->informeCometido();
-            return optional($informe)->fecha_termino;
+        if ($column === 'informe_cometido_fecha_termino' && $informe_cometido) {
+            return optional($informe_cometido)->fecha_termino;
         }
 
-        if ($column === 'informe_cometido_hora_llegada') {
-            $informe = $solicitud->informeCometido();
-            return optional($informe)->hora_llegada;
+        if ($column === 'informe_cometido_hora_llegada' && $informe_cometido) {
+            return optional($informe_cometido)->hora_llegada;
         }
 
-        if ($column === 'informe_cometido_hora_salida') {
-            $informe = $solicitud->informeCometido();
-            return optional($informe)->hora_salida;
+        if ($column === 'informe_cometido_hora_salida' && $informe_cometido) {
+            return optional($informe_cometido)->hora_salida;
         }
 
-        if ($column === 'informe_cometido_actividad_realizada') {
-            $informe = $solicitud->informeCometido();
-            return optional($informe)->actividad_realizada;
+        if ($column === 'informe_cometido_actividad_realizada' && $informe_cometido) {
+            return optional($informe_cometido)->actividad_realizada;
         }
 
-        if ($column === 'informe_cometido_utiliza_transporte') {
-            $informe = $solicitud->informeCometido();
-            return $informe ? ($informe->utiliza_transporte ? 'Si' : 'No') : '';
+        if ($column === 'informe_cometido_utiliza_transporte' && $informe_cometido) {
+            return $informe_cometido ? ($informe_cometido->utiliza_transporte ? 'Si' : 'No') : '';
         }
 
-        if ($column === 'informe_cometido_transportes') {
-            $informe = $solicitud->informeCometido();
-            return $informe ? ($informe->transportes ? $informe->transportes->pluck('nombre')->implode('; ') : '') : '';
+        if ($column === 'informe_cometido_transportes' && $informe_cometido) {
+            return $informe_cometido ? ($informe_cometido->transportes ? $informe_cometido->transportes->pluck('nombre')->implode('; ') : '') : '';
         }
 
-        if ($column === 'informe_cometido_estado_informe') {
-            $informe = $solicitud->informeCometido();
-            return $informe ? EstadoInformeCometido::STATUS_NOM[$informe->last_status] : '';
+        if ($column === 'informe_cometido_estado_informe' && $informe_cometido) {
+            return $informe_cometido ? EstadoInformeCometido::STATUS_NOM[$informe_cometido->last_status] : '';
         }
 
-        if ($column === 'informe_cometido_created_at') {
-            $informe = $solicitud->informeCometido();
-            return optional($informe)->fecha_by_user;
+        if ($column === 'informe_cometido_created_at' && $informe_cometido) {
+            return optional($informe_cometido)->fecha_by_user;
         }
 
-        if ($column === 'valorizacion_fecha_inicio_escala') {
-            $calculo = $solicitud->getLastCalculo();
+        if ($column === 'valorizacion_fecha_inicio_escala' && $calculo) {
             return optional($calculo)->fecha_inicio;
         }
 
-        if ($column === 'valorizacion_fecha_termino_escala') {
-            $calculo = $solicitud->getLastCalculo();
+        if ($column === 'valorizacion_fecha_termino_escala' && $calculo) {
             return optional($calculo)->fecha_termino;
         }
 
-        if ($column === 'valorizacion_grado_escala') {
-            $calculo = $solicitud->getLastCalculo();
+        if ($column === 'valorizacion_grado_escala' && $calculo) {
             return $calculo ? ($calculo->grado ? $calculo->grado->nombre : '') : '';
         }
 
-        if ($column === 'valorizacion_ley_escala') {
-            $calculo = $solicitud->getLastCalculo();
+        if ($column === 'valorizacion_ley_escala' && $calculo) {
             return $calculo ? ($calculo->ley ? $calculo->ley->nombre : '') : '';
         }
 
-        if ($column === 'valorizacion_valor_dia_40_escala') {
-            $calculo = $solicitud->getLastCalculo();
+        if ($column === 'valorizacion_valor_dia_40_escala' && $calculo) {
             return optional($calculo)->valor_dia_40;
         }
 
-        if ($column === 'valorizacion_valor_dia_100_escala') {
-            $calculo = $solicitud->getLastCalculo();
+        if ($column === 'valorizacion_valor_dia_100_escala' && $calculo) {
             return optional($calculo)->valor_dia_100;
         }
 
-        if ($column === 'valorizacion_n_dias_40') {
-            $calculo = $solicitud->getLastCalculo();
+        if ($column === 'valorizacion_n_dias_40' && $calculo) {
             return optional($calculo)->n_dias_40;
         }
 
-        if ($column === 'valorizacion_n_dias_100') {
-            $calculo = $solicitud->getLastCalculo();
+        if ($column === 'valorizacion_n_dias_100' && $calculo) {
             return optional($calculo)->n_dias_100;
         }
 
-        if ($column === 'valorizacion_monto_total') {
-            $calculo = $solicitud->getLastCalculo();
+        if ($column === 'valorizacion_monto_total' && $calculo) {
             return optional($calculo)->monto_total;
         }
 
-        if ($column === 'valorizacion_n_dias_ajustes_40') {
-            $calculo = $solicitud->getLastCalculo();
+        if ($column === 'valorizacion_n_dias_ajustes_40' && $calculo) {
             return $calculo ? $calculo->valorizacionAjuste40()->total_dias : '';
         }
 
-        if ($column === 'valorizacion_n_dias_ajustes_100') {
-            $calculo = $solicitud->getLastCalculo();
+        if ($column === 'valorizacion_n_dias_ajustes_100' && $calculo) {
             return $calculo ? $calculo->valorizacionAjuste100()->total_dias : '';
         }
 
-        if ($column === 'valorizacion_monto_ajustes_40') {
-            $calculo = $solicitud->getLastCalculo();
+        if ($column === 'valorizacion_monto_ajustes_40' && $calculo) {
             return $calculo ? $calculo->valorizacionAjusteMonto40()->total_monto_value : '';
         }
 
-        if ($column === 'valorizacion_monto_ajustes_100') {
-            $calculo = $solicitud->getLastCalculo();
+        if ($column === 'valorizacion_monto_ajustes_100' && $calculo) {
             return $calculo ? $calculo->valorizacionAjusteMonto100()->total_monto_value : '';
         }
 
-        if ($column === 'valorizacion_total') {
-            $calculo = $solicitud->getLastCalculo();
+        if ($column === 'valorizacion_total' && $calculo) {
             return $calculo ? $calculo->valorizacionTotalAjusteMonto()->total_valorizacion_value : '';
         }
 
@@ -264,7 +239,7 @@ class SolicitudesExport implements FromCollection, WithHeadings, ShouldQueue
         return $solicitud->$column;
     }
 
-    protected function mapFieldToFriendlyName($column)
+    public function mapFieldToFriendlyName($column)
     {
         $map = [
             'codigo'                                        => 'N° de resolución solicitud',

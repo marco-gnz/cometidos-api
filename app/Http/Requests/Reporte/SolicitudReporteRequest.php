@@ -27,7 +27,9 @@ class SolicitudReporteRequest extends FormRequest
             'columns'       => ['required', 'array'],
             'year'          => ['required'],
             'month'         => ['required'],
-            'filename'      => ['required']
+            'filename'      => ['required'],
+            'estado'        => ['required'],
+            'establecimiento_id'    => ['required']
         ];
     }
 
@@ -39,6 +41,10 @@ class SolicitudReporteRequest extends FormRequest
             'year.required'                         => 'El :attribute es obligatorio',
 
             'month.required'                        => 'El :attribute es obligatorio',
+
+            'estado.required'                       => 'El :attribute es obligatorio',
+
+            'establecimiento_id.required'           => 'El :attribute es obligatorio',
         ];
     }
 
@@ -47,7 +53,9 @@ class SolicitudReporteRequest extends FormRequest
         return [
             'columns'           => 'columnas',
             'year'              => 'año',
-            'months'            => 'mes'
+            'months'            => 'mes',
+            'estado'            => 'estado',
+            'establecimiento_id'    => 'establecimiento'
         ];
     }
 }
