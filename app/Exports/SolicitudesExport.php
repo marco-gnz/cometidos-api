@@ -9,8 +9,12 @@ use Maatwebsite\Excel\Concerns\FromCollection;
 use Maatwebsite\Excel\Concerns\WithHeadings;
 use App\Traits\StatusSolicitudTrait;
 use Illuminate\Support\Facades\Log;
+use Maatwebsite\Excel\Concerns\WithColumnFormatting;
+use PhpOffice\PhpSpreadsheet\Style\NumberFormat;
+use PhpOffice\PhpSpreadsheet\Cell\Coordinate;
+use PhpOffice\PhpSpreadsheet\Shared\Date;
 
-class SolicitudesExport implements FromCollection, WithHeadings
+class SolicitudesExport implements FromCollection, WithHeadings, WithColumnFormatting
 {
     use StatusSolicitudTrait;
 
@@ -43,6 +47,29 @@ class SolicitudesExport implements FromCollection, WithHeadings
         }, $this->columns);
     }
 
+    public function columnFormats(): array
+    {
+        $fechas_nativa      = $this->returnFechasNativa();
+        $fechas_adicional   = $this->returnFechasAdicional();
+        $horas_nativa       = $this->returnHorasNativa();
+        $horas_adicional    = $this->returnHorasAdicional();
+        $formats = [];
+
+        foreach ($this->columns as $index => $column) {
+            if (in_array($column, $fechas_nativa) || in_array($column, $fechas_adicional) ) {
+                $columnLetter = Coordinate::stringFromColumnIndex($index + 1);
+                $formats[$columnLetter] = NumberFormat::FORMAT_DATE_DDMMYYYY;
+            }
+
+            if (in_array($column, $horas_nativa) || in_array($column, $horas_adicional)) {
+                $columnLetter = Coordinate::stringFromColumnIndex($index + 1);
+                $formats[$columnLetter] = 'hh:mm';
+            }
+        }
+
+        return $formats;
+    }
+
     public function getFieldValue($solicitud, $column)
     {
 
@@ -56,6 +83,19 @@ class SolicitudesExport implements FromCollection, WithHeadings
 
         if ($this->filter_all->valorizacion) {
             $calculo            = $solicitud->getLastCalculo();
+        }
+
+        $fechas_nativa = $this->returnFechasNativa();
+        if (in_array($column, $fechas_nativa)) {
+            return $solicitud->$column ? Date::stringToExcel($solicitud->$column) : null;
+        }
+
+        if ($column === 'hora_llegada') {
+            return $solicitud->hora_llegada ? $this->timeToExcelFormat($solicitud->hora_llegada) : null;
+        }
+
+        if ($column === 'hora_salida') {
+            return $solicitud->hora_salida ? $this->timeToExcelFormat($solicitud->hora_salida) : null;
         }
 
         if ($column === 'codigo_sirh') {
@@ -132,19 +172,19 @@ class SolicitudesExport implements FromCollection, WithHeadings
         }
 
         if ($column === 'informe_cometido_fecha_inicio' && $informe_cometido) {
-            return optional($informe_cometido)->fecha_inicio;
+            return $informe_cometido->fecha_inicio ? Date::stringToExcel($informe_cometido->fecha_inicio) : null;
         }
 
         if ($column === 'informe_cometido_fecha_termino' && $informe_cometido) {
-            return optional($informe_cometido)->fecha_termino;
+            return $informe_cometido->fecha_termino ? Date::stringToExcel($informe_cometido->fecha_termino) : null;
         }
 
         if ($column === 'informe_cometido_hora_llegada' && $informe_cometido) {
-            return optional($informe_cometido)->hora_llegada;
+            return $informe_cometido->hora_llegada ? $this->timeToExcelFormat($informe_cometido->hora_llegada) : null;
         }
 
         if ($column === 'informe_cometido_hora_salida' && $informe_cometido) {
-            return optional($informe_cometido)->hora_salida;
+            return $informe_cometido->hora_salida ? $this->timeToExcelFormat($informe_cometido->hora_salida) : null;
         }
 
         if ($column === 'informe_cometido_actividad_realizada' && $informe_cometido) {
@@ -164,15 +204,15 @@ class SolicitudesExport implements FromCollection, WithHeadings
         }
 
         if ($column === 'informe_cometido_created_at' && $informe_cometido) {
-            return optional($informe_cometido)->fecha_by_user;
+            return $informe_cometido->fecha_by_user ? Date::stringToExcel($informe_cometido->fecha_by_user) : null;
         }
 
         if ($column === 'valorizacion_fecha_inicio_escala' && $calculo) {
-            return optional($calculo)->fecha_inicio;
+            return $calculo->fecha_inicio ? Date::stringToExcel($calculo->fecha_inicio) : null;
         }
 
         if ($column === 'valorizacion_fecha_termino_escala' && $calculo) {
-            return optional($calculo)->fecha_termino;
+            return $calculo->fecha_termino ? Date::stringToExcel($calculo->fecha_termino) : null;
         }
 
         if ($column === 'valorizacion_grado_escala' && $calculo) {
@@ -316,5 +356,54 @@ class SolicitudesExport implements FromCollection, WithHeadings
         ];
 
         return $map[$column] ?? $column;
+    }
+
+    private function returnFechasNativa()
+    {
+        return [
+            'fecha_inicio',
+            'fecha_termino',
+            'fecha_by_user',
+        ];
+    }
+
+    private function returnFechasAdicional()
+    {
+        return [
+            'informe_cometido_fecha_inicio',
+            'informe_cometido_fecha_termino',
+            'valorizacion_fecha_inicio_escala',
+            'valorizacion_fecha_termino_escala',
+            'informe_cometido_created_at'
+        ];
+    }
+
+    private function returnHorasNativa()
+    {
+        return [
+            'hora_llegada',
+            'hora_salida'
+        ];
+    }
+
+    private function returnHorasAdicional()
+    {
+        return [
+            'hora.nombre',
+            'informe_cometido_hora_llegada',
+            'informe_cometido_hora_salida'
+        ];
+    }
+
+    private function timeToExcelFormat($time)
+    {
+        // Convierte el string de hora a formato de Excel
+        $timeParts = explode(':', $time);
+        $hours = isset($timeParts[0]) ? (int) $timeParts[0] : 0;
+        $minutes = isset($timeParts[1]) ? (int) $timeParts[1] : 0;
+        $seconds = isset($timeParts[2]) ? (int) $timeParts[2] : 0;
+
+        // Calcula la fracción del día
+        return ($hours / 24) + ($minutes / 1440) + ($seconds / 86400);
     }
 }
