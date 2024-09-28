@@ -56,7 +56,7 @@ class SolicitudesExport implements FromCollection, WithHeadings, WithColumnForma
         $formats = [];
 
         foreach ($this->columns as $index => $column) {
-            if (in_array($column, $fechas_nativa) || in_array($column, $fechas_adicional) ) {
+            if (in_array($column, $fechas_nativa) || in_array($column, $fechas_adicional)) {
                 $columnLetter = Coordinate::stringFromColumnIndex($index + 1);
                 $formats[$columnLetter] = NumberFormat::FORMAT_DATE_DDMMYYYY;
             }
@@ -77,11 +77,11 @@ class SolicitudesExport implements FromCollection, WithHeadings, WithColumnForma
         $informe_cometido   = null;
         $calculo            = null;
 
-        if ($this->filter_all->informes_cometido) {
+        if (in_array($column, $this->columnsInformeCometido())) {
             $informe_cometido   = $solicitud->informeCometido();
         }
 
-        if ($this->filter_all->valorizacion) {
+        if (in_array($column, $this->columnsValorizacion())) {
             $calculo            = $solicitud->getLastCalculo();
         }
 
@@ -405,5 +405,43 @@ class SolicitudesExport implements FromCollection, WithHeadings, WithColumnForma
 
         // Calcula la fracción del día
         return ($hours / 24) + ($minutes / 1440) + ($seconds / 86400);
+    }
+
+    private function columnsInformeCometido()
+    {
+        return [
+            'informe_cometido_codigo',
+            'informe_cometido_estado',
+            'informe_cometido_fecha_inicio',
+            'informe_cometido_fecha_termino',
+            'informe_cometido_hora_llegada',
+            'informe_cometido_hora_salida',
+            'informe_cometido_actividad_realizada',
+            'informe_cometido_utiliza_transporte',
+            'informe_cometido_transportes',
+            'informe_cometido_estado_informe',
+            'informe_cometido_created_at'
+        ];
+    }
+
+    private function columnsValorizacion()
+    {
+        return [
+            'valorizacion_fecha_inicio_escala',
+            'valorizacion_fecha_termino_escala',
+            'valorizacion_grado_escala',
+            'valorizacion_ley_escala',
+            'valorizacion_valor_dia_40_escala',
+            'valorizacion_valor_dia_100_escala',
+            'valorizacion_n_dias_40',
+            'valorizacion_n_dias_100',
+            'valorizacion_monto_total',
+            'valorizacion_n_dias_ajustes_40',
+            'valorizacion_n_dias_ajustes_100',
+            'valorizacion_monto_ajustes_40',
+            'valorizacion_monto_ajustes_100',
+            'valorizacion_monto_ajustes',
+            'valorizacion_total',
+        ];
     }
 }
