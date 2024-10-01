@@ -510,7 +510,7 @@
                                     </td>
                                     <td>{{ $solicitud->cuentaBancaria && $solicitud->cuentaBancaria->tipo_cuenta !== null ? App\Models\CuentaBancaria::TYPE_ACCOUNT_NOM[$solicitud->cuentaBancaria->tipo_cuenta] : '--' }}
                                     </td>
-                                    <td>{{ $solicitud->cuentaBancaria ? $solicitud->cuentaBancaria->banco->nombre : '--' }}
+                                    <td>{{ $solicitud->cuentaBancaria ? ($solicitud->cuentaBancaria->banco ? $solicitud->cuentaBancaria->banco->nombre : '') : '--' }}
                                     </td>
                                 </tr>
                             </tbody>
