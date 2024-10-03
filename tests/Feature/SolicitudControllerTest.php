@@ -32,41 +32,45 @@ class SolicitudControllerTest extends TestCase
         $rut                = '19270290';
         $user               = User::where('rut', $rut)->first();
         Auth::login($user);
-        $motivos_cometido   = Motivo::all();
+        $motivos_cometido   = Motivo::orderBy('id', 'DESC')->get()->take(2);
         $tipo_comision      = TipoComision::find(1);
         $lugares            = Lugar::orderBy('id', 'DESC')->get()->take(2);
         $medio_transporte   = Transporte::orderBy('id', 'DESC')->get()->take(2);
         $fecha_inicio       = Carbon::now()->format('Y-m-d');
-        $fecha_termino      = Carbon::now()->addDay(1)->format('Y-m-d');
+        $fecha_termino      = Carbon::now()->format('Y-m-d');
+        $contrato           = $user->contratos()->first();
         Mail::fake();
         //Event::fake(); //deshabilitar todo evento dispatch, incluso eventos en el modelo Solicitud-. created, creating, destroy, etc.
 
+        /* Log::info($motivos_cometido->pluck('id')->toArray());
+        Log::info($lugares->pluck('id')->toArray()); */
         $data_request = [
-            'user_id'                   => $user ? $user->id : null,
+            'user_id'                   => $user->id,
             'fecha_inicio'              => $fecha_inicio,
             'fecha_termino'             => $fecha_termino,
-            'hora_llegada'              => '08:00:00',
-            'hora_salida'               => '17:00:00',
+            'hora_salida'               => '08:00:00',
+            'hora_llegada'              => '13:00:00',
             'derecho_pago'              => true,
-            'motivos_cometido'          => $motivos_cometido->pluck('id'),
-            'tipo_comision_id'          => $tipo_comision ? $tipo_comision->id : null,
-            'jornada'                   => Solicitud::JORNADA_TODO_EL_DIA,
-            'dentro_pais'               => false,
-            'lugares_cometido'          => $lugares->pluck('id'),
+            'utiliza_transporte'        => false,
             'viaja_acompaniante'        => false,
             'alimentacion_red'          => false,
-            'utiliza_transporte'        => true,
-            'medio_transporte'          => $medio_transporte->pluck('id'),
+            'jornada'                   => Solicitud::JORNADA_TODO_EL_DIA,
+            'dentro_pais'               => false,
+            'tipo_comision_id'          => $tipo_comision->id,
             'actividad_realizada'       => $this->faker->text,
             'gastos_alimentacion'       => false,
             'gastos_alojamiento'        => false,
             'pernocta_lugar_residencia' => false,
             'n_dias_40'                 => 1,
-            'n_dias_100'                => 2,
-            'observacion_gastos'        => null,
-
+            'n_dias_100'                => 0,
+            'observacion_gastos'        => $this->faker->text,
+            'contrato_uuid'             => $contrato->uuid,
+            'observacion'               => $this->faker->text,
+            'motivos_cometido'          => $motivos_cometido->pluck('id')->toArray(),
+            'lugares_cometido'          => $lugares->pluck('id')->toArray(),
+            'medio_transporte'          => $medio_transporte->pluck('id')->toArray()
         ];
-
+        Log::info($data_request);
         $response = $this->postJson(action([SolicitudController::class, 'storeSolicitud']), $data_request);
 
         $response->assertStatus(200);
@@ -102,7 +106,7 @@ class SolicitudControllerTest extends TestCase
                 'motivos_cometido'          => $motivos_cometido->pluck('id'),
                 'tipo_comision_id'          => $tipo_comision ? $tipo_comision->id : null,
                 'jornada'                   => Solicitud::JORNADA_TODO_EL_DIA,
-                'dentro_pais'               => false,
+                'dentro_pais'               => true,
                 'lugares_cometido'          => $lugares->pluck('id'),
                 'viaja_acompaniante'        => false,
                 'alimentacion_red'          => false,
@@ -113,7 +117,7 @@ class SolicitudControllerTest extends TestCase
                 'gastos_alojamiento'        => false,
                 'pernocta_lugar_residencia' => false,
                 'n_dias_40'                 => 1,
-                'n_dias_100'                => 1,
+                'n_dias_100'                => 0,
                 'observacion_gastos'        => null,
             ];
 

@@ -99,6 +99,9 @@ class CreateSolicitudsTable extends Migration
             $table->unsignedBigInteger('item_presupuestario_id')->nullable();
             $table->foreign('item_presupuestario_id')->references('id')->on('item_presupuestarios');
 
+            $table->integer('posicion_firma_ok')->default(1);
+            $table->dateTime('fecha_last_firma', 0)->nullable();
+
             $table->unsignedBigInteger('user_id_by')->nullable();
             $table->foreign('user_id_by')->references('id')->on('users');
             $table->dateTime('fecha_by_user', 0)->nullable();

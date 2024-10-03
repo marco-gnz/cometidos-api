@@ -27,7 +27,7 @@ class StoreAdminAusentismoRequest extends FormRequest
             'firmante_uuid'             => ['required', 'exists:users,uuid'],
             'fecha_inicio'              => ['required', 'date', 'before_or_equal:fecha_termino'],
             'fecha_termino'             => ['required', 'date', 'after_or_equal:fecha_inicio'],
-            'subrogantes_id'            => ['required']
+            'subrogante_uuid'           => ['required', 'exists:users,uuid']
         ];
     }
 
@@ -43,7 +43,7 @@ class StoreAdminAusentismoRequest extends FormRequest
             'fecha_termino.date'                    => 'La :attribute debe ser una fecha válida',
             'fecha_termino.after_or_equal'          => 'La :attribute debe ser superior a fecha de inicio',
 
-            'subrogantes_id.required'               => 'El :attribute debe ser obligatorio'
+            'subrogante_uuid.required'               => 'El :attribute debe ser obligatorio'
         ];
     }
 
@@ -53,7 +53,7 @@ class StoreAdminAusentismoRequest extends FormRequest
             'firmante_uuid'     => 'firmante',
             'fecha_inicio'      => 'fecha',
             'fecha_termino'     => 'fecha',
-            'subrogantes_id'    => 'subrogante'
+            'subrogante_uuid'    => 'subrogante'
         ];
     }
 }

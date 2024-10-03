@@ -227,7 +227,7 @@ class LinksController extends Controller
         return Solicitud::where(function ($q) use ($auth) {
             $q->whereHas('firmantes', function ($q) use ($auth) {
                 $q->where(function ($q) use ($auth) {
-                    $q->whereRaw('solicituds.posicion_firma_actual = solicitud_firmantes.posicion_firma - 1')
+                    $q->whereRaw('solicituds.posicion_firma_ok = solicitud_firmantes.posicion_firma')
                         ->where('solicituds.is_reasignada', 0)
                         ->where('status', true)
                         ->where('is_executed', false)
@@ -236,7 +236,7 @@ class LinksController extends Controller
                         ->where('solicituds.status', '=', Solicitud::STATUS_EN_PROCESO);
                 })
                     ->orWhere(function ($q) use ($auth) {
-                        $q->whereRaw('solicituds.posicion_firma_actual = solicitud_firmantes.posicion_firma')
+                        $q->whereRaw('solicituds.posicion_firma_ok = solicitud_firmantes.posicion_firma')
                             ->where('solicituds.is_reasignada', 1)
                             ->where('is_reasignado', true)
                             ->where('status', true)
@@ -251,9 +251,9 @@ class LinksController extends Controller
                 $q->whereHas('funcionario.ausentismos', function ($q) use ($auth) {
                     $q->where(function ($query) use ($auth) {
                         $query
-                            ->whereRaw("DATE(solicituds.fecha_by_user) >= ausentismos.fecha_inicio")
-                            ->whereRaw("DATE(solicituds.fecha_by_user) <= ausentismos.fecha_termino")
-                            ->whereRaw('solicituds.posicion_firma_actual = solicitud_firmantes.posicion_firma - 1')
+                            ->whereRaw("DATE(solicituds.fecha_last_firma) >= ausentismos.fecha_inicio")
+                            ->whereRaw("DATE(solicituds.fecha_last_firma) <= ausentismos.fecha_termino")
+                            ->whereRaw('solicituds.posicion_firma_ok = solicitud_firmantes.posicion_firma')
                             ->where('solicituds.is_reasignada', 0)
                             ->where('status', true)
                             ->where('is_executed', false)
@@ -264,9 +264,9 @@ class LinksController extends Controller
                             });
                     })->orWhere(function ($query) use ($auth) {
                         $query
-                            ->whereRaw("DATE(solicituds.fecha_by_user) >= ausentismos.fecha_inicio")
-                            ->whereRaw("DATE(solicituds.fecha_by_user) <= ausentismos.fecha_termino")
-                            ->whereRaw('solicituds.posicion_firma_actual = solicitud_firmantes.posicion_firma')
+                            ->whereRaw("DATE(solicituds.fecha_last_firma) >= ausentismos.fecha_inicio")
+                            ->whereRaw("DATE(solicituds.fecha_last_firma) <= ausentismos.fecha_termino")
+                            ->whereRaw('solicituds.posicion_firma_ok = solicitud_firmantes.posicion_firma')
                             ->where('solicituds.is_reasignada', 1)
                             ->where('is_reasignado', true)
                             ->where('status', true)
@@ -285,14 +285,14 @@ class LinksController extends Controller
                     ->whereHas('funcionario.reasignacionAusencias', function ($q) use ($auth) {
                         $q->where('user_subrogante_id', $auth->id)
                             ->where(function ($query) {
-                                $query->whereRaw('solicituds.posicion_firma_actual = solicitud_firmantes.posicion_firma - 1')
+                                $query->whereRaw('solicituds.posicion_firma_ok = solicitud_firmantes.posicion_firma')
                                     ->where('solicituds.is_reasignada', 0)
                                     ->where('status', true)
                                     ->where('is_executed', false)
                                     ->where('role_id', '!=', 1)
                                     ->where('solicituds.status', '=', Solicitud::STATUS_EN_PROCESO);
                             })->orWhere(function ($query) {
-                                $query->whereRaw('solicituds.posicion_firma_actual = solicitud_firmantes.posicion_firma')
+                                $query->whereRaw('solicituds.posicion_firma_ok = solicitud_firmantes.posicion_firma')
                                     ->where('solicituds.is_reasignada', 1)
                                     ->where('is_reasignado', true)
                                     ->where('status', true)

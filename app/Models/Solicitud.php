@@ -134,6 +134,8 @@ class Solicitud extends Model
         'hora_id',
         'cuenta_bancaria_id',
         'item_presupuestario_id',
+        'fecha_last_firma',
+        'posicion_firma_ok',
         'user_id_by',
         'fecha_by_user',
         'user_id_update',
@@ -699,7 +701,7 @@ class Solicitud extends Model
             $query->where('is_reasignado', true)
                 ->where('posicion_firma', $this->posicion_firma_actual);
         } else {
-            $query->where('posicion_firma', $this->posicion_firma_actual + 1);
+            $query->where('posicion_firma', '>' ,$this->posicion_firma_actual);
         }
         return $query->first();
     }
@@ -1359,13 +1361,13 @@ class Solicitud extends Model
                 ->whereHas('firmantes', function ($q) use ($params) {
                     $q->whereIn('user_id', $params)
                         ->where(function ($query) {
-                            $query->whereRaw('solicituds.posicion_firma_actual = solicitud_firmantes.posicion_firma - 1')
+                            $query->whereRaw('solicituds.posicion_firma_ok = solicitud_firmantes.posicion_firma')
                                 ->where('solicituds.is_reasignada', 0)
                                 ->where('status', true)
                                 ->where('is_executed', false)
                                 ->where('role_id', '!=', 1);
                         })->orWhere(function ($query) {
-                            $query->whereRaw('solicituds.posicion_firma_actual = solicitud_firmantes.posicion_firma')
+                            $query->whereRaw('solicituds.posicion_firma_ok = solicitud_firmantes.posicion_firma')
                                 ->where('solicituds.is_reasignada', 1)
                                 ->where('is_reasignado', true)
                                 ->where('status', true)

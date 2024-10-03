@@ -55,13 +55,13 @@ class AusentismosController extends Controller
                 ], 422);
             }
 
-            if (!$validateExistAusentismoFirmantes) {
+            /* if (!$validateExistAusentismoFirmantes) {
                 return response()->json([
                     'errors' => [
                         'subrogantes_id'  => ['Un firmante seleccionado ya registras otro ausentismo en el periodo de ausentismo.'],
                     ]
                 ], 422);
-            }
+            } */
 
             $ausentismo = Ausentismo::create($data);
 
@@ -138,7 +138,11 @@ class AusentismosController extends Controller
         $fecha_termino      = $request->fecha_termino;
         if (count($users_id) > 0) {
             foreach ($users_id as $id) {
-                $total = Ausentismo::where('user_ausente_id', $id)
+                $total = Ausentismo::where(function ($q) use ($id) {
+                    $q->whereHas('subrogantes', function ($q) use ($id) {
+                        $q->where('ausentismo_user.user_id', $id);
+                    });
+                })
                     ->where(function ($query) use ($fecha_inicio, $fecha_termino) {
                         $query->where(function ($query) use ($fecha_inicio, $fecha_termino) {
                             $query->where('fecha_inicio', '<=', $fecha_inicio)

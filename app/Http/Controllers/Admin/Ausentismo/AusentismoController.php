@@ -24,29 +24,77 @@ class AusentismoController extends Controller
     {
         try {
             $firmante       = User::where('uuid', $request->firmante_uuid)->firstOrFail();
+            $subrogante     = User::where('uuid', $request->subrogante_uuid)->firstOrFail();
             $fecha_inicio   = Carbon::parse($request->fecha_inicio)->startOfDay();
             $fecha_termino  = Carbon::parse($request->fecha_termino)->endOfDay();
+            $solicitudes_pendientes = $request->solicitudes_pendientes === 'true' ? true : false;
+            $campo_search = $solicitudes_pendientes === true ? 'fecha_last_firma' : 'fecha_by_user';
 
-            $count_solicitudes_anterior = Solicitud::where('fecha_by_user', '<', $fecha_inicio)
-                ->whereHas('firmantes', function ($q) use ($firmante) {
+            $count_solicitudes_anterior = Solicitud::where($campo_search, '<', $fecha_inicio)
+                ->whereHas('firmantes', function ($q) use ($firmante, $solicitudes_pendientes, $subrogante, $fecha_inicio, $fecha_termino) {
                     $q->where('user_id', $firmante->id)
                         ->where('status', true)
-                        ->where('is_executed', false);
-                })->count();
+                        ->where('is_executed', false)
+                        ->where(function ($q) use ($firmante, $subrogante, $fecha_inicio, $fecha_termino) {
+                            $q->whereDoesntHave('funcionario.ausentismos', function ($q) use ($firmante, $subrogante, $fecha_inicio, $fecha_termino) {
+                                $q->where('user_ausente_id', $firmante->id)
+                                    ->whereBetween('fecha_inicio', [$fecha_inicio->format('Y-m-d'), $fecha_termino->format('Y-m-d')])
+                                    ->whereHas('subrogantes', function ($q) use ($subrogante) {
+                                        $q->where('ausentismo_user.user_id', $subrogante->id);
+                                    });
+                            });
+                        });
+                    if ($solicitudes_pendientes) {
+                        $q->whereRaw('solicituds.posicion_firma_ok = solicitud_firmantes.posicion_firma');
+                    }
+                })->whereDoesntHave('reasignaciones', function ($q) use ($subrogante) {
+                    $q->where('user_subrogante_id', $subrogante->id);
+                })
+                ->count();
 
-            $count_solicitudes_rango = Solicitud::whereBetween('fecha_by_user', [$fecha_inicio, $fecha_termino])
-                ->whereHas('firmantes', function ($q) use ($firmante) {
+            $count_solicitudes_rango = Solicitud::whereBetween($campo_search, [$fecha_inicio, $fecha_termino])
+                ->whereHas('firmantes', function ($q) use ($firmante, $solicitudes_pendientes, $subrogante, $fecha_inicio, $fecha_termino) {
                     $q->where('user_id', $firmante->id)
                         ->where('status', true)
-                        ->whereIn('is_executed', [true, false]);
-                })->get();
+                        ->whereIn('is_executed', [true, false])
+                        ->where(function ($q) use ($firmante, $subrogante, $fecha_inicio, $fecha_termino) {
+                            $q->whereDoesntHave('funcionario.ausentismos', function ($q) use ($firmante, $subrogante, $fecha_inicio, $fecha_termino) {
+                                $q->where('user_ausente_id', $firmante->id)
+                                    ->whereBetween('fecha_inicio', [$fecha_inicio->format('Y-m-d'), $fecha_termino->format('Y-m-d')])
+                                    ->whereHas('subrogantes', function ($q) use ($subrogante) {
+                                        $q->where('ausentismo_user.user_id', $subrogante->id);
+                                    });
+                            });
+                        });
+                    if ($solicitudes_pendientes) {
+                        $q->whereRaw('solicituds.posicion_firma_ok = solicitud_firmantes.posicion_firma');
+                    }
+                })->whereDoesntHave('reasignaciones', function ($q) use ($subrogante) {
+                    $q->where('user_subrogante_id', $subrogante->id);
+                })
+                ->get();
 
-            $count_solicitudes_posterior = Solicitud::where('fecha_by_user', '>', $fecha_termino)
-                ->whereHas('firmantes', function ($q) use ($firmante) {
+            $count_solicitudes_posterior = Solicitud::where($campo_search, '>', $fecha_termino)
+                ->whereHas('firmantes', function ($q) use ($firmante, $solicitudes_pendientes, $subrogante, $fecha_inicio, $fecha_termino) {
                     $q->where('user_id', $firmante->id)
                         ->where('status', true)
-                        ->where('is_executed', false);
-                })->count();
+                        ->where('is_executed', false)
+                        ->where(function ($q) use ($firmante, $subrogante, $fecha_inicio, $fecha_termino) {
+                            $q->whereDoesntHave('funcionario.ausentismos', function ($q) use ($firmante, $subrogante, $fecha_inicio, $fecha_termino) {
+                                $q->where('user_ausente_id', $firmante->id)
+                                    ->whereBetween('fecha_inicio', [$fecha_inicio->format('Y-m-d'), $fecha_termino->format('Y-m-d')])
+                                    ->whereHas('subrogantes', function ($q) use ($subrogante) {
+                                        $q->where('ausentismo_user.user_id', $subrogante->id);
+                                    });
+                            });
+                        });
+                    if ($solicitudes_pendientes) {
+                        $q->whereRaw('solicituds.posicion_firma_ok = solicitud_firmantes.posicion_firma');
+                    }
+                })->whereDoesntHave('reasignaciones', function ($q) use ($subrogante) {
+                    $q->where('user_subrogante_id', $subrogante->id);
+                })
+                ->count();
 
             $totales = (object)[
                 'count_solicitudes_anterior'    => $count_solicitudes_anterior,
@@ -91,6 +139,7 @@ class AusentismoController extends Controller
         try {
             $this->authorize('create', Ausentismo::class);
             $firmante = User::where('uuid', $request->firmante_uuid)->firstOrFail();
+            $subrogante = User::where('uuid', $request->subrogante_uuid)->firstOrFail();
             $data = [
                 'user_ausente_id'   => $firmante->id,
                 'fecha_inicio'      => $request->fecha_inicio,
@@ -98,7 +147,7 @@ class AusentismoController extends Controller
             ];
 
             $validateExistAusentismoUser = $this->validateExistAusentismoUser($request, $firmante);
-            $validateExistAusentismoFirmantes = $this->validateExistAusentismoFirmantes($request);
+            $validateExistAusentismoFirmantes = $this->validateExistAusentismoFirmantes($request, $subrogante);
 
             if (!$validateExistAusentismoUser) {
                 return response()->json([
@@ -108,28 +157,30 @@ class AusentismoController extends Controller
                 ], 422);
             }
 
-            if (!$validateExistAusentismoFirmantes) {
+            /* if (!$validateExistAusentismoFirmantes) {
                 return response()->json([
                     'errors' => [
-                        'subrogantes_id'  => ['Un firmante seleccionado ya registras otro ausentismo en el periodo de ausentismo.'],
+                        'subrogante_uuid'  => ['Subrogante seleccionado ya registra un ausentismo en el periodo de ausentismo.'],
                     ]
                 ], 422);
-            }
+            } */
 
-            $ausentismo = Ausentismo::create($data);
-
-            if ($ausentismo) {
-                $ausentismo->subrogantes()->attach($request->subrogantes_id);
+            if ($subrogante) {
+                $ausentismo = Ausentismo::create($data);
 
                 if ($ausentismo) {
-                    return response()->json(
-                        array(
-                            'status'        => 'success',
-                            'title'         => 'Ausentismo ingresado con éxito.',
-                            'message'       => null,
-                            'data'          => ListAusentismoResource::make($ausentismo)
-                        )
-                    );
+                    $ausentismo->subrogantes()->attach([$subrogante->id]);
+
+                    if ($ausentismo) {
+                        return response()->json(
+                            array(
+                                'status'        => 'success',
+                                'title'         => 'Ausentismo ingresado con éxito.',
+                                'message'       => null,
+                                'data'          => ListAusentismoResource::make($ausentismo)
+                            )
+                        );
+                    }
                 }
             }
         } catch (\Exception $error) {
@@ -184,31 +235,30 @@ class AusentismoController extends Controller
         return true;
     }
 
-    private function validateExistAusentismoFirmantes($request)
+    private function validateExistAusentismoFirmantes($request, $subrogante)
     {
-        $users_id           = User::where('id', $request->subrogantes_id)->pluck('id')->toArray();
         $fecha_inicio       = $request->fecha_inicio;
         $fecha_termino      = $request->fecha_termino;
-        if (count($users_id) > 0) {
-            foreach ($users_id as $id) {
-                $total = Ausentismo::where('user_ausente_id', $id)
-                    ->where(function ($query) use ($fecha_inicio, $fecha_termino) {
-                        $query->where(function ($query) use ($fecha_inicio, $fecha_termino) {
-                            $query->where('fecha_inicio', '<=', $fecha_inicio)
-                                ->where('fecha_termino', '>=', $fecha_inicio);
-                        })->orWhere(function ($query) use ($fecha_inicio, $fecha_termino) {
-                            $query->where('fecha_inicio', '<=', $fecha_termino)
-                                ->where('fecha_termino', '>=', $fecha_termino);
-                        })->orWhere(function ($query) use ($fecha_inicio, $fecha_termino) {
-                            $query->where('fecha_inicio', '>=', $fecha_inicio)
-                                ->where('fecha_termino', '<=', $fecha_termino);
-                        });
-                    })
-                    ->count();
-                if ($total > 0) {
-                    return false;
-                }
-            }
+        $total = Ausentismo::where(function ($q) use ($subrogante) {
+            $q->whereHas('subrogantes', function ($q) use ($subrogante) {
+                $q->where('ausentismo_user.user_id', $subrogante->id);
+            });
+        })
+            ->where(function ($query) use ($fecha_inicio, $fecha_termino) {
+                $query->where(function ($query) use ($fecha_inicio, $fecha_termino) {
+                    $query->where('fecha_inicio', '<=', $fecha_inicio)
+                        ->where('fecha_termino', '>=', $fecha_inicio);
+                })->orWhere(function ($query) use ($fecha_inicio, $fecha_termino) {
+                    $query->where('fecha_inicio', '<=', $fecha_termino)
+                        ->where('fecha_termino', '>=', $fecha_termino);
+                })->orWhere(function ($query) use ($fecha_inicio, $fecha_termino) {
+                    $query->where('fecha_inicio', '>=', $fecha_inicio)
+                        ->where('fecha_termino', '<=', $fecha_termino);
+                });
+            })
+            ->count();
+        if ($total > 0) {
+            return false;
         }
         return true;
     }

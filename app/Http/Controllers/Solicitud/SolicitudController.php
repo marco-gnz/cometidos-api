@@ -432,6 +432,8 @@ class SolicitudController extends Controller
                 }
                 $solicitud = $solicitud->fresh();
 
+                $this->updatePosicionSolicitud($solicitud);
+
                 $fecha = "$solicitud->fecha_termino $solicitud->hora_salida";
                 $fecha_termino_solicitud = Carbon::parse($fecha);
                 $now                     = Carbon::now();
@@ -1066,6 +1068,9 @@ class SolicitudController extends Controller
                 }
 
                 $create_status  = $solicitud->addEstados($estados);
+
+                $solicitud = $solicitud->fresh();
+                $this->updatePosicionSolicitud($solicitud);
 
                 $emails_copy     = [];
                 $siguiente_email = $this->getSiguienteFirmante($solicitud);

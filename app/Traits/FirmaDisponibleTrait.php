@@ -46,11 +46,11 @@ trait FirmaDisponibleTrait
         }
 
         if (!$primerFirmante) {
-            $fecha_by_solicitud = Carbon::parse($solicitud->fecha_by_user)->format('Y-m-d');
+            $fecha_by_solicitud = Carbon::parse($solicitud->fecha_last_firma)->format('Y-m-d');
             $primerFirmante = $solicitud->firmantes()
                 ->whereJsonContains('permissions_id', $id_permission)
                 ->where('solicitud_id', $solicitud->id)
-                ->where(function ($query) use($auth, $fecha_by_solicitud) {
+                ->where(function ($query) use ($auth, $fecha_by_solicitud) {
                     $query->where(function ($q) use ($auth, $fecha_by_solicitud) {
                         $q->whereHas('funcionario.reasignacionAusencias', function ($q) use ($auth, $fecha_by_solicitud) {
                             $q->where('user_subrogante_id', $auth->id);
@@ -102,9 +102,9 @@ trait FirmaDisponibleTrait
             ->orderBy('posicion_firma', 'ASC');
 
         if (!$solicitud->is_reasignada) {
-            $query->where('posicion_firma', '>', $solicitud->posicion_firma_actual);
+            $query->where('posicion_firma', $solicitud->posicion_firma_ok);
         } else {
-            $query->where('posicion_firma', $solicitud->posicion_firma_actual);
+            $query->where('posicion_firma', $solicitud->posicion_firma_ok);
         }
 
         return $query->first();
@@ -125,7 +125,7 @@ trait FirmaDisponibleTrait
 
         if ($solicitud->status === Solicitud::STATUS_PROCESADO && $solicitud->authorizedToReasignarEmergency()) {
             $name_user  = $auth->abreNombres();
-            $title      = "{$name_user}, registras firma disponible de emergencia.";
+            $title      = "{$name_user}, registras firma disponible especial.";
             $type       = 'warning';
             $is_firma   = true;
             $if_buttom              = true;
@@ -133,7 +133,6 @@ trait FirmaDisponibleTrait
         } else {
             $id_permission                      = $this->idPermission($name_permission);
             $first_firma_habilitada_solicitud   = $this->obtenerPrimerFirmanteHabilitado($solicitud, $id_permission);
-
             if ($first_firma_habilitada_solicitud) {
                 $first_firma_auth = $solicitud->firmantes()
                     ->where('user_id', $auth->id)
@@ -187,7 +186,7 @@ trait FirmaDisponibleTrait
                         }
                     }
                 } else {
-                    $fecha_by_solicitud = Carbon::parse($solicitud->fecha_by_user)->format('Y-m-d');
+                    $fecha_by_solicitud = Carbon::parse($solicitud->fecha_last_firma)->format('Y-m-d');
                     $first_firma_position = $solicitud->firmantes()
                         ->where(function ($q) use ($first_firma_habilitada_solicitud) {
                             $q->where('id', $first_firma_habilitada_solicitud->id);

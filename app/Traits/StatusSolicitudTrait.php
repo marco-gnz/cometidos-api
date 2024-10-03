@@ -192,4 +192,20 @@ trait StatusSolicitudTrait
 
         return $ciclo_firma->permissions()->pluck('permission_id')->toArray();
     }
+
+    public function updatePosicionSolicitud($solicitud)
+    {
+        try {
+            if ($solicitud) {
+                $last_status        = $solicitud->estados()->orderBy('id', 'DESC')->first();
+                $isFirmaPendiente   = $solicitud->isFirmaPendiente();
+                $solicitud->update([
+                    'fecha_last_firma'  => $last_status ? $last_status->created_at : $solicitud->fecha_last_firma,
+                    'posicion_firma_ok' => $isFirmaPendiente ? $isFirmaPendiente->posicion_firma : $solicitud->posicion_firma_ok
+                ]);
+            }
+        } catch (\Exception $error) {
+            Log::info($error->getMessage());
+        }
+    }
 }
