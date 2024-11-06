@@ -24,6 +24,7 @@ use App\Http\Controllers\User\Cuenta\CuentaController;
 use App\Http\Controllers\User\Firmantes\FirmantesController;
 use App\Http\Controllers\User\Solicitudes\SolicitudesController;
 use App\Http\Resources\UserAuthResource;
+use App\Models\Lugar;
 use App\Models\Solicitud;
 use App\Models\User;
 use Illuminate\Http\Request;
@@ -259,3 +260,13 @@ Route::group(
         Route::get('/links', [LinksController::class, 'getLinks']);
     }
 );
+
+Route::get('/share/lugares', function(){
+    $lugares = Lugar::orderBy('nombre', 'ASC')->get();
+    return response()->json($lugares);
+});
+
+Route::get('/share/lugares/{id}', function ($id) {
+    $lugar = Lugar::find($id);
+    return response()->json($lugar);
+});
