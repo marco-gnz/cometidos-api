@@ -57,9 +57,30 @@ class ConvenioController extends Controller
     public function getConvenio($uuid)
     {
         try {
-
             $convenio = Convenio::where('uuid', $uuid)->firstOrFail();
             $this->authorize('view', $convenio);
+            $convenio->{'solicitudes_to_year'} = $convenio->solicitudesPorAnioYMes();
+            $convenio->{'filter_year'}         = $convenio->yearToFirstSelected();
+            return response()->json(
+                array(
+                    'status'        => 'success',
+                    'title'         => null,
+                    'message'       => null,
+                    'data'          => ConvenioResource::make($convenio)
+                )
+            );
+        } catch (\Exception $error) {
+            return response()->json(['error' => $error->getMessage()], 500);
+        }
+    }
+
+    public function getCometidosConvenio($uuid, $year)
+    {
+        try {
+            $convenio = Convenio::where('uuid', $uuid)->firstOrFail();
+            $this->authorize('view', $convenio);
+            $convenio->{'solicitudes_to_year'} = $convenio->solicitudesPorAnioYMes($year);
+            $convenio->{'filter_year'}         = $convenio->yearToFirstSelected($year);
             return response()->json(
                 array(
                     'status'        => 'success',

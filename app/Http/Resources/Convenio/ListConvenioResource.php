@@ -30,7 +30,8 @@ class ListConvenioResource extends JsonResource
             'ilustre'               => $this->ilustre ? $this->ilustre->nombre : null,
             'funcionario'           => $this->funcionario ? $this->funcionario->nombre_completo : null,
             'authorized_to_delete'    => $this->authorizedToDelete(),
-            'authorized_to_update'    => $this->authorizedToUpdate()
+            'authorized_to_update'    => $this->authorizedToUpdate(),
+            'n_solicitudes'           => $this->solicitudes()->count()
         ];
     }
 }

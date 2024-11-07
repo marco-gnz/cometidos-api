@@ -165,7 +165,8 @@ Route::group(
         Route::get('/admin/convenios', [ConvenioController::class, 'getConvenios']);
         Route::post('/admin/convenios', [ConvenioController::class, 'storeConvenio']);
         Route::get('/admin/convenios/{uuid}', [ConvenioController::class, 'getConvenio']);
-        Route::get('/admin/convenios/edit/{uuid}', [ConvenioController::class, 'getConvenioEdit']);
+        Route::get('/admin/convenios/{uuid}/{year}', [ConvenioController::class, 'getCometidosConvenio']);
+        Route::get('/admin/convenios/find/edit/{uuid}', [ConvenioController::class, 'getConvenioEdit']);
         Route::delete('/admin/convenios/{uuid}', [ConvenioController::class, 'deleteConvenio']);
         Route::put('/admin/convenios/{uuid}', [ConvenioController::class, 'updateConvenio']);
         Route::put('admin/convenios/status/{uuid}', [ConvenioController::class, 'updateConvenioStatus']);

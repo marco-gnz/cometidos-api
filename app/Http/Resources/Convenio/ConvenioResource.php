@@ -38,7 +38,10 @@ class ConvenioResource extends JsonResource
             'tipo_contrato'         => $this->tipo_contrato ? $this->tipo_contrato : null,
             'email'                 => $this->email ? $this->email : null,
             'user_by'               => $this->userBy ? $this->userBy->abreNombres() : null,
-            'created_at'            => $this->created_at ? Carbon::parse($this->created_at)->format('d-m-Y H:i:s') : null
+            'created_at'            => $this->created_at ? Carbon::parse($this->created_at)->format('d-m-Y H:i:s') : null,
+            'solicitudes'           => $this->solicitudes_to_year,
+            'years_to_solicitudes'  => $this->yearsToSolicitudes(),
+            'filter_year'           => $this->filter_year
         ];
     }
 }

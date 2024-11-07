@@ -65,6 +65,9 @@ class SolicitudController extends Controller
 
             $total_convenios    = $contrato->funcionario->convenios()
                 ->where('active', true)
+                ->where('establecimiento_id', $contrato->establecimiento_id)
+                ->where('ley_id', $contrato->ley_id)
+                ->where('estamento_id', $contrato->estamento_id)
                 ->where(function ($query) use ($fecha_inicio, $fecha_termino) {
                     $query->where(function ($query) use ($fecha_inicio, $fecha_termino) {
                         $query->where('fecha_inicio', '<=', $fecha_inicio)

@@ -166,4 +166,80 @@ class Convenio extends Model
     {
         return Gate::allows('update', $this);
     }
+
+    public function solicitudesPorAnioYMes($anio = null)
+    {
+        $years = $this->yearsToSolicitudes();
+        if(count($years) <= 0){
+            return [];
+        }
+        setlocale(LC_ALL, "es_ES");
+        Carbon::setLocale('es');
+        $anio = $anio ? $anio : Carbon::now()->format('Y');
+        $solicitudes = $this->solicitudes()
+            ->whereYear('fecha_inicio', $anio)
+            ->orderBy('fecha_inicio', 'ASC')
+            ->get()
+            ->groupBy(function ($solicitud) {
+                return Carbon::parse($solicitud->fecha_inicio)->locale('es')->format('F');
+            });
+
+        $resultado = collect();
+
+        foreach (range(1, 12) as $mes) {
+            $nombreMes_spanish  = Carbon::createFromDate($anio, $mes, 1)->locale('es')->monthName;
+            $nombreMes          = Carbon::createFromDate($anio, $mes, 1)->locale('es')->format('F');
+
+            $solicitudesMes = $solicitudes->get($nombreMes, collect());
+            $resultado->push([
+                'year_month'    => "{$nombreMes_spanish}",
+                'n_solicitudes' => $solicitudesMes->count(),
+                'solicitudes'   => $solicitudesMes->map(function ($solicitud) {
+                    return [
+                        'codigo'                => $solicitud->codigo,
+                        'fecha_inicio'          => Carbon::parse($solicitud->fecha_inicio)->format('d-m-y'),
+                        'fecha_termino'         => Carbon::parse($solicitud->fecha_termino)->format('d-m-y'),
+                        'derecho_pago_value'    => $solicitud->derecho_pago ? true : false,
+                        'derecho_pago'          => $solicitud->derecho_pago ? "Si" : "No",
+                        'type'                  => $solicitud->typeStatus(),
+                        'page_firma'            => $solicitud->pageFirma(),
+                        'type_page_firma'       => $solicitud->typePageFirma(),
+                        'estado_nom'            => Solicitud::STATUS_NOM[$solicitud->status],
+                        'tipo'                  => $solicitud->tipoComision->nombre
+                    ];
+                })->values()
+            ]);
+        }
+
+        return $resultado;
+    }
+
+    public function yearsToSolicitudes()
+    {
+        $years = $this->solicitudes()
+            ->selectRaw('YEAR(fecha_inicio) as year')
+            ->orderBy('year', 'ASC')
+            ->distinct()
+            ->pluck('year');
+
+        return $years;
+    }
+
+    public function yearToFirstSelected($year = null)
+    {
+        if($year){
+            return $year;
+        }
+        $years = $this->yearsToSolicitudes();
+
+        if (count($years) <= 0) {
+            return null;
+        }
+
+        $currentYear = Carbon::now()->format('Y');
+        if ($years->contains($currentYear)) {
+            return $currentYear;
+        }
+        return $years->last();
+    }
 }

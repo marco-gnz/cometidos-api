@@ -115,7 +115,8 @@ class SolicitudAdminController extends Controller
                 ->subdepartamento($request->subdeptos_id)
                 ->ley($request->ley_id)
                 ->estamento($request->estamento_id)
-                ->calidad($request->calidad_id);
+                ->calidad($request->calidad_id)
+                ->convenio($request->is_convenio);
 
             $solicitudes = $query->orderByDesc('fecha_inicio')->paginate(50);
 

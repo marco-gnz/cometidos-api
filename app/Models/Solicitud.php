@@ -197,6 +197,7 @@ class Solicitud extends Model
             $solicitud->total_firmas        = $solicitud->firmantes()->where('status', true)->count();
             $solicitud->dias_permitidos     = $dias_permitidos;
             $solicitud->vistos              = $vistos;
+            $solicitud->convenio_id         = self::searchConvenio($solicitud);
             $solicitud->save();
         });
 
@@ -221,6 +222,32 @@ class Solicitud extends Model
         });
     }
 
+    private static function searchConvenio($solicitud)
+    {
+        $fecha_inicio   = $solicitud->fecha_inicio;
+        $fecha_termino  = $solicitud->fecha_termino;
+
+        $first_convenio = $solicitud->funcionario->convenios()
+            ->where('active', true)
+            ->where('establecimiento_id', $solicitud->establecimiento_id)
+            ->where('ley_id', $solicitud->ley_id)
+            ->where('estamento_id', $solicitud->estamento_id)
+            ->where(function ($query) use ($fecha_inicio, $fecha_termino) {
+                $query->where(function ($query) use ($fecha_inicio, $fecha_termino) {
+                    $query->where('fecha_inicio', '<=', $fecha_inicio)
+                        ->where('fecha_termino', '>=', $fecha_inicio);
+                })->orWhere(function ($query) use ($fecha_inicio, $fecha_termino) {
+                    $query->where('fecha_inicio', '<=', $fecha_termino)
+                        ->where('fecha_termino', '>=', $fecha_termino);
+                })->orWhere(function ($query) use ($fecha_inicio, $fecha_termino) {
+                    $query->where('fecha_inicio', '>=', $fecha_inicio)
+                        ->where('fecha_termino', '<=', $fecha_termino);
+                });
+            })
+            ->first();
+
+        return $first_convenio ? $first_convenio->id : null;
+    }
 
     private static function generarCodigo($solicitud)
     {
@@ -701,7 +728,7 @@ class Solicitud extends Model
             $query->where('is_reasignado', true)
                 ->where('posicion_firma', $this->posicion_firma_actual);
         } else {
-            $query->where('posicion_firma', '>' ,$this->posicion_firma_actual);
+            $query->where('posicion_firma', '>', $this->posicion_firma_actual);
         }
         return $query->first();
     }
@@ -1118,6 +1145,14 @@ class Solicitud extends Model
                     $query->whereHas('estados', function ($query) use ($params) {
                         $query->where('observacion', 'like', '%' . $params . '%');
                     });
+                })->orWhere(function ($query) use ($params) {
+                    $query->whereHas('convenio', function ($q) use ($params) {
+                        $q->where('codigo', 'like', '%' . $params . '%')
+                            ->orWhere('n_resolucion', 'like', '%' . $params . '%')
+                            ->orWhere('email', 'like', '%' . $params . '%')
+                            ->orWhere('tipo_contrato', 'like', '%' . $params . '%')
+                            ->orWhere('observacion', 'like', '%' . $params . '%');
+                    });
                 });
     }
 
@@ -1224,6 +1259,19 @@ class Solicitud extends Model
                 return $query->whereDoesntHave('procesoRendicionGastos');
             } elseif (in_array(1, $params)) {
                 return $query->whereHas('procesoRendicionGastos');
+            }
+        }
+    }
+
+    public function scopeConvenio($query, $params)
+    {
+        if ($params) {
+            if (in_array(0, $params) && in_array(1, $params)) {
+                return $query;
+            } elseif (in_array(0, $params)) {
+                return $query->whereNull('convenio_id');
+            } elseif (in_array(1, $params)) {
+                return $query->whereNotNull('convenio_id');
             }
         }
     }
