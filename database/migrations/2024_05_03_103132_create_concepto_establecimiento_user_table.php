@@ -17,6 +17,7 @@ class CreateConceptoEstablecimientoUserTable extends Migration
             $table->bigIncrements('id');
             $table->unsignedInteger('concepto_establecimiento_id');
             $table->unsignedInteger('user_id');
+            $table->unsignedInteger('role_id');
             $table->integer('posicion');
             $table->boolean('active')->default(1);
             $table->timestamps();

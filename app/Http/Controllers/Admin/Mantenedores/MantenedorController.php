@@ -8,6 +8,7 @@ use App\Models\Banco;
 use App\Models\Calidad;
 use App\Models\Cargo;
 use App\Models\Concepto;
+use App\Models\ConceptoEstablecimiento;
 use App\Models\Country;
 use App\Models\CuentaBancaria;
 use App\Models\Departamento;
@@ -382,6 +383,26 @@ class MantenedorController extends Controller
             return response()->json($error->getMessage());
         }
     }
+
+    public function getRolesUsuariosEspecial($concepto_uuid, $establecimiento_id)
+    {
+        try {
+            $concepto                   = Concepto::where('uuid', $concepto_uuid)->firstOrFail();
+            $concepto_establecimiento   = $concepto->conceptosEstablecimientos->where('establecimiento_id', $establecimiento_id)->first();
+
+            $roles_id = $concepto_establecimiento
+                ? $concepto_establecimiento->funcionarios->pluck('pivot.role_id')->filter()->all()
+                : [];
+
+            $not_roles_id   = [1, 3, 8, 9, 12, 13];
+            $total_ids      = array_unique(array_merge($not_roles_id, $roles_id));
+            $roles          = Role::whereNotIn('id', $total_ids)->orderBy('name', 'ASC')->get();
+            return response()->json($roles);
+        } catch (\Exception $error) {
+            return response()->json(['error' => $error->getMessage()], 500);
+        }
+    }
+
 
     public function getUser($id)
     {

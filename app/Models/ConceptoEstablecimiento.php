@@ -27,6 +27,6 @@ class ConceptoEstablecimiento extends Model
 
     public function funcionarios()
     {
-        return $this->belongsToMany(User::class)->withPivot('posicion', 'active')->orderBy('posicion', 'ASC');
+        return $this->belongsToMany(User::class)->withPivot('posicion', 'active', 'role_id')->orderBy('posicion', 'ASC');
     }
 }

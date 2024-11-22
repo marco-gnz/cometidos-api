@@ -3,6 +3,7 @@
 namespace App\Http\Resources\Concepto;
 
 use Illuminate\Http\Resources\Json\JsonResource;
+use Spatie\Permission\Models\Role;
 
 class UsersResource extends JsonResource
 {
@@ -14,11 +15,13 @@ class UsersResource extends JsonResource
      */
     public function toArray($request)
     {
+        $role = Role::find($this->pivot->role_id);
         return [
             'nombres'   => $this->abreNombres(),
             'email'     => $this->email,
             'posicion'  => $this->pivot->posicion,
-            'active'    => $this->pivot->active
+            'active'    => $this->pivot->active,
+            'perfil'    => $role ? $role->name : null
         ];
     }
 }

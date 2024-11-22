@@ -28,9 +28,10 @@ class ListFirmantesResource extends JsonResource
             ->whereHas('solicitudes')
             ->first();
 
+            $is_valorizar = in_array(10, $this->permissions_id) ? true : false;
         return [
             'uuid'                  => $this->uuid,
-            'rut'                   => $this->funcionario->rut ? $this->funcionario->rut : null,
+            'rut'                   => $this->funcionario->rut_completo ? $this->funcionario->rut_completo : null,
             'nombres'               => $this->funcionario->nombre_completo ? $this->funcionario->nombre_completo : null,
             'email'                 => $this->funcionario->email ? $this->funcionario->email : null,
             'posicion_firma'        => $this->posicion_firma,
@@ -42,7 +43,8 @@ class ListFirmantesResource extends JsonResource
             'is_firma'              => $this->solicitud ? ($this->posicion_firma === $this->solicitud->posicion_firma_actual ? true : false) : false,
             'authorized_to_update'  => $this->authorizedToUpdate(),
             'is_executed'           => $this->is_executed,
-            'is_success'            => $this->is_success
+            'is_success'            => $this->is_success,
+            'is_valorizar'              => $is_valorizar
         ];
     }
 }

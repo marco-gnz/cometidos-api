@@ -730,7 +730,7 @@ class Solicitud extends Model
         } else {
             $query->where('posicion_firma', '>', $this->posicion_firma_actual);
         }
-        return $query->first();
+        return $query->orderBy('posicion_firma', 'ASC')->first();
     }
 
 

@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Admin\Conceptos;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Concepto\StoreConceptoEstablecimientoRequest;
 use App\Http\Resources\Concepto\ListConceptoResource;
 use App\Models\Concepto;
 use App\Models\ConceptoEstablecimiento;
@@ -108,7 +109,7 @@ class ConceptosController extends Controller
         }
     }
 
-    public function storeUser(Request $request)
+    public function storeUser(StoreConceptoEstablecimientoRequest $request)
     {
         try {
             $conceptoEstablecimiento = ConceptoEstablecimiento::where('id', $request->concepto_establecimiento_id)
@@ -117,7 +118,14 @@ class ConceptosController extends Controller
             $count_users = $conceptoEstablecimiento->funcionarios()->count();
             $user = User::where('uuid', $request->user_selected_id)->firstOrFail();
             $posicion = $count_users + 1;
-            $conceptoEstablecimiento->funcionarios()->attach($user->id, ['posicion' => $posicion]);
+            $role_id = null;
+
+            if ($conceptoEstablecimiento->concepto->id === 1) {
+                $role_id = 9;
+            } else if ($conceptoEstablecimiento->concepto->id === 2) {
+                $role_id = $request->role_id ? $request->role_id : null;
+            }
+            $conceptoEstablecimiento->funcionarios()->attach($user->id, ['posicion' => $posicion, 'role_id' => $role_id]);
 
             return response()->json([
                 'status'    => 'success',
