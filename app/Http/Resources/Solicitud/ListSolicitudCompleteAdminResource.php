@@ -22,6 +22,7 @@ class ListSolicitudCompleteAdminResource extends JsonResource
         return [
             'uuid'                      => $this->uuid,
             'codigo'                    => $this->codigo,
+            'codigo_sirh'               => $this->nResolucionSirh(),
             'fecha_inicio'              => $this->fecha_inicio ? Carbon::parse($this->fecha_inicio)->format('d-m-Y') : null,
             'fecha_termino'             => $this->fecha_termino ? Carbon::parse($this->fecha_termino)->format('d-m-Y') : null,
             'hora_llegada'              => $this->hora_llegada ? Carbon::parse($this->hora_llegada)->format('H:i') : null,
@@ -63,7 +64,7 @@ class ListSolicitudCompleteAdminResource extends JsonResource
             'jornada'                   => Solicitud::JORNADA_NOM[$this->jornada],
             'dentro_pais'               => $this->dentro_pais ? true : false,
             'tipo_comision'             => $this->tipoComision ? $this->tipoComision->nombre : null,
-            'created_at'                => $this->fecha_by_user ? Carbon::parse($this->fecha_by_user)->format('d-m-Y H:i') : null,
+            'created_at'                => $this->fecha_by_user ? Carbon::parse($this->fecha_by_user)->format('d-m-Y H:i:s') : null,
             'user_by'                   => $this->userBy ? $this->userBy->nombre_completo : nul,
             'afecta_convenio'           => $this->afectaConvenio(),
             'url_convenio'              => $this->convenio ? route('convenio.show', ['uuid' => $this->convenio->uuid]) : null,
