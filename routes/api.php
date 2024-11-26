@@ -272,3 +272,7 @@ Route::get('/share/lugares/{id}', function ($id) {
     $lugar = Lugar::find($id);
     return response()->json($lugar);
 });
+
+Route::middleware('guest')->get('/maintenance-mode', function () {
+    return response()->json(['maintenance' => App::isDownForMaintenance()]);
+});

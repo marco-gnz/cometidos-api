@@ -4,6 +4,8 @@ namespace App\Exceptions;
 
 use Illuminate\Foundation\Exceptions\Handler as ExceptionHandler;
 use Throwable;
+use Illuminate\Foundation\Application;
+use Illuminate\Support\Facades\Cache;
 
 class Handler extends ExceptionHandler
 {
@@ -36,6 +38,24 @@ class Handler extends ExceptionHandler
     {
         $this->reportable(function (Throwable $e) {
             //
+        });
+
+        $this->renderable(function (Throwable $e, $request) {
+            $isMaintenance = Cache::get('app_is_maintenance', null);
+
+            if ($isMaintenance === null) {
+                $isMaintenance = app()->isDownForMaintenance();
+                Cache::put('app_is_maintenance', $isMaintenance, 60); // Mantén el valor por 60 minutos
+            }
+
+            if ($isMaintenance && ($request->expectsJson() || $request->is('api/*'))) {
+                return response()->json([
+                    'message'       => 'La aplicación está en mantenimiento.',
+                    'maintenance'   => true,
+                ], 503);
+            }
+
+            return parent::render($request, $e);
         });
     }
 }
