@@ -40,7 +40,7 @@ class Handler extends ExceptionHandler
             //
         });
 
-        $this->renderable(function (Throwable $e, $request) {
+        /* $this->renderable(function (Throwable $e, $request) {
             $isMaintenance = Cache::get('app_is_maintenance', null);
 
             if ($isMaintenance === null) {
@@ -56,6 +56,6 @@ class Handler extends ExceptionHandler
             }
 
             return parent::render($request, $e);
-        });
+        }); */
     }
 }
