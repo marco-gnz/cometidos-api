@@ -273,6 +273,6 @@ Route::get('/share/lugares/{id}', function ($id) {
     return response()->json($lugar);
 });
 
-Route::middleware('guest')->get('/maintenance-mode', function () {
+Route::get('/maintenance-mode', function () {
     return response()->json(['maintenance' => App::isDownForMaintenance()]);
 });
