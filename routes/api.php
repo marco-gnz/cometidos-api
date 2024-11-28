@@ -21,6 +21,7 @@ use App\Http\Controllers\Solicitud\SolicitudController;
 use App\Http\Controllers\User\Archivos\ArchivosController;
 use App\Http\Controllers\User\Ausentismos\AusentismosController;
 use App\Http\Controllers\User\Cuenta\CuentaController;
+use App\Http\Controllers\User\DocumentoInstitucional\DocumentoInstitucionalController;
 use App\Http\Controllers\User\Firmantes\FirmantesController;
 use App\Http\Controllers\User\Solicitudes\SolicitudesController;
 use App\Http\Resources\UserAuthResource;
@@ -235,6 +236,11 @@ Route::group(
         Route::get('/admin/motivos', [MantenedorAdminController::class, 'getMotivos']);
         Route::post('/admin/motivos', [MantenedorAdminController::class, 'storeMotivo']);
         Route::put('/admin/motivos/{id}', [MantenedorAdminController::class, 'changeStatusMotivo']);
+
+        Route::get('/documento/institucional', [DocumentoInstitucionalController::class, 'getDocumentosInstitucional']);
+        Route::post('/documento/institucional', [DocumentoInstitucionalController::class, 'storeDocumento']);
+        Route::delete('/documento/institucional/{uuid}', [DocumentoInstitucionalController::class, 'deleteDocumento']);
+        Route::post('/documento/download-file/institucional/{uuid}', [DocumentoInstitucionalController::class, 'downloadFileInstitucional']);
     }
 );
 

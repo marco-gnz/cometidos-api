@@ -9,6 +9,7 @@ use App\Models\Documento;
 use App\Models\EstadoInformeCometido;
 use App\Models\EstadoProcesoRendicionGasto;
 use App\Models\InformeCometido;
+use App\Models\InstitucionalDocumento;
 use App\Models\ProcesoRendicionGasto;
 use App\Models\Solicitud;
 use Carbon\Carbon;
@@ -99,6 +100,30 @@ class PdfController extends Controller
             return response($content)
             ->header('Content-Type', 'application/pdf')
             ->header('Content-Disposition', "inline; filename={$safeFileName}; filename*=UTF-8''{$safeFileName}");
+        } catch (\Exception $error) {
+            return response()->json(['error' => $error->getMessage()], 500);
+        }
+    }
+
+    public function showDocumentoInstitucional($uuid)
+    {
+        try {
+            $documento  = InstitucionalDocumento::where('uuid', $uuid)->first();
+            if (!$documento) {
+                return response()->view('errors.404');
+            }
+            $filePath   = Storage::disk('public')->path($documento->url);
+
+            if (!Storage::disk('public')->exists($documento->url)) {
+                return response()->view('errors.404');
+            }
+
+            $content = Storage::disk('public')->get($documento->url);
+            $safeFileName = str_replace([',', ';', ' '], '_', $documento->nombre);
+
+            return response($content)
+                ->header('Content-Type', 'application/pdf')
+                ->header('Content-Disposition', "inline; filename={$safeFileName}; filename*=UTF-8''{$safeFileName}");
         } catch (\Exception $error) {
             return response()->json(['error' => $error->getMessage()], 500);
         }

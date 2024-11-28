@@ -56,7 +56,7 @@ class MantenedorController extends Controller
                     }
                 }
             }
-            $models = ['grupofirma', 'convenio', 'ausentismo', 'funcionario', 'usuarioespecial', 'configuracion', 'perfil', 'solicitudes', 'rendiciones', 'reasignacion', 'solicitud.datos', 'reporte'];
+            $models = ['grupofirma', 'convenio', 'ausentismo', 'funcionario', 'usuarioespecial', 'configuracion', 'perfil', 'solicitudes', 'rendiciones', 'reasignacion', 'solicitud.datos', 'reporte', 'documento.institucional'];
             $permissions_aditional = Permission::whereNotIn('id', $permissions)
                 ->whereIn('model', $models)
                 ->get();

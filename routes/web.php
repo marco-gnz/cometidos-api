@@ -30,6 +30,7 @@ Route::get('/', function () {
 
 Route::get('/convenio/{uuid}', [App\Http\Controllers\pdf\PdfController::class, 'showConvenio'])->name('convenio.show');
 Route::get('/documento/{uuid}', [App\Http\Controllers\pdf\PdfController::class, 'showDocumento'])->name('documento.show');
+Route::get('/documento/institucional/{uuid}', [App\Http\Controllers\pdf\PdfController::class, 'showDocumentoInstitucional'])->name('documento.institucional.show');
 Route::get('/gcf/{uuid}', [App\Http\Controllers\pdf\PdfController::class, 'showGastosCometidoFuncional'])->name('gastoscometidofuncional.show');
 Route::get('/resolucion-cometido/{uuid}', [App\Http\Controllers\pdf\PdfController::class, 'showResolucionCometidoFuncional'])->name('resolucioncometidofuncional.show');
 Route::get('/informe/{uuid}', [App\Http\Controllers\pdf\PdfController::class, 'showInformeCometido'])->name('informecometido.show');
@@ -53,25 +54,25 @@ Route::get('/email/test/{id}', function ($id) {
 
         case 4:
             $data =
-            EstadoInformeCometido::where('status', 1)->whereNotNull('observacion')->first();
+                EstadoInformeCometido::where('status', 1)->whereNotNull('observacion')->first();
             return new \App\Mail\InformeCometidoStatus($data);
             break;
 
         case 5:
             $data =
-            ProcesoRendicionGasto::orderBy('id', 'DESC')->first();
+                ProcesoRendicionGasto::orderBy('id', 'DESC')->first();
             return new \App\Mail\ProcesoRendicionGastoCreated($data);
             break;
 
         case 6:
             $data =
-            EstadoProcesoRendicionGasto::whereIn('status', [6])->orderBy('id', 'DESC')->first();
+                EstadoProcesoRendicionGasto::whereIn('status', [6])->orderBy('id', 'DESC')->first();
             return new \App\Mail\ProcesoRendicionGastoStatus($data);
             break;
 
         case 7:
             $data =
-            EstadoProcesoRendicionGasto::whereIn('status', [2])->orderBy('id', 'DESC')->first();
+                EstadoProcesoRendicionGasto::whereIn('status', [2])->orderBy('id', 'DESC')->first();
             return new \App\Mail\ProcesoRendicionGastoStatus($data);
             break;
     }
@@ -215,5 +216,50 @@ Route::get('/test/check-plazo-informe', function () {
         return "STATUS_INGRESO_TARDIO";
     }
 });
+
+Route::get('/test/jefes-directos', function () {
+    try {
+        $users = User::whereHas('contratos.grupo', function ($q) {
+            $q->where('establecimiento_id', 1)
+                ->whereHas('firmantes', function ($query) {
+                    $query->where('role_id', 3);
+                });
+        })->get();
+
+        $data = [];
+        foreach ($users as $user) {
+            $grupo = $user->lastContrato() ? $user->lastContrato()->grupo : null;
+            $data[] = [
+                'rut'   => $user->rut,
+                'jd'    => $grupo ? $grupo->jefaturaDirecta() : null
+            ];
+        }
+
+        $table = '<table border="1" style="width:100%; border-collapse:collapse;">
+                    <thead>
+                        <tr>
+                            <th>RUT</th>
+                            <th>Jefatura Directa</th>
+                        </tr>
+                    </thead>
+                    <tbody>';
+
+        foreach ($data as $row) {
+            $table .= '<tr>
+                        <td>' . htmlspecialchars($row['rut']) . '</td>
+                        <td>' . htmlspecialchars($row['jd']) . '</td>
+                       </tr>';
+        }
+
+        $table .= '</tbody>
+                  </table>';
+
+        return $table;
+    } catch (\Exception $error) {
+        Log::info($error->getMessage());
+        return $error->getMessage();
+    }
+});
+
 
 require __DIR__ . '/auth.php';
