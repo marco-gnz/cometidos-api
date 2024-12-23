@@ -89,7 +89,7 @@ class SolicitudAdminController extends Controller
                     break;
             }
 
-            $query->searchInput($request->input)
+            $query->searchInput($request->input, $request->in)
                 ->firmantesPendiente($request->firmantes_id)
                 ->periodoSolicitud($request->periodo_cometido)
                 ->periodoIngreso($request->periodo_ingreso)

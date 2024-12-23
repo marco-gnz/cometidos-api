@@ -1115,45 +1115,68 @@ class Solicitud extends Model
         return $menu;
     }
 
-    public function scopeSearchInput($query, $params)
+    public function scopeSearchInput($query, $params, $in = null)
     {
         if ($params)
-            return $query->where('codigo', 'like', '%' . $params . '%')
-                ->orWhere('actividad_realizada', 'like', '%' . $params . '%')
-                ->orWhere('vistos', 'like', '%' . $params . '%')
-                ->orWhere('observacion_gastos', 'like', '%' . $params . '%')
-                ->orWhere('observacion', 'like', '%' . $params . '%')
-                ->orWhere(function ($query) use ($params) {
-                    $query->whereHas('funcionario', function ($query) use ($params) {
-                        $query->where('rut_completo', 'like', '%' . $params . '%')
-                            ->orWhere('rut', 'like', '%' . $params . '%')
-                            ->orWhere('nombres', 'like', '%' . $params . '%')
-                            ->orWhere('apellidos', 'like', '%' . $params . '%')
-                            ->orWhere('nombre_completo', 'like', '%' . $params . '%')
-                            ->orWhere('email', 'like', '%' . $params . '%');
+            if ($in === '0') {
+                return $query->where('codigo', 'like', '%' . $params . '%')
+                    ->orWhere('actividad_realizada', 'like', '%' . $params . '%')
+                    ->orWhere('vistos', 'like', '%' . $params . '%')
+                    ->orWhere('observacion_gastos', 'like', '%' . $params . '%')
+                    ->orWhere('observacion', 'like', '%' . $params . '%')
+                    ->orWhere(function ($query) use ($params) {
+                        $query->whereHas('funcionario', function ($query) use ($params) {
+                            $query->where('rut_completo', 'like', '%' . $params . '%')
+                                ->orWhere('rut', 'like', '%' . $params . '%')
+                                ->orWhere('nombres', 'like', '%' . $params . '%')
+                                ->orWhere('apellidos', 'like', '%' . $params . '%')
+                                ->orWhere('nombre_completo', 'like', '%' . $params . '%')
+                                ->orWhere('email', 'like', '%' . $params . '%');
+                        });
                     });
-                })->orWhere(function ($query) use ($params) {
-                    $query->whereHas('firmantes.funcionario', function ($query) use ($params) {
-                        $query->where('rut_completo', 'like', '%' . $params . '%')
-                            ->orWhere('rut', 'like', '%' . $params . '%')
-                            ->orWhere('nombres', 'like', '%' . $params . '%')
-                            ->orWhere('apellidos', 'like', '%' . $params . '%')
-                            ->orWhere('nombre_completo', 'like', '%' . $params . '%')
-                            ->orWhere('email', 'like', '%' . $params . '%');
+            } else {
+                return $query->where('codigo', 'like', '%' . $params . '%')
+                    ->orWhere('actividad_realizada', 'like', '%' . $params . '%')
+                    ->orWhere('vistos', 'like', '%' . $params . '%')
+                    ->orWhere('observacion_gastos', 'like', '%' . $params . '%')
+                    ->orWhere('observacion', 'like', '%' . $params . '%')
+                    ->orWhere(function ($query) use ($params) {
+                        $query->whereHas('funcionario', function ($query) use ($params) {
+                            $query->where('rut_completo', 'like', '%' . $params . '%')
+                                ->orWhere('rut', 'like', '%' . $params . '%')
+                                ->orWhere('nombres', 'like', '%' . $params . '%')
+                                ->orWhere('apellidos', 'like', '%' . $params . '%')
+                                ->orWhere('nombre_completo', 'like', '%' . $params . '%')
+                                ->orWhere('email', 'like', '%' . $params . '%');
+                        });
+                    })->orWhere(function ($query) use ($params) {
+                        $query->whereHas('firmantes.funcionario', function ($query) use ($params) {
+                            $query->where('rut_completo', 'like', '%' . $params . '%')
+                                ->orWhere('rut', 'like', '%' . $params . '%')
+                                ->orWhere('nombres', 'like', '%' . $params . '%')
+                                ->orWhere('apellidos', 'like', '%' . $params . '%')
+                                ->orWhere('nombre_completo', 'like', '%' . $params . '%')
+                                ->orWhere('email', 'like', '%' . $params . '%');
+                        });
+                    })->orWhere(function ($query) use ($params) {
+                        $query->whereHas('estados', function ($query) use ($params) {
+                            $query->where('observacion', 'like', '%' . $params . '%');
+                        });
+                    })->orWhere(function ($query) use ($params) {
+                        $query->whereHas('convenio', function ($q) use ($params) {
+                            $q->where('codigo', 'like', '%' . $params . '%')
+                                ->orWhere('n_resolucion', 'like', '%' . $params . '%')
+                                ->orWhere('email', 'like', '%' . $params . '%')
+                                ->orWhere('tipo_contrato', 'like', '%' . $params . '%')
+                                ->orWhere('observacion', 'like', '%' . $params . '%');
+                        });
+                    })->orWhere(function ($query) use ($params) {
+                        $query->whereHas('informes', function ($q) use ($params) {
+                            $q->where('codigo', 'like', '%' . $params . '%')
+                                ->orWhere('actividad_realizada', 'like', '%' . $params . '%');
+                        });
                     });
-                })->orWhere(function ($query) use ($params) {
-                    $query->whereHas('estados', function ($query) use ($params) {
-                        $query->where('observacion', 'like', '%' . $params . '%');
-                    });
-                })->orWhere(function ($query) use ($params) {
-                    $query->whereHas('convenio', function ($q) use ($params) {
-                        $q->where('codigo', 'like', '%' . $params . '%')
-                            ->orWhere('n_resolucion', 'like', '%' . $params . '%')
-                            ->orWhere('email', 'like', '%' . $params . '%')
-                            ->orWhere('tipo_contrato', 'like', '%' . $params . '%')
-                            ->orWhere('observacion', 'like', '%' . $params . '%');
-                    });
-                });
+            }
     }
 
     public function scopeIsReasignada($query, $params)
