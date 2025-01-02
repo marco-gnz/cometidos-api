@@ -25,7 +25,7 @@ class ListSolicitudAdminResource extends JsonResource
             'fijada'                    => $this->isPinnedByUser(auth()->user()),
             'fecha_inicio'              => $this->fecha_inicio ? Carbon::parse($this->fecha_inicio)->format('d-m-y') : null,
             'fecha_termino'             => $this->fecha_termino ? Carbon::parse($this->fecha_termino)->format('d-m-y') : null,
-            'funcionario'               => $this->funcionario ? $this->funcionario->abreNombres() : null,
+            'funcionario'               => $this->funcionario ? $this->funcionario->abreNombresList() : null,
             'departamento'              => $this->departamento ? substr($this->departamento->nombre, 0, 15) : null,
             'departamento_complete'     => $this->departamento ? $this->departamento->nombre : null,
             'establecimiento'           => $this->establecimiento ? $this->establecimiento->sigla : null,

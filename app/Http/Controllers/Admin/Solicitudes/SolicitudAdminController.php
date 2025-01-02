@@ -119,7 +119,20 @@ class SolicitudAdminController extends Controller
                 ->calidad($request->calidad_id)
                 ->convenio($request->is_convenio);
 
-            $solicitudes = $query->orderByDesc('fecha_inicio')->paginate(50);
+            $sort           = $request->sort; //column.asc || column.desc
+            $parts          = explode('.', $sort);
+            $column         = $parts[0];
+            $direction      = $parts[1];
+
+            if ($sort === 'apellidos.asc' || $sort === 'apellidos.desc') {
+                $solicitudes = $query->select('solicituds.*')
+                    ->join('users', 'users.id', '=', 'solicituds.user_id')
+                    ->orderBy('users.apellidos', $direction);
+            } else {
+                $solicitudes    = $query->orderBy($column, $direction);
+            }
+
+            $solicitudes = $solicitudes->paginate(50);
 
             return response()->json([
                 'status' => 'success',
@@ -387,7 +400,7 @@ class SolicitudAdminController extends Controller
                     }
                     $solicitud = $solicitud->fresh();
 
-                    if (count($solicitud->firmantes) === 1){
+                    if (count($solicitud->firmantes) === 1) {
                         $firmantes_solicitud = $this->addFirmantesGrupo($solicitud);
                         $solicitud->addFirmantes($firmantes_solicitud);
                     }

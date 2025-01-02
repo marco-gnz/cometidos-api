@@ -297,6 +297,13 @@ class User extends Authenticatable
         return "$nombres. $apellidos.";
     }
 
+    public function abreNombresList()
+    {
+        $nombres    = mb_substr($this->nombres, 0, 3);
+        $apellidos  = mb_substr($this->apellidos, 0, 17);
+        return "$apellidos $nombres.";
+    }
+
     public function totalViaticosProcesados()
     {
         return $this->solicitudes()->where('status', Solicitud::STATUS_PROCESADO)->count();

@@ -1118,7 +1118,7 @@ class Solicitud extends Model
     public function scopeSearchInput($query, $params, $in = null)
     {
         if ($params)
-            if ($in === '0') {
+            if ($in === 'solicitud') {
                 return $query->where('codigo', 'like', '%' . $params . '%')
                     ->orWhere('actividad_realizada', 'like', '%' . $params . '%')
                     ->orWhere('vistos', 'like', '%' . $params . '%')
