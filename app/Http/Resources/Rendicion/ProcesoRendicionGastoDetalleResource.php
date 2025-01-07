@@ -37,6 +37,8 @@ class ProcesoRendicionGastoDetalleResource extends JsonResource
             'n_folio'                                       => $this->n_folio,
             'dias_habiles_pago'                             => $this->dias_habiles_pago,
             'dias_habiles_pago_message'                     => $this->pagoHabilesMessage(),
+            'solicitud_derecho_pago_value'                  => $this->solicitud->derecho_pago ? true : false,
+            'solicitud_derecho_pago'                        => $this->solicitud->derecho_pago ? "Si" : "No",
             'rut_funcionario'                               => optional($this->solicitud->funcionario)->rut_completo,
             'nombres_funcionario'                           => optional($this->solicitud->funcionario)->nombre_completo,
             'correo_funcionario'                            => optional($this->solicitud->funcionario)->email,
@@ -80,7 +82,8 @@ class ProcesoRendicionGastoDetalleResource extends JsonResource
             'estados'                                       => $this->estados ? StatusProcesoRendicionGastoResource::collection($this->estados) : null,
             'documentos_r'                                  => $this->exportarDocumentos(),
             'documentos_s'                                  => $this->solicitud->exportarDocumentos(),
-            'cuenta_bancaria'                               => $this->cuentaBancaria ? CuentaBancariaResource::make($this->cuentaBancaria) : null
+            'cuenta_bancaria'                               => $this->cuentaBancaria ? CuentaBancariaResource::make($this->cuentaBancaria) : null,
+            'msg_firma'                                     => $this->solicitud->status === Solicitud::STATUS_EN_PROCESO ? 'Esta rendición de gastos se firmará una vez que el cometido complete el proceso de firma y sea procesado.' : null
         ];
     }
 }

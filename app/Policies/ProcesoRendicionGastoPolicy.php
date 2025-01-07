@@ -95,8 +95,16 @@ class ProcesoRendicionGastoPolicy
 
     public function anular(User $user, ProcesoRendicionGasto $procesoRendicionGasto)
     {
-        if ($procesoRendicionGasto->solicitud->status === Solicitud::STATUS_ANULADO ||
-        $procesoRendicionGasto->status === EstadoProcesoRendicionGasto::STATUS_ANULADO) {
+        if ($procesoRendicionGasto->solicitud->status === Solicitud::STATUS_ANULADO || $procesoRendicionGasto->status === EstadoProcesoRendicionGasto::STATUS_ANULADO) {
+            return false;
+        }
+
+        $status_ok = [
+            EstadoProcesoRendicionGasto::STATUS_APROBADO_N,
+            EstadoProcesoRendicionGasto::STATUS_APROBADO_S,
+        ];
+
+        if ($procesoRendicionGasto->user_id_by === $user->id && in_array($procesoRendicionGasto->status, $status_ok)) {
             return false;
         }
 

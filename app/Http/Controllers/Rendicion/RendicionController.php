@@ -25,10 +25,11 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 use App\Traits\FirmaDisponibleTrait;
+use App\Traits\StatusSolicitudTrait;
 
 class RendicionController extends Controller
 {
-    use FirmaDisponibleTrait;
+    use FirmaDisponibleTrait, StatusSolicitudTrait;
 
     public function __construct()
     {
@@ -115,12 +116,14 @@ class RendicionController extends Controller
     {
         try {
             $rendicion = ProcesoRendicionGasto::where('uuid', $uuid)->firstOrFail();
+            $navStatus  = $this->navStatusRendicion($rendicion);
             return response()->json(
                 array(
                     'status'        => 'success',
                     'title'         => null,
                     'message'       => null,
-                    'data'          => ProcesoRendicionGastoDetalleResource::make($rendicion)
+                    'data'          => ProcesoRendicionGastoDetalleResource::make($rendicion),
+                    'nav'           => $navStatus
                 )
             );
         } catch (\Exception $error) {
