@@ -175,7 +175,8 @@ class Convenio extends Model
         }
         setlocale(LC_ALL, "es_ES");
         Carbon::setLocale('es');
-        $anio = $anio ? $anio : Carbon::now()->format('Y');
+        $anio_last = self::yearToFirstSelected();
+        $anio = $anio === null ? ($anio_last ? $anio_last : Carbon::now()->format('Y')) : $anio;
         $solicitudes = $this->solicitudes()
             ->whereYear('fecha_inicio', $anio)
             ->orderBy('fecha_inicio', 'ASC')
