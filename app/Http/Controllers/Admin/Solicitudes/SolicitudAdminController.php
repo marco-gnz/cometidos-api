@@ -783,7 +783,7 @@ class SolicitudAdminController extends Controller
                 $escala = $escala->where('grado_id', $grado_solicitud);
             }
         }
-        return $escala->first();
+        return $escala->orderBy('id', 'DESC')->first();
     }
 
     private function buscarEscalas($fecha_inicio, $fecha_termino, $solicitud)
@@ -801,6 +801,7 @@ class SolicitudAdminController extends Controller
             });
         })
             ->with('grado')
+            ->orderBy('id', 'DESC')
             ->get()
             ->sortBy('grado.nombre');
     }
