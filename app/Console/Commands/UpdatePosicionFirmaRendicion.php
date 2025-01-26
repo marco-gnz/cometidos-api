@@ -41,11 +41,11 @@ class UpdatePosicionFirmaRendicion extends Command
     {
         $updatedCount = 0;
         try {
-            $procesos = ProcesoRendicionGasto::whereNotIn('status', [0, 1, 7])->get();
+            $procesos = ProcesoRendicionGasto::all();
 
             foreach ($procesos as $proceso) {
                 $last_status = $proceso->estados()->orderBy('id', 'DESC')->first();
-                $proceso->update(['posicion_firma_actual' => $last_status->posicion_firma]);
+                $proceso->update(['fecha_last_firma' => $last_status->fecha_by_user]);
                 $updatedCount++;
             }
 

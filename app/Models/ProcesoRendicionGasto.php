@@ -21,6 +21,7 @@ class ProcesoRendicionGasto extends Model
         'n_folio',
         'dias_habiles_pago',
         'fecha_pago',
+        'fecha_last_firma',
         'status',
         'posicion_firma_actual',
         'posicion_firma_ok',
@@ -44,6 +45,7 @@ class ProcesoRendicionGasto extends Model
             $proceso->uuid                    = Str::uuid();
             $proceso->user_id_by              = Auth::user()->id;
             $proceso->fecha_by_user           = now();
+            $proceso->fecha_last_firma        = now();
         });
 
         static::deleting(function ($proceso) {
@@ -458,6 +460,6 @@ class ProcesoRendicionGasto extends Model
     public function scopeEstadoRendicion($query, $params)
     {
         if ($params)
-            return $query->whereIn('status', $params);
+            return $query->whereIn('proceso_rendicion_gastos.status', $params);
     }
 }

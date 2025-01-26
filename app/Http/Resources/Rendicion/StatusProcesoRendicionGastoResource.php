@@ -23,7 +23,7 @@ class StatusProcesoRendicionGastoResource extends JsonResource
             'estado_type'               => $this->procesoRendicionGasto->typeStatus($this->status),
             'observacion'               => $this->observacion ? $this->observacion : null,
             'user_by'                   => $this->userBy ? $this->userBy->abreNombres() : null,
-            'created_at'                => $this->fecha_by_user ? Carbon::parse($this->fecha_by_user)->format('d-m-Y H:i') : null,
+            'created_at'                => $this->fecha_by_user ? Carbon::parse($this->fecha_by_user)->format('d-m-Y H:i:s') : null,
             'perfil'                    => $this->perfil ? "{$this->perfil->name} {$is_subrogante}"  : null,
         ];
     }

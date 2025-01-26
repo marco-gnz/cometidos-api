@@ -33,7 +33,7 @@ class AusentismoController extends Controller
             $count_solicitudes_anterior = Solicitud::where($campo_search, '<', $fecha_inicio)
                 ->whereHas('firmantes', function ($q) use ($firmante, $solicitudes_pendientes, $subrogante, $fecha_inicio, $fecha_termino) {
                     $q->where('user_id', $firmante->id)
-                        ->where('status', true)
+                        /* ->where('status', true) */
                         ->where('is_executed', false)
                         ->where(function ($q) use ($firmante, $subrogante, $fecha_inicio, $fecha_termino) {
                             $q->whereDoesntHave('funcionario.ausentismos', function ($q) use ($firmante, $subrogante, $fecha_inicio, $fecha_termino) {
@@ -55,7 +55,7 @@ class AusentismoController extends Controller
             $count_solicitudes_rango = Solicitud::whereBetween($campo_search, [$fecha_inicio, $fecha_termino])
                 ->whereHas('firmantes', function ($q) use ($firmante, $solicitudes_pendientes, $subrogante, $fecha_inicio, $fecha_termino) {
                     $q->where('user_id', $firmante->id)
-                        ->where('status', true)
+                        /* ->where('status', true) */
                         ->whereIn('is_executed', [true, false])
                         ->where(function ($q) use ($firmante, $subrogante, $fecha_inicio, $fecha_termino) {
                             $q->whereDoesntHave('funcionario.ausentismos', function ($q) use ($firmante, $subrogante, $fecha_inicio, $fecha_termino) {
@@ -69,15 +69,16 @@ class AusentismoController extends Controller
                     if ($solicitudes_pendientes) {
                         $q->whereRaw('solicituds.posicion_firma_ok = solicitud_firmantes.posicion_firma');
                     }
-                })->whereDoesntHave('reasignaciones', function ($q) use ($subrogante) {
-                    $q->where('user_subrogante_id', $subrogante->id);
+                })->whereDoesntHave('reasignaciones', function ($q) use ($subrogante, $firmante) {
+                    $q->where('user_subrogante_id', $subrogante->id)
+                    ->where('user_ausente_id', $firmante->id);
                 })
                 ->get();
 
             $count_solicitudes_posterior = Solicitud::where($campo_search, '>', $fecha_termino)
                 ->whereHas('firmantes', function ($q) use ($firmante, $solicitudes_pendientes, $subrogante, $fecha_inicio, $fecha_termino) {
                     $q->where('user_id', $firmante->id)
-                        ->where('status', true)
+                        /* ->where('status', true) */
                         ->where('is_executed', false)
                         ->where(function ($q) use ($firmante, $subrogante, $fecha_inicio, $fecha_termino) {
                             $q->whereDoesntHave('funcionario.ausentismos', function ($q) use ($firmante, $subrogante, $fecha_inicio, $fecha_termino) {

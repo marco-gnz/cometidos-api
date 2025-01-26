@@ -27,7 +27,7 @@ class ProcesoRendicionGastoResource extends JsonResource
             'solicitud_codigo'                  => $this->solicitud ? $this->solicitud->codigo : null,
             'solicitud_fecha_inicio'            => $this->solicitud ? Carbon::parse($this->solicitud->fecha_inicio)->format('d-m-y') : null,
             'solicitud_fecha_termino'           => $this->solicitud ? Carbon::parse($this->solicitud->fecha_termino)->format('d-m-y') : null,
-            'funcionario'                       => $this->solicitud ? $this->solicitud->funcionario->abreNombres() : null,
+            'funcionario'                       => $this->solicitud ? $this->solicitud->funcionario->abreNombresList() : null,
             'establecimiento'                   => $this->solicitud ? $this->solicitud->establecimiento->sigla : null,
             'lugares'                           => optional($this->solicitud->lugares)->pluck('nombre')->implode(', '),
             'mount_rendiciones_solicitadas'     => $this->sumRendicionesSolicitadas(),
@@ -43,7 +43,8 @@ class ProcesoRendicionGastoResource extends JsonResource
             'authorized_to_anular'              => $this->authorizedToAnular(),
             'authorized_to_aprobar'             => $this->authorizedToAprobar(),
             'authorized_to_rechazar'            => $this->authorizedToRechazar(),
-            'is_rendiciones_modificadas'        => $this->isRendicionesModificadas()
+            'is_rendiciones_modificadas'        => $this->isRendicionesModificadas(),
+            'created_at'                        => Carbon::parse($this->created_at)->format('d-m-Y H:i')
         ];
     }
 }

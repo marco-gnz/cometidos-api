@@ -61,7 +61,7 @@ class RendicionGastoPolicy
             return false;
         }
 
-        $firma = $this->isFirmaDisponibleActionPolicy($rendicionGasto->procesoRendicionGasto->solicitud, 'rendicion.actividad.validar');
+        $firma = $this->isFirmaDisponibleProcesoRendicionActionPolicy($rendicionGasto->procesoRendicionGasto, 'rendicion.actividad.validar');
         if ($rendicionGasto->rinde_gasto && $firma->is_firma) {
             return true;
         }
@@ -75,7 +75,7 @@ class RendicionGastoPolicy
             return false;
         }
 
-        $firma = $this->isFirmaDisponibleActionPolicy($rendicionGasto->procesoRendicionGasto->solicitud, 'rendicion.actividad.validar');
+        $firma = $this->isFirmaDisponibleProcesoRendicionActionPolicy($rendicionGasto->procesoRendicionGasto, 'rendicion.actividad.validar');
 
         $statusProcesoRendicionAll = [
             EstadoProcesoRendicionGasto::STATUS_APROBADO_JD,
@@ -101,7 +101,7 @@ class RendicionGastoPolicy
             return false;
         }
 
-        $firma = $this->isFirmaDisponibleActionPolicy($rendicionGasto->procesoRendicionGasto->solicitud, 'rendicion.actividad.validar');
+        $firma = $this->isFirmaDisponibleProcesoRendicionActionPolicy($rendicionGasto->procesoRendicionGasto, 'rendicion.actividad.validar');
         $statusProcesoRendicionAll = [
             EstadoProcesoRendicionGasto::STATUS_APROBADO_JD,
             EstadoProcesoRendicionGasto::STATUS_EN_PROCESO,
@@ -120,7 +120,7 @@ class RendicionGastoPolicy
             return false;
         }
 
-        $firma = $this->isFirmaDisponibleActionPolicy($rendicionGasto->procesoRendicionGasto->solicitud, 'rendicion.actividad.validar');
+        $firma = $this->isFirmaDisponibleProcesoRendicionActionPolicy($rendicionGasto->procesoRendicionGasto, 'rendicion.actividad.validar');
         $statusProcesoRendicionAll = [
             EstadoProcesoRendicionGasto::STATUS_APROBADO_JD,
             EstadoProcesoRendicionGasto::STATUS_EN_PROCESO,
@@ -139,7 +139,7 @@ class RendicionGastoPolicy
             return false;
         }
 
-        $firma = $this->isFirmaDisponibleActionPolicy($rendicionGasto->procesoRendicionGasto->solicitud, 'rendicion.actividad.resetear');
+        $firma = $this->isFirmaDisponibleProcesoRendicionActionPolicy($rendicionGasto->procesoRendicionGasto, 'rendicion.actividad.resetear');
         $statusProcesoRendicionAll = [
             EstadoProcesoRendicionGasto::STATUS_APROBADO_JD,
             EstadoProcesoRendicionGasto::STATUS_EN_PROCESO,

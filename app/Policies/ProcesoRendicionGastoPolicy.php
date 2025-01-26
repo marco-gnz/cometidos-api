@@ -14,6 +14,10 @@ class ProcesoRendicionGastoPolicy
 {
     use HandlesAuthorization, FirmaDisponibleTrait;
 
+    /*  public function before($user, $ability)
+    {
+        return true;
+    } */
     /**
      * Determine whether the user can view any models.
      *
@@ -86,7 +90,7 @@ class ProcesoRendicionGastoPolicy
         if ($procesoRendicionGasto->solicitud->status !== Solicitud::STATUS_PROCESADO) {
             return false;
         }
-        $firma = $this->isFirmaDisponibleActionPolicy($procesoRendicionGasto->solicitud, 'rendicion.dias-pago');
+        $firma = $this->isFirmaDisponibleProcesoRendicionActionPolicy($procesoRendicionGasto, 'rendicion.dias-pago');
         if ($firma->is_firma && $procesoRendicionGasto->status === EstadoProcesoRendicionGasto::STATUS_APROBADO_N || $procesoRendicionGasto->status === EstadoProcesoRendicionGasto::STATUS_APROBADO_S) {
             return true;
         }
@@ -108,7 +112,7 @@ class ProcesoRendicionGastoPolicy
             return false;
         }
 
-        $firma = $this->isFirmaDisponibleActionPolicy($procesoRendicionGasto->solicitud, 'rendicion.firma.anular');
+        $firma = $this->isFirmaDisponibleProcesoRendicionActionPolicy($procesoRendicionGasto, 'rendicion.firma.anular');
         if ($firma->is_firma || $procesoRendicionGasto->user_id_by === $user->id) {
             return true;
         }
@@ -125,12 +129,14 @@ class ProcesoRendicionGastoPolicy
         }
 
         $status_ok = [
+            EstadoProcesoRendicionGasto::STATUS_INGRESADA,
+            EstadoProcesoRendicionGasto::STATUS_MODIFICADA,
             EstadoProcesoRendicionGasto::STATUS_APROBADO_JD,
             EstadoProcesoRendicionGasto::STATUS_EN_PROCESO,
             EstadoProcesoRendicionGasto::STATUS_VERIFICADO,
         ];
 
-        $firma = $this->isFirmaDisponibleActionPolicy($procesoRendicionGasto->solicitud, 'rendicion.firma.rechazar');
+        $firma = $this->obtenerFirmaDisponibleProcesoRendicion($procesoRendicionGasto, 'rendicion.firma.rechazar');
         if ($firma->is_firma && in_array($procesoRendicionGasto->status, $status_ok)) {
             return true;
         }
@@ -142,17 +148,26 @@ class ProcesoRendicionGastoPolicy
         if ($procesoRendicionGasto->solicitud->status !== Solicitud::STATUS_PROCESADO) {
             return false;
         }
+
+        $status_rendicion = [
+            EstadoProcesoRendicionGasto::STATUS_APROBADO_JD,
+            EstadoProcesoRendicionGasto::STATUS_EN_PROCESO,
+            EstadoProcesoRendicionGasto::STATUS_ANULADO,
+            EstadoProcesoRendicionGasto::STATUS_APROBADO_N,
+            EstadoProcesoRendicionGasto::STATUS_APROBADO_S,
+        ];
         $status = $procesoRendicionGasto->status;
 
-        $firma  = $this->isFirmaDisponibleActionPolicy($procesoRendicionGasto->solicitud, 'rendicion.firma.validar');
-        if (($firma->is_firma) && ($firma->firma->role_id === 3 && ($status === EstadoProcesoRendicionGasto::STATUS_INGRESADA || $status === EstadoProcesoRendicionGasto::STATUS_MODIFICADA))) {
-            return true;
+        if (in_array($status, $status_rendicion)) {
+            return false;
         }
 
-        if (($firma->is_firma) && ($firma->firma->role_id === 7 && $status === EstadoProcesoRendicionGasto::STATUS_VERIFICADO)) {
-            return true;
+        $firma  = $this->obtenerFirmaDisponibleProcesoRendicion($procesoRendicionGasto, 'rendicion.firma.validar');
+        if (!$firma->is_firma) {
+            return false;
         }
-        return false;
+
+        return true;
     }
 
     /**

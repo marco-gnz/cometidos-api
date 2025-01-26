@@ -45,6 +45,7 @@ class ProcesoRendicionGastoDetalleResource extends JsonResource
             'establecimiento'                               => optional($this->solicitud->establecimiento)->nombre,
             'departamento'                                  => optional($this->solicitud->departamento)->nombre,
             'subdepartamento'                               => optional($this->solicitud->subdepartamento)->nombre,
+            'observacion_solicitud'                         => $this->solicitud->observacion ? $this->solicitud->observacion : null,
             'dentro_pais'                                   => $this->solicitud->dentro_pais ?? false,
             'utiliza_transporte'                            => $this->solicitud->utiliza_transporte ?? false,
             'lugares'                                       => optional($this->solicitud->lugares)->pluck('nombre')->implode(', '),

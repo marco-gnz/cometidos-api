@@ -20,6 +20,7 @@ class CreateProcesoRendicionGastosTable extends Migration
             $table->integer('n_rendicion')->default(0);
             $table->integer('dias_habiles_pago')->nullable();
             $table->date('fecha_pago')->nullable();
+            $table->dateTime('fecha_last_firma')->nullable();
             $table->integer('posicion_firma_actual')->default(0);
             $table->integer('posicion_firma_ok')->default(1);
             $table->unsignedSmallInteger('status')->default(0);

@@ -82,7 +82,57 @@ class ProcesoRendicionController extends Controller
                 ->concepto($request->conceptos_id)
                 ->estadoRendicion($request->estados_rendicion_id);
 
-            $proceso_rendiciones = $query->orderBy('fecha_by_user', 'DESC')->paginate(50);
+            $sort           = $request->sort; //column.asc || column.desc
+            $parts          = explode('.', $sort);
+            $column         = $parts[0];
+            $direction      = $parts[1];
+
+            switch ($sort) {
+                case 'fecha_inicio.asc':
+                case 'fecha_inicio.desc':
+                    $proceso_rendiciones = $query->select('proceso_rendicion_gastos.*')
+                        ->join('solicituds', 'solicituds.id', '=', 'proceso_rendicion_gastos.solicitud_id')
+                        ->orderBy('solicituds.fecha_inicio', $direction);
+                    break;
+
+                case 'apellidos.asc':
+                case 'apellidos.desc':
+                    $proceso_rendiciones = $query->select('proceso_rendicion_gastos.*')
+                        ->join('solicituds', 'solicituds.id', '=', 'proceso_rendicion_gastos.solicitud_id')
+                        ->join('users', 'users.id', '=', 'solicituds.user_id')
+                        ->orderBy('users.apellidos', $direction);
+                    break;
+
+                case 'monto_solicitado.asc':
+                case 'monto_solicitado.desc':
+                    $proceso_rendiciones = $query->select('proceso_rendicion_gastos.*')
+                        ->leftJoin('rendicion_gastos', function ($join) {
+                            $join->on('rendicion_gastos.proceso_rendicion_gasto_id', '=', 'proceso_rendicion_gastos.id')
+                                ->where('rendicion_gastos.rinde_gasto', true);
+                        })
+                        ->selectRaw('COALESCE(SUM(rendicion_gastos.mount), 0) as total_monto')
+                        ->groupBy('proceso_rendicion_gastos.id')
+                        ->orderBy('total_monto', $direction);
+                    break;
+
+                case 'monto_aprobado.asc':
+                case 'monto_aprobado.desc':
+                    $proceso_rendiciones = $query->select('proceso_rendicion_gastos.*')
+                        ->leftJoin('rendicion_gastos', function ($join) {
+                            $join->on('rendicion_gastos.proceso_rendicion_gasto_id', '=', 'proceso_rendicion_gastos.id')
+                                ->where('rendicion_gastos.rinde_gasto', true)
+                                ->where('rendicion_gastos.last_status', 1);
+                        })
+                        ->selectRaw('COALESCE(SUM(rendicion_gastos.mount_real), 0) as total_monto_aprobado')
+                        ->groupBy('proceso_rendicion_gastos.id')
+                        ->orderBy('total_monto_aprobado', $direction);
+                    break;
+
+                default:
+                    $proceso_rendiciones = $query->orderBy($column, $direction);
+            }
+
+            $proceso_rendiciones = $proceso_rendiciones->paginate(50);
 
             return response()->json(
                 array(
@@ -127,18 +177,19 @@ class ProcesoRendicionController extends Controller
                         ->whereHas('funcionario.ausentismos', function ($q) use ($auth) {
                             $q->whereHas('subrogantes', function ($q) use ($auth) {
                                 $q->where('users.id', $auth->id);
-                            })->whereRaw("DATE(solicituds.fecha_by_user) >= ausentismos.fecha_inicio")
-                                ->whereRaw("DATE(solicituds.fecha_by_user) <= ausentismos.fecha_termino");
+                            })->whereRaw("DATE(proceso_rendicion_gastos.fecha_last_firma) >= ausentismos.fecha_inicio")
+                                ->whereRaw("DATE(proceso_rendicion_gastos.fecha_last_firma) <= ausentismos.fecha_termino");
                         });
                 })->orWhere(function ($q) use ($auth) {
                     $q->whereHas('solicitud.firmantes', function ($q) use ($auth) {
                         $q->whereIn('is_executed', [true, false])
                             ->whereRaw('proceso_rendicion_gastos.posicion_firma_ok = solicitud_firmantes.posicion_firma')
                             ->whereHas('funcionario.reasignacionAusencias', function ($q) use ($auth) {
-                                $q->where('user_subrogante_id', $auth->id);
+                                $q->where('user_subrogante_id', $auth->id)
+                                    ->whereHas('solicitudes', function ($query) {
+                                        $query->whereRaw('solicituds.id = solicitud_firmantes.solicitud_id');
+                                    });
                             });
-                    })->whereHas('solicitud.reasignaciones', function ($q) use ($auth) {
-                        $q->where('user_subrogante_id', $auth->id);
                     });
                 });
             });
@@ -166,18 +217,21 @@ class ProcesoRendicionController extends Controller
                         ->whereHas('funcionario.ausentismos', function ($q) use ($auth) {
                             $q->whereHas('subrogantes', function ($q) use ($auth) {
                                 $q->where('users.id', $auth->id);
-                            })->whereRaw("DATE(solicituds.fecha_by_user) >= ausentismos.fecha_inicio")
-                                ->whereRaw("DATE(solicituds.fecha_by_user) <= ausentismos.fecha_termino");
+                            })->whereRaw("DATE(proceso_rendicion_gastos.fecha_last_firma) >= ausentismos.fecha_inicio")
+                                ->whereRaw("DATE(proceso_rendicion_gastos.fecha_last_firma) <= ausentismos.fecha_termino");
                         });
                 })->orWhere(function ($q) use ($auth) {
                     $q->whereHas('solicitud.firmantes', function ($q) use ($auth) {
                         $q->whereIn('is_executed', [true, false])
                             ->whereHas('funcionario.reasignacionAusencias', function ($q) use ($auth) {
-                                $q->where('user_subrogante_id', $auth->id);
+                                $q->where('user_subrogante_id', $auth->id)
+                                    ->whereHas('solicitudes', function ($query) {
+                                        $query->whereRaw('solicituds.id = solicitud_firmantes.solicitud_id');
+                                    });
                             });
-                    })->whereHas('solicitud.reasignaciones', function ($q) use ($auth) {
-                        $q->where('user_subrogante_id', $auth->id);
                     });
+                })->orWhereHas('estados', function ($q) use ($auth) {
+                    $q->where('user_id_by', $auth->id);
                 });
             });
 
@@ -202,8 +256,8 @@ class ProcesoRendicionController extends Controller
                         ->whereHas('funcionario.ausentismos', function ($q) use ($auth) {
                             $q->whereHas('subrogantes', function ($q) use ($auth) {
                                 $q->where('users.id', $auth->id);
-                            })->whereRaw("DATE(solicituds.fecha_by_user) >= ausentismos.fecha_inicio")
-                                ->whereRaw("DATE(solicituds.fecha_by_user) <= ausentismos.fecha_termino");
+                            })->whereRaw("DATE(proceso_rendicion_gastos.fecha_last_firma) >= ausentismos.fecha_inicio")
+                                ->whereRaw("DATE(proceso_rendicion_gastos.fecha_last_firma) <= ausentismos.fecha_termino");
                         });
                 })->orWhere(function ($q) use ($auth) {
                     $q->whereHas('solicitud.firmantes', function ($q) use ($auth) {
@@ -214,6 +268,8 @@ class ProcesoRendicionController extends Controller
                     })->whereHas('solicitud.reasignaciones', function ($q) use ($auth) {
                         $q->where('user_subrogante_id', $auth->id);
                     });
+                })->orWhereHas('estados', function ($q) use ($auth) {
+                    $q->where('user_id_by', $auth->id);
                 });
             });
         } catch (\Exception $error) {
@@ -258,7 +314,6 @@ class ProcesoRendicionController extends Controller
                 $q->whereIn('id', $tip_comision_id);
             });
         }
-
     }
 
     public function getProcesoRendicion($uuid)
@@ -302,7 +357,7 @@ class ProcesoRendicionController extends Controller
                             ], 422);
                         }
                     }
-                    $this->aprobarProcesoRendicion($proceso_rendicion_gasto, $observacion);
+                    $aprobar = $this->aprobarProcesoRendicion($proceso_rendicion_gasto, $observacion);
                     break;
 
                 case 3:
@@ -329,7 +384,7 @@ class ProcesoRendicionController extends Controller
     private function anularProcesoRendicion($proceso_rendicion_gasto, $observacion)
     {
         try {
-            $firma_disponible = $this->isFirmaDisponibleActionPolicy($proceso_rendicion_gasto->solicitud, 'rendicion.firma.anular');
+            $firma_disponible = $this->isFirmaDisponibleProcesoRendicionActionPolicy($proceso_rendicion_gasto, 'rendicion.firma.anular');
             $estado = [
                 'observacion'           => $observacion,
                 'status'                => EstadoProcesoRendicionGasto::STATUS_ANULADO,
@@ -352,19 +407,20 @@ class ProcesoRendicionController extends Controller
     private function rechazarProcesoRendicion($proceso_rendicion_gasto, $observacion)
     {
         try {
-            $firma_disponible = $this->isFirmaDisponibleActionPolicy($proceso_rendicion_gasto->solicitud, 'rendicion.firma.rechazar');
+            $firma_disponible = $this->obtenerFirmaDisponibleProcesoRendicion($proceso_rendicion_gasto, 'rendicion.firma.rechazar');
             $estado = [
                 'observacion'           => $observacion,
                 'status'                => EstadoProcesoRendicionGasto::STATUS_RECHAZADO,
                 'p_rendicion_gasto_id'  => $proceso_rendicion_gasto->id,
-                'role_id'               => $firma_disponible->is_firma ? $firma_disponible->firma->role_id : null,
-                'posicion_firma'        => $firma_disponible->is_firma ? $firma_disponible->firma->posicion_firma : null,
+                'role_id'               => $firma_disponible->is_firma ? $firma_disponible->role_id : null,
+                'posicion_firma'        => $firma_disponible->is_firma ? $firma_disponible->posicion_firma : null,
                 'is_subrogante'         => $firma_disponible->is_subrogante
             ];
             $status = EstadoProcesoRendicionGasto::create($estado);
             if ($status) {
                 $proceso_rendicion_gasto->update([
-                    'posicion_firma_ok' =>  0
+                    'posicion_firma_ok' =>  0,
+                    'fecha_last_firma'  => now()
                 ]);
             }
             $rendiciones = $proceso_rendicion_gasto->rendiciones()
@@ -408,21 +464,23 @@ class ProcesoRendicionController extends Controller
                 $status = EstadoProcesoRendicionGasto::STATUS_APROBADO_JD;
             }
 
-            $firma_disponible = $this->isFirmaDisponibleActionPolicy($proceso_rendicion_gasto->solicitud, 'rendicion.firma.validar');
-            $next_firma_roceso_rendicion = $this->nextFirmaProcesoRendicion(true, $proceso_rendicion_gasto->solicitud, $firma_disponible);
-            if ($next_firma_roceso_rendicion) {
-                $proceso_rendicion_gasto->update([
-                    'posicion_firma_ok' =>  $next_firma_roceso_rendicion->posicion_firma
-                ]);
-            }
+            $firma_disponible = $this->obtenerFirmaDisponibleProcesoRendicion($proceso_rendicion_gasto, 'rendicion.firma.validar');
+            $next_firma_roceso_rendicion = $this->nextFirmaProcesoRendicion('>', $proceso_rendicion_gasto->solicitud, $firma_disponible);
             $estado = [
                 'status'                => $status,
                 'observacion'           => $observacion,
                 'p_rendicion_gasto_id'  => $proceso_rendicion_gasto->id,
-                'role_id'               => $firma_disponible->is_firma ? $firma_disponible->firma->role_id : null,
-                'posicion_firma'        => $firma_disponible->is_firma ? $firma_disponible->firma->posicion_firma : null,
+                'role_id'               => $firma_disponible->is_firma ? $firma_disponible->role_id : null,
+                'posicion_firma'        => $firma_disponible->is_firma ? $firma_disponible->posicion_firma : null,
                 'is_subrogante'         => $firma_disponible->is_subrogante
             ];
+            if ($next_firma_roceso_rendicion) {
+                $proceso_rendicion_gasto->update([
+                    'posicion_firma_ok' =>  $next_firma_roceso_rendicion->posicion_firma,
+                    'fecha_last_firma'  => now()
+                ]);
+            }
+
             $status_r = EstadoProcesoRendicionGasto::create($estado);
 
             $proceso_rendicion_gasto = $proceso_rendicion_gasto->fresh();
@@ -441,7 +499,7 @@ class ProcesoRendicionController extends Controller
             $this->authorize('update', $rendicion);
             $rendicion_old  = $rendicion->replicate();
             $status         = (int)$request->status;
-            $message_status = $status === 1 ? 'aprobada' : 'rechazada';
+            $message_status = EstadoRendicionGasto::STATUS_DESC[$status];
 
             if ($rendicion) {
                 $mount_real = (int)$request->mount_real;
@@ -451,7 +509,7 @@ class ProcesoRendicionController extends Controller
                 ]);
 
                 if ($update) {
-                    $firma_disponible = $this->isFirmaDisponibleActionPolicy($rendicion->procesoRendicionGasto->solicitud, 'rendicion.actividad.validar');
+                    $firma_disponible = $this->isFirmaDisponibleProcesoRendicionActionPolicy($rendicion->procesoRendicionGasto, 'rendicion.actividad.validar');
                     $count_rendiciones              = $rendicion->procesoRendicionGasto->rendiciones()->where('rinde_gasto', true)->count();
                     $count_rendiciones_aprobadas    = $rendicion->procesoRendicionGasto->rendiciones()->where('rinde_gasto', true)->where('last_status', '!=', EstadoRendicionGasto::STATUS_PENDIENTE)->count();
                     if ($count_rendiciones_aprobadas >= $count_rendiciones) {
@@ -464,11 +522,13 @@ class ProcesoRendicionController extends Controller
                         ];
                         $status_r = EstadoProcesoRendicionGasto::create($estado);
 
+                        $before_or_after = $firma_disponible->is_firma ? ($firma_disponible->firma->role_id === 6 ? '>' : '>=') : null;
                         if ($status_r) {
-                            $next_firma_roceso_rendicion = $this->nextFirmaProcesoRendicion(true, $rendicion->procesoRendicionGasto->solicitud, $firma_disponible);
+                            $next_firma_roceso_rendicion = $this->nextFirmaProcesoRendicion($before_or_after, $rendicion->procesoRendicionGasto->solicitud, $firma_disponible);
                             if ($next_firma_roceso_rendicion) {
                                 $rendicion->procesoRendicionGasto->update([
-                                    'posicion_firma_ok' =>  $next_firma_roceso_rendicion->posicion_firma
+                                    'posicion_firma_ok' =>  $next_firma_roceso_rendicion->posicion_firma,
+                                    'fecha_last_firma'  => now()
                                 ]);
                             }
                         }

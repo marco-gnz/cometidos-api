@@ -390,7 +390,6 @@ class SolicitudController extends Controller
                     SolicitudCreated::dispatch($solicitud, $emails_copy);
                 }
                 DB::commit();
-                Log::info($solicitud->codigo);
                 return response()->json(
                     array(
                         'status'        => 'success',

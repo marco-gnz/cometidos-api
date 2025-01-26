@@ -304,6 +304,8 @@ class SolicitudAdminController extends Controller
             })->whereHas('reasignaciones', function ($q) use ($auth) {
                 $q->where('user_subrogante_id', $auth->id);
             });
+        })->orWhereHas('estados', function ($q) use ($auth) {
+            $q->where('user_id', $auth->id);
         });
     }
 
@@ -320,6 +322,8 @@ class SolicitudAdminController extends Controller
                 ->whereRaw("DATE(solicituds.fecha_by_user) <= ausentismos.fecha_termino");
         })->orWhereHas('reasignaciones', function ($q) use ($auth) {
             $q->where('user_subrogante_id', $auth->id);
+        })->orWhereHas('estados', function ($q) use ($auth) {
+            $q->where('user_id', $auth->id);
         });
     }
 

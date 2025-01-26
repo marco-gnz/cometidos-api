@@ -328,18 +328,19 @@ class LinksController extends Controller
                     ->whereHas('funcionario.ausentismos', function ($q) use ($auth) {
                         $q->whereHas('subrogantes', function ($q) use ($auth) {
                             $q->where('users.id', $auth->id);
-                        })->whereRaw("DATE(solicituds.fecha_by_user) >= ausentismos.fecha_inicio")
-                            ->whereRaw("DATE(solicituds.fecha_by_user) <= ausentismos.fecha_termino");
+                        })->whereRaw("DATE(proceso_rendicion_gastos.fecha_last_firma) >= ausentismos.fecha_inicio")
+                            ->whereRaw("DATE(proceso_rendicion_gastos.fecha_last_firma) <= ausentismos.fecha_termino");
                     });
             })->orWhere(function ($q) use ($auth) {
                 $q->whereHas('solicitud.firmantes', function ($q) use ($auth) {
                     $q->whereIn('is_executed', [true, false])
                         ->whereRaw('proceso_rendicion_gastos.posicion_firma_ok = solicitud_firmantes.posicion_firma')
                         ->whereHas('funcionario.reasignacionAusencias', function ($q) use ($auth) {
-                            $q->where('user_subrogante_id', $auth->id);
+                            $q->where('user_subrogante_id', $auth->id)
+                                ->whereHas('solicitudes', function ($query) {
+                                    $query->whereRaw('solicituds.id = solicitud_firmantes.solicitud_id');
+                                });
                         });
-                })->whereHas('solicitud.reasignaciones', function ($q) use ($auth) {
-                    $q->where('user_subrogante_id', $auth->id);
                 });
             });
         });

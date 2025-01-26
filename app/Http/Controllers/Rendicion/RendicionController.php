@@ -268,7 +268,7 @@ class RendicionController extends Controller
                     $proceso_rendicion_gasto = $proceso_rendicion_gasto->fresh();
 
                     if ($proceso_rendicion_gasto) {
-                        $firma_disponible = $this->isFirmaDisponibleActionPolicy($proceso_rendicion_gasto, null);
+                        $firma_disponible = $this->isFirmaDisponibleProcesoRendicionActionPolicy($proceso_rendicion_gasto, null);
                         $estado = [
                             'status'                => EstadoProcesoRendicionGasto::STATUS_INGRESADA,
                             'p_rendicion_gasto_id'  => $proceso_rendicion_gasto->id,
@@ -637,7 +637,7 @@ class RendicionController extends Controller
                 $proceso_rendicion_gasto = $proceso_rendicion_gasto->fresh();
 
                 if ($proceso_rendicion_gasto) {
-                    $firma_disponible = $this->isFirmaDisponibleActionPolicy($proceso_rendicion_gasto, null);
+                    $firma_disponible = $this->isFirmaDisponibleProcesoRendicionActionPolicy($proceso_rendicion_gasto, null);
                     $estado = [
                         'status'                => EstadoProcesoRendicionGasto::STATUS_MODIFICADA,
                         'p_rendicion_gasto_id'  => $proceso_rendicion_gasto->id,
@@ -647,11 +647,12 @@ class RendicionController extends Controller
                     ];
                     $status = EstadoProcesoRendicionGasto::create($estado);
                 }
-                $next_firma_roceso_rendicion = $this->nextFirmaProcesoRendicion(true, $proceso_rendicion_gasto->solicitud, $firma_disponible);
+                $next_firma_roceso_rendicion = $this->nextFirmaProcesoRendicion('>', $proceso_rendicion_gasto->solicitud, $firma_disponible);
 
                 if ($next_firma_roceso_rendicion) {
                     $proceso_rendicion_gasto->update([
-                        'posicion_firma_ok' =>  $next_firma_roceso_rendicion->posicion_firma
+                        'posicion_firma_ok' =>  $next_firma_roceso_rendicion->posicion_firma,
+                        'fecha_last_firma'  => now()
                     ]);
                 }
 
@@ -699,7 +700,7 @@ class RendicionController extends Controller
         try {
             $proceso_rendicion_gasto = ProcesoRendicionGasto::where('uuid', $request->uuid)->firstOrFail();
             $this->authorize('anular', $proceso_rendicion_gasto);
-            $firma_disponible = $this->isFirmaDisponibleActionPolicy($proceso_rendicion_gasto->solicitud, 'rendicion.firma.anular');
+            $firma_disponible = $this->isFirmaDisponibleProcesoRendicionActionPolicy($proceso_rendicion_gasto, 'rendicion.firma.anular');
             $estado = [
                 'observacion'           => $request->observacion,
                 'status'                => EstadoProcesoRendicionGasto::STATUS_ANULADO,
@@ -752,7 +753,7 @@ class RendicionController extends Controller
                 $status = EstadoProcesoRendicionGasto::STATUS_APROBADO_JD;
             }
 
-            $firma_disponible = $this->isFirmaDisponibleActionPolicy($proceso_rendicion_gasto->solicitud, 'rendicion.firma.validar');
+            $firma_disponible = $this->isFirmaDisponibleProcesoRendicionActionPolicy($proceso_rendicion_gasto, 'rendicion.firma.validar');
             $estado = [
                 'status'                => $status,
                 'observacion'           => $request->observacion,
