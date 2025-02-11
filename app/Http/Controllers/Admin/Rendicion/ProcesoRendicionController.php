@@ -66,7 +66,7 @@ class ProcesoRendicionController extends Controller
                     break;
             }
 
-            $query->searchInput($request->input)
+            $query->searchInput($request->input, $request->in)
                 ->periodoSolicitud($request->periodo_cometido)
                 ->periodoIngresoSolicitud($request->periodo_ingreso_cometido)
                 ->periodoIngresoProceso($request->periodo_ingreso_rendicion)

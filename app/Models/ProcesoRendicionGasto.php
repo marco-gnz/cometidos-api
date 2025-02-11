@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Str;
 use Carbon\Carbon;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Storage;
 
@@ -302,43 +303,92 @@ class ProcesoRendicionGasto extends Model
         return null;
     }
 
-    public function scopeSearchInput($query, $params)
+    public function scopeSearchInput($query, $params, $in = null)
     {
-        if ($params)
-            return $query->where('n_folio', 'like', '%' . $params . '%')
-                ->orWhere('observacion', 'like', '%' . $params . '%')
-                ->orWhere('n_rendicion', 'like', '%' . $params . '%')
-                ->orWhere(function ($query) use ($params) {
-                    $query->whereHas('solicitud', function ($query) use ($params) {
-                        $query->where('codigo', 'like', '%' . $params . '%')
-                            ->orWhere('actividad_realizada', 'like', '%' . $params . '%')
-                            ->orWhere('vistos', 'like', '%' . $params . '%')
-                            ->orWhere('observacion_gastos', 'like', '%' . $params . '%');
-                    });
-                })
-                ->orWhere(function ($query) use ($params) {
-                    $query->whereHas('solicitud.funcionario', function ($query) use ($params) {
-                        $query->where('rut_completo', 'like', '%' . $params . '%')
-                            ->orWhere('rut', 'like', '%' . $params . '%')
-                            ->orWhere('nombres', 'like', '%' . $params . '%')
-                            ->orWhere('apellidos', 'like', '%' . $params . '%')
-                            ->orWhere('nombre_completo', 'like', '%' . $params . '%')
-                            ->orWhere('email', 'like', '%' . $params . '%');
-                    });
-                })->orWhere(function ($query) use ($params) {
-                    $query->whereHas('solicitud.firmantes.funcionario', function ($query) use ($params) {
-                        $query->where('rut_completo', 'like', '%' . $params . '%')
-                            ->orWhere('rut', 'like', '%' . $params . '%')
-                            ->orWhere('nombres', 'like', '%' . $params . '%')
-                            ->orWhere('apellidos', 'like', '%' . $params . '%')
-                            ->orWhere('nombre_completo', 'like', '%' . $params . '%')
-                            ->orWhere('email', 'like', '%' . $params . '%');
-                    });
-                })->orWhere(function ($query) use ($params) {
-                    $query->whereHas('estados', function ($query) use ($params) {
-                        $query->where('observacion', 'like', '%' . $params . '%');
-                    });
-                });
+        if (!$params) {
+            return $query;
+        }
+
+        $camposDirectos = ['n_folio', 'n_rendicion', 'observacion'];
+
+        $query->where(function ($q) use ($params, $camposDirectos) {
+            foreach ($camposDirectos as $campo) {
+                $q->orWhere($campo, 'like', "%{$params}%");
+            }
+        });
+
+        $this->aplicarFiltroFuncionario($query, $params);
+        $this->aplicarFiltroEstados($query, $params);
+        $this->aplicarFiltroEstadosItems($query, $params);
+
+        if ($in !== 'rendicion') {
+            $this->aplicarFiltroSolicitud($query, $params);
+            $this->aplicarFiltroFirmantes($query, $params);
+        }
+    }
+
+    private function aplicarFiltroFuncionario($query, $params)
+    {
+        $query->orWhere(function ($q) use ($params) {
+            $q->whereHas('solicitud.funcionario', function ($q) use ($params) {
+                $this->aplicarFiltroNombre($q, $params);
+                $this->aplicarFiltroRutEmail($q, $params);
+            });
+        });
+    }
+
+    private function aplicarFiltroSolicitud($query, $params)
+    {
+        $query->orWhere(function ($q) use ($params) {
+            $q->whereHas('solicitud', function ($q) use ($params) {
+                $q->where('codigo', 'like', "%{$params}%")
+                    ->orWhere('actividad_realizada', 'like', "%{$params}%")
+                    ->orWhere('vistos', 'like', "%{$params}%")
+                    ->orWhere('observacion_gastos', 'like', "%{$params}%")
+                    ->orWhere('observacion', 'like', "%{$params}%");
+            });
+        });
+    }
+
+    private function aplicarFiltroFirmantes($query, $params)
+    {
+        $query->orWhere(function ($q) use ($params) {
+            $q->whereHas('solicitud.firmantes.funcionario', function ($q) use ($params) {
+                $this->aplicarFiltroNombre($q, $params);
+                $this->aplicarFiltroRutEmail($q, $params);
+            });
+        });
+    }
+
+    private function aplicarFiltroEstados($query, $params)
+    {
+        $query->orWhereHas('estados', function ($q) use ($params) {
+            $q->where('observacion', 'like', "%{$params}%");
+        });
+    }
+
+    private function aplicarFiltroEstadosItems($query, $params)
+    {
+        $query->orWhereHas('rendiciones.estados', function ($q) use ($params) {
+            $q->where('observacion', 'like', "%{$params}%");
+        });
+    }
+
+    private function aplicarFiltroNombre($query, $params)
+    {
+        $palabras = explode(' ', $params);
+        $query->where(function ($q) use ($palabras) {
+            foreach ($palabras as $palabra) {
+                $q->where(DB::raw("CONCAT(nombres, ' ', apellidos)"), 'like', "%{$palabra}%");
+            }
+        });
+    }
+
+    private function aplicarFiltroRutEmail($query, $params)
+    {
+        $query->orWhere('rut_completo', 'like', "%{$params}%")
+            ->orWhere('rut', 'like', "%{$params}%")
+            ->orWhere('email', 'like', "%{$params}%");
     }
 
     public function scopePeriodoSolicitud($query, $params)
