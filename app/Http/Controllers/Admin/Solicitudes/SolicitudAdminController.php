@@ -117,7 +117,8 @@ class SolicitudAdminController extends Controller
                 ->ley($request->ley_id)
                 ->estamento($request->estamento_id)
                 ->calidad($request->calidad_id)
-                ->convenio($request->is_convenio);
+                ->convenio($request->is_convenio)
+                ->jefaturaDirecta($request->j_directa);
 
             $sort           = $request->sort; //column.asc || column.desc
             $parts          = explode('.', $sort);
@@ -133,12 +134,12 @@ class SolicitudAdminController extends Controller
             }
 
             $solicitudes = $solicitudes->paginate(50);
-
+            $total_format = number_format($solicitudes->total(), 0, ",", ".");
             return response()->json([
                 'status' => 'success',
                 'pagination' => [
                     'total'         => $solicitudes->total(),
-                    'total_desc'    => $solicitudes->total() > 1 ? "{$solicitudes->total()} resultados" : "{$solicitudes->total()} resultado",
+                    'total_desc'    => $solicitudes->total() > 1 ? "{$total_format} resultados" : "{$total_format} resultado",
                     'current_page'  => $solicitudes->currentPage(),
                     'per_page'      => $solicitudes->perPage(),
                     'last_page'     => $solicitudes->lastPage(),

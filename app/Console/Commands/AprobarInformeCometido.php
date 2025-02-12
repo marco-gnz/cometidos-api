@@ -50,7 +50,12 @@ class AprobarInformeCometido extends Command
         $status_informe_ok      = [EstadoInformeCometido::STATUS_INGRESADA, EstadoInformeCometido::STATUS_MODIFICADO];
         $informes               = InformeCometido::whereIn('last_status', $status_informe_ok)
             ->whereHas('solicitud', function ($q) {
-                $q->where('status', Solicitud::STATUS_PROCESADO);
+                $q->where('is_reasignada', false)
+                    ->whereIn('status', [Solicitud::STATUS_PROCESADO, Solicitud::STATUS_EN_PROCESO])
+                    ->whereHas('estados', function ($q) {
+                        $q->where('status', EstadoSolicitud::STATUS_APROBADO)
+                            ->where('s_role_id', 3);
+                    });
             })
             ->get();
 

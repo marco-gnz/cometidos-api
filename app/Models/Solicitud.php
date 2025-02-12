@@ -1231,6 +1231,23 @@ class Solicitud extends Model
         }
     }
 
+    public function scopeJefaturaDirecta($query, $params)
+    {
+        if ($params) {
+            if (in_array(1, $params)) {
+                return $query->whereHas('estados', function ($q) {
+                    $q->where(function ($query) {
+                        $query->where('s_role_id', 3)
+                            ->orWhere('r_s_role_id', 3);
+                    })
+                        ->where('status', EstadoSolicitud::STATUS_APROBADO);
+                });
+            }
+        } else {
+            return $query;
+        }
+    }
+
     public function scopeIsLoadSirh($query, $params)
     {
         if ($params) {
