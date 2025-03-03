@@ -1473,21 +1473,22 @@ class Solicitud extends Model
         if ($params)
             return $query->where('status', self::STATUS_EN_PROCESO)
                 ->whereHas('firmantes', function ($q) use ($params) {
-                    $q->whereIn('user_id', $params)
-                        ->where(function ($query) {
-                            $query->whereRaw('solicituds.posicion_firma_ok = solicitud_firmantes.posicion_firma')
-                                ->where('solicituds.is_reasignada', 0)
-                                ->where('status', true)
-                                ->where('is_executed', false)
-                                ->where('role_id', '!=', 1);
-                        })->orWhere(function ($query) {
-                            $query->whereRaw('solicituds.posicion_firma_ok = solicitud_firmantes.posicion_firma')
-                                ->where('solicituds.is_reasignada', 1)
-                                ->where('is_reasignado', true)
-                                ->where('status', true)
-                                ->where('is_executed', false)
-                                ->where('role_id', '!=', 1);
-                        });
+                    $q->where(function ($query) use ($params) {
+                        $query->whereRaw('solicituds.posicion_firma_ok = solicitud_firmantes.posicion_firma')
+                            ->where('solicituds.is_reasignada', 0)
+                            ->where('status', true)
+                            ->where('is_executed', false)
+                            ->where('role_id', '!=', 1)
+                            ->whereIn('user_id', $params);
+                    })->orWhere(function ($query) use ($params) {
+                        $query->whereRaw('solicituds.posicion_firma_ok = solicitud_firmantes.posicion_firma')
+                            ->where('solicituds.is_reasignada', 1)
+                            ->where('is_reasignado', true)
+                            ->where('status', true)
+                            ->where('is_executed', false)
+                            ->where('role_id', '!=', 1)
+                            ->whereIn('user_id', $params);
+                    });
                 });
     }
 }
