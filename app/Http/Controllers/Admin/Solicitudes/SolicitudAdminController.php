@@ -306,7 +306,8 @@ class SolicitudAdminController extends Controller
                 $q->where('user_subrogante_id', $auth->id);
             });
         })->orWhereHas('estados', function ($q) use ($auth) {
-            $q->where('user_id', $auth->id);
+            $q->where('user_id', $auth->id)
+                ->where('s_role_id', '!=', 1);
         });
     }
 
@@ -324,7 +325,8 @@ class SolicitudAdminController extends Controller
         })->orWhereHas('reasignaciones', function ($q) use ($auth) {
             $q->where('user_subrogante_id', $auth->id);
         })->orWhereHas('estados', function ($q) use ($auth) {
-            $q->where('user_id', $auth->id);
+            $q->where('user_id', $auth->id)
+                ->where('s_role_id', '!=', 1);
         });
     }
 
