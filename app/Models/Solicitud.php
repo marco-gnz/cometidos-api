@@ -1137,6 +1137,7 @@ class Solicitud extends Model
             $this->aplicarFiltroEstados($query, $params);
             $this->aplicarFiltroConvenio($query, $params);
             $this->aplicarFiltroInformes($query, $params);
+            $this->aplicarFiltroLugares($query, $params);
         }
 
         return $query;
@@ -1166,6 +1167,13 @@ class Solicitud extends Model
     {
         $query->orWhereHas('estados', function ($q) use ($params) {
             $q->where('observacion', 'like', "%{$params}%");
+        });
+    }
+
+    private function aplicarFiltroLugares($query, $params)
+    {
+        $query->orWhereHas('lugares', function ($q) use ($params) {
+            $q->where('nombre', 'like', "%{$params}%");
         });
     }
 

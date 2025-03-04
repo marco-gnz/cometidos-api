@@ -35,13 +35,19 @@ class SolicitudesController extends Controller
     {
         try {
             $auth = Auth::user();
-            $solicitudes = Solicitud::where('user_id', $auth->id)
+            $query = Solicitud::where('user_id', $auth->id)
                 ->searchInput($request->input)
                 ->periodoSolicitud($request->periodo_cometido)
                 ->periodoIngreso($request->periodo_ingreso)
                 ->estado($request->estados_id)
-                ->orderBy('fecha_inicio', 'DESC')
-                ->paginate(20);
+                ->derechoViatico($request->derecho_pago);
+
+            $sort           = $request->sort; //column.asc || column.desc
+            $parts          = explode('.', $sort);
+            $column         = $parts[0];
+            $direction      = $parts[1];
+
+            $solicitudes    = $query->orderBy($column, $direction)->paginate(20);
 
             return response()->json(
                 array(
@@ -96,7 +102,7 @@ class SolicitudesController extends Controller
                 $emails_copy        = [];
                 $last_status        = $solicitud->estados()->orderBy('id', 'DESC')->first();
 
-                if($last_status){
+                if ($last_status) {
                     if ($solicitud->derecho_pago) {
                         $emails_copy = $solicitud->firmantes()->whereIn('role_id', $ids_roles_anulado)->with('funcionario')->get()->pluck('funcionario.email')->toArray();
                     }

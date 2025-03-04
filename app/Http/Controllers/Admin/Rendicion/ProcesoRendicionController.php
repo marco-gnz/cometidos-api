@@ -231,7 +231,8 @@ class ProcesoRendicionController extends Controller
                             });
                     });
                 })->orWhereHas('estados', function ($q) use ($auth) {
-                    $q->where('user_id_by', $auth->id);
+                    $q->where('user_id_by', $auth->id)
+                        ->where('role_id', '!=', 1);
                 });
             });
 
@@ -269,7 +270,8 @@ class ProcesoRendicionController extends Controller
                         $q->where('user_subrogante_id', $auth->id);
                     });
                 })->orWhereHas('estados', function ($q) use ($auth) {
-                    $q->where('user_id_by', $auth->id);
+                    $q->where('user_id_by', $auth->id)
+                        ->where('role_id', '!=', 1);
                 });
             });
         } catch (\Exception $error) {

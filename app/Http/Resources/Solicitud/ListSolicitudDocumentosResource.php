@@ -2,6 +2,7 @@
 
 namespace App\Http\Resources\Solicitud;
 
+use App\Models\Documento;
 use Carbon\Carbon;
 use Illuminate\Http\Resources\Json\JsonResource;
 
@@ -25,7 +26,8 @@ class ListSolicitudDocumentosResource extends JsonResource
             'created_at'            => $this->created_at ? Carbon::parse($this->created_at)->format('d-m-Y H:i:s') : null,
             'url_open'              => $this ? route('documento.show', ['uuid' => $this->uuid]) : null,
             'user_by'               => $this->userBy ? $this->userBy->abreNombres() : null,
-            'authorized_to_delete'  => $this->authorizedToDelete()
+            'authorized_to_delete'  => $this->authorizedToDelete(),
+            'tipo_carga'            => Documento::MODEL_NOM[$this->model]
         ];
     }
 }
