@@ -423,8 +423,7 @@ class ProcesoRendicionGasto extends Model
         if ($params) {
             $inicio     = Carbon::parse($params[0])->startOfDay();
             $termino    = Carbon::parse($params[1])->endOfDay();
-
-            return $query->whereBetween('fecha_by_user', array($inicio, $termino));
+            return $query->whereBetween('proceso_rendicion_gastos.fecha_by_user', array($inicio, $termino));
         }
     }
 

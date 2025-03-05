@@ -81,13 +81,56 @@ class RendicionController extends Controller
         try {
             $auth           = Auth::user();
             if ($auth) {
-                $proceso_rendiciones = ProcesoRendicionGasto::whereHas('solicitud', function ($q) use ($auth) {
+                $query = ProcesoRendicionGasto::whereHas('solicitud', function ($q) use ($auth) {
                     $q->where('user_id', $auth->id);
                 })
                     ->searchInput($request->input)
                     ->periodoIngresoProceso($request->periodo_ingreso_rendicion)
-                    ->estadoRendicion($request->estados_rendicion_id)
-                    ->orderBy('id', 'DESC')->paginate(20);
+                    ->estadoRendicion($request->estados_rendicion_id);
+
+                $sort           = $request->sort; //column.asc || column.desc
+                $parts          = explode('.', $sort);
+                $column         = $parts[0];
+                $direction      = $parts[1];
+
+                switch ($sort) {
+                    case 'fecha_inicio.asc':
+                    case 'fecha_inicio.desc':
+                        $proceso_rendiciones = $query->select('proceso_rendicion_gastos.*')
+                            ->join('solicituds', 'solicituds.id', '=', 'proceso_rendicion_gastos.solicitud_id')
+                            ->orderBy('solicituds.fecha_inicio', $direction);
+                        break;
+
+                    case 'monto_solicitado.asc':
+                    case 'monto_solicitado.desc':
+                        $proceso_rendiciones = $query->select('proceso_rendicion_gastos.*')
+                            ->leftJoin('rendicion_gastos', function ($join) {
+                                $join->on('rendicion_gastos.proceso_rendicion_gasto_id', '=', 'proceso_rendicion_gastos.id')
+                                    ->where('rendicion_gastos.rinde_gasto', true);
+                            })
+                            ->selectRaw('COALESCE(SUM(rendicion_gastos.mount), 0) as total_monto')
+                            ->groupBy('proceso_rendicion_gastos.id')
+                            ->orderBy('total_monto', $direction);
+                        break;
+
+                    case 'monto_aprobado.asc':
+                    case 'monto_aprobado.desc':
+                        $proceso_rendiciones = $query->select('proceso_rendicion_gastos.*')
+                            ->leftJoin('rendicion_gastos', function ($join) {
+                                $join->on('rendicion_gastos.proceso_rendicion_gasto_id', '=', 'proceso_rendicion_gastos.id')
+                                    ->where('rendicion_gastos.rinde_gasto', true)
+                                    ->where('rendicion_gastos.last_status', 1);
+                            })
+                            ->selectRaw('COALESCE(SUM(rendicion_gastos.mount_real), 0) as total_monto_aprobado')
+                            ->groupBy('proceso_rendicion_gastos.id')
+                            ->orderBy('total_monto_aprobado', $direction);
+                        break;
+
+                    default:
+                        $proceso_rendiciones = $query->orderBy($column, $direction);
+                }
+
+                $proceso_rendiciones = $proceso_rendiciones->paginate(20);
 
                 return response()->json(
                     array(
