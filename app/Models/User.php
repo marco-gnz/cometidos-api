@@ -14,6 +14,7 @@ use Spatie\Permission\Traits\HasRoles;
 use Spatie\Permission\Models\Permission;
 use Illuminate\Support\Str;
 use App\Notifications\ResetPasswordNotification;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
 
 class User extends Authenticatable
@@ -191,12 +192,27 @@ class User extends Authenticatable
     public function scopeGeneral($query, $input)
     {
         if ($input)
-            return $query->where('rut_completo', 'like', '%' . $input . '%')
-                ->orWhere('rut', 'like', '%' . $input . '%')
-                ->orWhere('nombres', 'like', '%' . $input . '%')
-                ->orWhere('apellidos', 'like', '%' . $input . '%')
-                ->orWhere('nombre_completo', 'like', '%' . $input . '%')
-                ->orWhere('email', 'like', '%' . $input . '%');
+            return $query->where(function ($q) use ($input) {
+                $this->aplicarFiltroNombre($q, $input);
+                $this->aplicarFiltroRutEmail($q, $input);
+            });
+    }
+
+    private function aplicarFiltroNombre($query, $params)
+    {
+        $palabras = explode(' ', $params);
+        $query->where(function ($q) use ($palabras) {
+            foreach ($palabras as $palabra) {
+                $q->where(DB::raw("CONCAT(nombres, ' ', apellidos)"), 'like', "%{$palabra}%");
+            }
+        });
+    }
+
+    private function aplicarFiltroRutEmail($query, $params)
+    {
+        $query->orWhere('rut_completo', 'like', "%{$params}%")
+            ->orWhere('rut', 'like', "%{$params}%")
+            ->orWhere('email', 'like', "%{$params}%");
     }
 
     public function scopeEstablecimiento($query, $params)
@@ -313,15 +329,15 @@ class User extends Authenticatable
     {
         $total = 0;
         $solicitudes =  $this->solicitudes()
-        ->where('status', Solicitud::STATUS_PROCESADO)
-        ->get();
+            ->where('status', Solicitud::STATUS_PROCESADO)
+            ->get();
 
         foreach ($solicitudes as $solicitud) {
-            if($solicitud->getLastCalculo()){
+            if ($solicitud->getLastCalculo()) {
                 $total += $solicitud->getLastCalculo()->monto_total;
             }
         }
-        return "$".number_format($total, 0, ',', '.');
+        return "$" . number_format($total, 0, ',', '.');
     }
 
     public function totalRendiciones()

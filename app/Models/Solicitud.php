@@ -1133,54 +1133,53 @@ class Solicitud extends Model
         $this->aplicarFiltroFuncionario($query, $params);
 
         if ($in !== 'solicitud') {
-            $this->aplicarFiltroFirmantes($query, $params);
-            $this->aplicarFiltroEstados($query, $params);
-            $this->aplicarFiltroConvenio($query, $params);
-            $this->aplicarFiltroInformes($query, $params);
-            $this->aplicarFiltroLugares($query, $params);
+            $query->when($this->debeAplicarFiltro('firmantes', $params), function ($q) use ($params) {
+                $this->aplicarFiltroFirmantes($q, $params);
+            });
+
+            $query->when($this->debeAplicarFiltro('estados', $params), function ($q) use ($params) {
+                $this->aplicarFiltroEstados($q, $params);
+            });
+
+            $query->when($this->debeAplicarFiltro('convenio', $params), function ($q) use ($params) {
+                $this->aplicarFiltroConvenio($q, $params);
+            });
+
+            $query->when($this->debeAplicarFiltro('informes', $params), function ($q) use ($params) {
+                $this->aplicarFiltroInformes($q, $params);
+            });
         }
 
         return $query;
     }
 
-    private function aplicarFiltroFuncionario($query, $params)
+    private function debeAplicarFiltro($relacion, $params)
     {
-        $query->orWhere(function ($q) use ($params) {
-            $q->whereHas('funcionario', function ($q) use ($params) {
-                $this->aplicarFiltroNombre($q, $params);
-                $this->aplicarFiltroRutEmail($q, $params);
-            });
-        });
+        return !empty($params) && in_array($relacion, ['firmantes', 'estados', 'convenio', 'informes']);
     }
 
     private function aplicarFiltroFirmantes($query, $params)
     {
-        $query->orWhere(function ($q) use ($params) {
-            $q->whereHas('firmantes.funcionario', function ($q) use ($params) {
-                $this->aplicarFiltroNombre($q, $params);
-                $this->aplicarFiltroRutEmail($q, $params);
-            });
+        $query->orWhereHas('firmantes.funcionario', function ($q) use ($params) {
+            $q->select(['id', 'nombres', 'apellidos', 'rut', 'rut_completo', 'email']);
+            $this->aplicarFiltroNombre($q, $params);
+            $this->aplicarFiltroRutEmail($q, $params);
         });
     }
 
     private function aplicarFiltroEstados($query, $params)
     {
         $query->orWhereHas('estados', function ($q) use ($params) {
-            $q->where('observacion', 'like', "%{$params}%");
-        });
-    }
-
-    private function aplicarFiltroLugares($query, $params)
-    {
-        $query->orWhereHas('lugares', function ($q) use ($params) {
-            $q->where('nombre', 'like', "%{$params}%");
+            $q->select(['id', 'observacion'])
+                ->where('observacion', 'like', "%{$params}%");
         });
     }
 
     private function aplicarFiltroConvenio($query, $params)
     {
         $query->orWhereHas('convenio', function ($q) use ($params) {
-            $q->where('codigo', 'like', "%{$params}%")
+            $q->select(['id', 'codigo', 'n_resolucion', 'email', 'tipo_contrato', 'observacion'])
+                ->where('codigo', 'like', "%{$params}%")
                 ->orWhere('n_resolucion', 'like', "%{$params}%")
                 ->orWhere('email', 'like', "%{$params}%")
                 ->orWhere('tipo_contrato', 'like', "%{$params}%")
@@ -1191,8 +1190,19 @@ class Solicitud extends Model
     private function aplicarFiltroInformes($query, $params)
     {
         $query->orWhereHas('informes', function ($q) use ($params) {
-            $q->where('codigo', 'like', "%{$params}%")
+            $q->select(['id', 'codigo', 'actividad_realizada'])
+                ->where('codigo', 'like', "%{$params}%")
                 ->orWhere('actividad_realizada', 'like', "%{$params}%");
+        });
+    }
+
+    private function aplicarFiltroFuncionario($query, $params)
+    {
+        $query->orWhere(function ($q) use ($params) {
+            $q->whereHas('funcionario', function ($q) use ($params) {
+                $this->aplicarFiltroNombre($q, $params);
+                $this->aplicarFiltroRutEmail($q, $params);
+            });
         });
     }
 
