@@ -46,6 +46,7 @@ class EstadoSolicitud extends Model
     public const RECHAZO_5 = 5;
     public const RECHAZO_6 = 6;
     public const RECHAZO_7 = 7;
+    public const RECHAZO_8 = 8;
 
     public const RECHAZO_NOM = [
         self::RECHAZO_1 => 'FALTAN ANTECEDENTES',
@@ -54,7 +55,8 @@ class EstadoSolicitud extends Model
         self::RECHAZO_4 => 'NO CORRESPONDE CON DERECHO A VIATICO',
         self::RECHAZO_5 => 'FECHAS U HORARIOS ERRONEOS',
         self::RECHAZO_6 => 'FUERA DE PLAZO',
-        self::RECHAZO_7 => 'ERRORES EN DATOS INGRESADOS'
+        self::RECHAZO_7 => 'ERRORES EN DATOS INGRESADOS',
+        self::RECHAZO_8 => 'ASISTENCIA A LA ACTIVIDAD NO AUTORIZADA',
     ];
 
     public const RECHAZO_DESC = [
@@ -64,7 +66,8 @@ class EstadoSolicitud extends Model
         self::RECHAZO_4 => 'NO CORRESPONDE CON DERECHO A VIATICO',
         self::RECHAZO_5 => 'FECHAS U HORARIOS ERRONEOS',
         self::RECHAZO_6 => 'FUERA DE PLAZO',
-        self::RECHAZO_7 => 'ERRORES EN DATOS INGRESADOS'
+        self::RECHAZO_7 => 'ERRORES EN DATOS INGRESADOS',
+        self::RECHAZO_8 => 'ASISTENCIA A LA ACTIVIDAD NO AUTORIZADA'
     ];
 
     public const RECHAZO_STATUS = [
@@ -75,6 +78,7 @@ class EstadoSolicitud extends Model
         ['id' => self::RECHAZO_5, 'nombre' => self::RECHAZO_NOM[self::RECHAZO_5], 'desc' => self::RECHAZO_DESC[self::RECHAZO_5]],
         ['id' => self::RECHAZO_6, 'nombre' => self::RECHAZO_NOM[self::RECHAZO_6], 'desc' => self::RECHAZO_DESC[self::RECHAZO_6]],
         ['id' => self::RECHAZO_7, 'nombre' => self::RECHAZO_NOM[self::RECHAZO_7], 'desc' => self::RECHAZO_DESC[self::RECHAZO_7]],
+        ['id' => self::RECHAZO_8, 'nombre' => self::RECHAZO_NOM[self::RECHAZO_8], 'desc' => self::RECHAZO_DESC[self::RECHAZO_8]]
     ];
 
     protected $fillable = [
