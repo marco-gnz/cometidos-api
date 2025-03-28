@@ -69,8 +69,12 @@ class MantenedorController extends Controller
     public function getStatusRechazo()
     {
         try {
-            $estados = EstadoSolicitud::RECHAZO_STATUS;
-            return response()->json($estados);
+            $estados        = EstadoSolicitud::RECHAZO_STATUS;
+            $new_estados    = collect($estados)
+                ->sortBy('nombre')
+                ->values()
+                ->toArray();
+            return response()->json($new_estados);
         } catch (\Exception $error) {
             return response()->json($error->getMessage());
         }

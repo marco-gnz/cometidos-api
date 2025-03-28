@@ -47,6 +47,7 @@ class EstadoSolicitud extends Model
     public const RECHAZO_6 = 6;
     public const RECHAZO_7 = 7;
     public const RECHAZO_8 = 8;
+    public const RECHAZO_9 = 9;
 
     public const RECHAZO_NOM = [
         self::RECHAZO_1 => 'FALTAN ANTECEDENTES',
@@ -57,18 +58,21 @@ class EstadoSolicitud extends Model
         self::RECHAZO_6 => 'FUERA DE PLAZO',
         self::RECHAZO_7 => 'ERRORES EN DATOS INGRESADOS',
         self::RECHAZO_8 => 'ASISTENCIA A LA ACTIVIDAD NO AUTORIZADA',
+        self::RECHAZO_9 => 'SOLICITUD NO CORRESPONDE A COMETIDO '
     ];
 
     public const RECHAZO_DESC = [
-        self::RECHAZO_1 => 'FALTAN ANTECEDENTES',
-        self::RECHAZO_2 => 'DOCUMENTOS ILEGIBLES',
-        self::RECHAZO_3 => 'ACTIVIDAD SUSPENDIDA',
-        self::RECHAZO_4 => 'NO CORRESPONDE CON DERECHO A VIATICO',
-        self::RECHAZO_5 => 'FECHAS U HORARIOS ERRONEOS',
-        self::RECHAZO_6 => 'FUERA DE PLAZO',
-        self::RECHAZO_7 => 'ERRORES EN DATOS INGRESADOS',
-        self::RECHAZO_8 => 'ASISTENCIA A LA ACTIVIDAD NO AUTORIZADA'
+        self::RECHAZO_1 => 'La solicitud no cuenta con toda la información requerida para su validación.',
+        self::RECHAZO_2 => 'Los documentos adjuntos no se pueden leer correctamente, ya sea por mala calidad, borrosidad o escaneo deficiente.',
+        self::RECHAZO_3 => 'La actividad para la cual se solicitó el cometido ha sido suspendida.',
+        self::RECHAZO_4 => 'La solicitud no cumple con los requisitos para acceder al pago del viático.',
+        self::RECHAZO_5 => 'Las fechas o los horarios indicados en la solicitud no son correctos.',
+        self::RECHAZO_6 => 'La solicitud fue ingresada fuera del período establecido para su tramitación.',
+        self::RECHAZO_7 => 'Se han detectado inconsistencias o errores en los datos proporcionados en la solicitud.',
+        self::RECHAZO_8 => 'Funcionaria(o) no cuenta con la autorización correspondiente para asistir a la actividad mencionada.',
+        self::RECHAZO_9 => 'La solicitud no se ajusta a las actividades o funciones que justifican un cometido.'
     ];
+
 
     public const RECHAZO_STATUS = [
         ['id' => self::RECHAZO_1, 'nombre' => self::RECHAZO_NOM[self::RECHAZO_1], 'desc' => self::RECHAZO_DESC[self::RECHAZO_1]],
@@ -78,7 +82,8 @@ class EstadoSolicitud extends Model
         ['id' => self::RECHAZO_5, 'nombre' => self::RECHAZO_NOM[self::RECHAZO_5], 'desc' => self::RECHAZO_DESC[self::RECHAZO_5]],
         ['id' => self::RECHAZO_6, 'nombre' => self::RECHAZO_NOM[self::RECHAZO_6], 'desc' => self::RECHAZO_DESC[self::RECHAZO_6]],
         ['id' => self::RECHAZO_7, 'nombre' => self::RECHAZO_NOM[self::RECHAZO_7], 'desc' => self::RECHAZO_DESC[self::RECHAZO_7]],
-        ['id' => self::RECHAZO_8, 'nombre' => self::RECHAZO_NOM[self::RECHAZO_8], 'desc' => self::RECHAZO_DESC[self::RECHAZO_8]]
+        ['id' => self::RECHAZO_8, 'nombre' => self::RECHAZO_NOM[self::RECHAZO_8], 'desc' => self::RECHAZO_DESC[self::RECHAZO_8]],
+        ['id' => self::RECHAZO_9, 'nombre' => self::RECHAZO_NOM[self::RECHAZO_9], 'desc' => self::RECHAZO_DESC[self::RECHAZO_9]]
     ];
 
     protected $fillable = [

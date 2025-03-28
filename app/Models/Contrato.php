@@ -41,6 +41,11 @@ class Contrato extends Model
             $contrato->usuario_add_id        = Auth::check() ? Auth::user()->id : null;
             $contrato->fecha_add            = now();
         });
+
+        static::updating(function ($contrato) {
+            $contrato->usuario_update_id    = Auth::check() ? Auth::user()->id : null;
+            $contrato->fecha_update         = now();
+        });
     }
 
     public function isPosibleGrupos()
