@@ -248,7 +248,7 @@ class MantenedorController extends Controller
             foreach ($actividades as $actividad) {
                 $actividad->{'rinde_gasto'}             = 0;
                 $actividad->{'mount'}                   = null;
-                $actividad->{'rinde_gastos_servicio'}   = null;
+                $actividad->{'rinde_gastos_servicio'}   = 0;
                 if (in_array($actividad->id, $transportes_id)) {
                     $actividad->{'exist_solicitud'}   = true;
                 } else {
