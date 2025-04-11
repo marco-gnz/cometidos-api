@@ -4,6 +4,8 @@ namespace App\Http\Resources\Admin;
 
 use App\Http\Resources\User\Contrato\ListContratosResource;
 use App\Http\Resources\User\CuentaBancariaResource;
+use App\Models\HistoryActionUser;
+use Carbon\Carbon;
 use Illuminate\Http\Resources\Json\JsonResource;
 
 class UserResource extends JsonResource
@@ -24,6 +26,8 @@ class UserResource extends JsonResource
             'apellidos'         => $this->apellidos,
             'email'             => $this->email ? $this->email : null,
             'status'            => $this->estado ? true : false,
+            'nacionalidad'      => $this->nacionalidad ? $this->nacionalidad->nombre : null,
+            'fecha_nacimiento'  => $this->fecha_nacimiento ? Carbon::parse($this->fecha_nacimiento)->format('d-m-Y') : null,
 
             'is_solicitud'      => $this->is_solicitud ? true : false,
             'is_informe'        => $this->is_informe ? true : false,
@@ -34,6 +38,8 @@ class UserResource extends JsonResource
             'is_informe_message'        => $this->is_informe ? "Si" : "No",
             'is_rendicion_message'      => $this->is_rendicion ? "Si" : "No",
             'is_subrogante_message'     => $this->is_subrogante ? "Si" : "No",
+            'n_solicitudes'             => $this->solicitudes()->count(),
+            'n_rendiciones'             => $this->procesoRendicionGastos()->count(),
 
             'establecimiento'   => $this->establecimiento ? $this->establecimiento->sigla : null,
             'estamento'         => $this->estamento ? $this->estamento->nombre : null,
@@ -46,9 +52,8 @@ class UserResource extends JsonResource
             'ley'               => $this->ley ? $this->ley->nombre : null,
             'cuentas_bancarias' => $this->cuentas ? CuentaBancariaResource::collection($this->cuentas) : [],
             'contratos'         => $this->contratos ? ListContratosResource::collection($this->contratos) : [],
-            'total_viaticos_procesados'     => $this->totalViaticosProcesados(),
-            'total_valorizacion'            => $this->totalValorizacion(),
-            'total_rendiciones'              => $this->totalRendiciones()
+            'last_login'                => $this->lastHistory(HistoryActionUser::TYPE_2) ? Carbon::parse($this->lastHistory(HistoryActionUser::TYPE_2)->created_at)->format('d-m-Y H:i:s') : 'Sin registros',
+            'last_change_password'      => $this->lastHistory(HistoryActionUser::TYPE_0) ? Carbon::parse($this->lastHistory(HistoryActionUser::TYPE_0)->created_at)->format('d-m-Y H:i:s') : 'Sin registros',
         ];
     }
 }

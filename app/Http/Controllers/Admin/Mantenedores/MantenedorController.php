@@ -25,6 +25,7 @@ use App\Models\InformeCometido;
 use App\Models\Ley;
 use App\Models\Lugar;
 use App\Models\Motivo;
+use App\Models\Nacionalidad;
 use App\Models\ProcesoRendicionGasto;
 use App\Models\Solicitud;
 use App\Models\SubDepartamento;
@@ -139,6 +140,17 @@ class MantenedorController extends Controller
             $leys = Ley::orderBy('nombre', 'ASC')->get();
 
             return response()->json($leys);
+        } catch (\Exception $error) {
+            return response()->json($error->getMessage());
+        }
+    }
+
+    public function getNacionalidades()
+    {
+        try {
+            $nacionalidades = Nacionalidad::orderBy('nombre', 'ASC')->get();
+
+            return response()->json($nacionalidades);
         } catch (\Exception $error) {
             return response()->json($error->getMessage());
         }

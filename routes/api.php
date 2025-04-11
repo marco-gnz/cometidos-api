@@ -66,6 +66,7 @@ Route::group(
         Route::post('/admin/mantenedores/permisos-adicionales', [MantenedorController::class, 'getPermisosAdicionales']);
         Route::get('/admin/mantenedores/ilustres', [MantenedorController::class, 'getIlustres']);
         Route::get('/admin/mantenedores/leys', [MantenedorController::class, 'getLeys']);
+        Route::get('/admin/mantenedores/nacionalidades', [MantenedorController::class, 'getNacionalidades']);
         Route::get('/admin/mantenedores/leys/user', [MantenedorController::class, 'getLeysUser']);
         Route::get('/admin/mantenedores/grados', [MantenedorController::class, 'getGrados']);
         Route::get('/admin/mantenedores/motivos', [MantenedorController::class, 'getMotivos']);

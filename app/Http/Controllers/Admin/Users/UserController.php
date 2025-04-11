@@ -127,11 +127,13 @@ class UserController extends Controller
             $this->authorize('create', User::class);
             DB::beginTransaction();
             $data_user = [
-                'rut'       => $request->rut,
-                'dv'        => $request->dv,
-                'nombres'   => $request->nombres,
-                'apellidos' => $request->apellidos,
-                'email'     => $request->email
+                'rut'               => $request->rut,
+                'dv'                => $request->dv,
+                'nombres'           => $request->nombres,
+                'apellidos'         => $request->apellidos,
+                'email'             => $request->email,
+                'fecha_nacimiento'  => $request->fecha_nacimiento_value,
+                'nacionalidad_id'   => $request->nacionalidad_id
             ];
 
             $user = User::create($data_user);
@@ -169,7 +171,7 @@ class UserController extends Controller
                 return response()->json(
                     array(
                         'status'        => 'success',
-                        'title'         => "Funcionario ingresado con éxito.",
+                        'title'         => "Funcionaria(o) ingresado con éxito.",
                         'message'       => null,
                         'data'          => ListUsersResource::make($user)
                     )
@@ -197,6 +199,8 @@ class UserController extends Controller
                 'nombres',
                 'apellidos',
                 'email',
+                'fecha_nacimiento',
+                'nacionalidad_id'
             ];
             $update = $user->update($request->only($form));
 
@@ -204,7 +208,7 @@ class UserController extends Controller
                 return response()->json(
                     array(
                         'status'        => 'success',
-                        'title'         => "Funcionario modificado con éxito.",
+                        'title'         => "Funcionaria(o) modificado con éxito.",
                         'message'       => null,
                         'data'          => ListUsersResource::make($user)
                     )

@@ -40,7 +40,9 @@ class StoreUserRequest extends FormRequest
             'calidad_id'                => ['required_if:is_contrato,true'],
             'hora_id'                   => ['required_if:is_contrato,true'],
             'ley_id'                    => ['required_if:is_contrato,true'],
-            'grado_id'                  => ['required_if:is_contrato,true']
+            'grado_id'                  => ['required_if:is_contrato,true'],
+            'fecha_nacimiento_value'    => ['required', 'date', 'before_or_equal:' . now()->subYears(15)->format('Y-m-d')],
+            'nacionalidad_id'           => ['required', 'exists:nacionalidads,id']
         ];
     }
 
@@ -59,6 +61,11 @@ class StoreUserRequest extends FormRequest
             'nombres.required'                  => 'El :attribute es obligatorio',
 
             'apellidos.required'                => 'El :attribute es obligatorio',
+
+            'fecha_nacimiento_value.required'   => 'La :attribute es obligatoria',
+            'fecha_nacimiento_value.before_or_equal' => 'La fecha de nacimiento debe ser de una persona mayor de 15 años.',
+
+            'nacionalidad_id.required'         => 'La :attribute es obligatoria',
 
             'email.required'                    => 'El :attribute debe ser un email (Debe incluir @ y punto)',
 
@@ -99,6 +106,8 @@ class StoreUserRequest extends FormRequest
             'hora_id'               => 'hora',
             'ley_id'                => 'ley',
             'grado_id'              => 'grado',
+            'fecha_nacimiento_value' => 'fecha de nacimiento',
+            'nacionalidad_id'           => 'nacionalidad'
         ];
     }
 }

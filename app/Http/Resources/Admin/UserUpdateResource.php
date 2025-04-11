@@ -31,6 +31,8 @@ class UserUpdateResource extends JsonResource
             'hora_id'                   => $this->hora_id,
             'ley_id'                    => $this->ley_id,
             'grado_id'                  => $this->grado_id,
+            'fecha_nacimiento'          => $this->fecha_nacimiento,
+            'nacionalidad_id'           => $this->nacionalidad_id
         ];
     }
 }

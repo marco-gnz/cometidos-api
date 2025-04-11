@@ -32,6 +32,8 @@ class UpdateUserRequest extends FormRequest
             'nombres'                   => ['required'],
             'apellidos'                 => ['required'],
             'email'                     => ['required', 'email', Rule::unique('users', 'rut')->ignore($this->id)],
+            'fecha_nacimiento'          => ['required', 'date', 'before_or_equal:' . now()->subYears(15)->format('Y-m-d')],
+            'nacionalidad_id'           => ['required', 'exists:nacionalidads,id']
         ];
     }
 
@@ -52,6 +54,11 @@ class UpdateUserRequest extends FormRequest
             'apellidos.required'                => 'El :attribute es obligatorio',
 
             'email.required'                    => 'El :attribute debe ser un email (Debe incluir @ y punto)',
+
+            'nacionalidad_id.required'         => 'La :attribute es obligatoria',
+
+            'fecha_nacimiento.required'         => 'La :attribute es obligatoria',
+            'fecha_nacimiento.before_or_equal'  => 'La fecha de nacimiento debe ser de una persona mayor de 15 años.',
         ];
     }
 
@@ -63,6 +70,8 @@ class UpdateUserRequest extends FormRequest
             'nombres'               => 'nombre',
             'apellidos'             => 'apellido',
             'email'                 => 'correo',
+            'fecha_nacimiento'      => 'fecha de nacimiento',
+            'nacionalidad_id'       => 'nacionalidad'
         ];
     }
 }

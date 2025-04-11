@@ -75,9 +75,18 @@ class User extends Authenticatable
             $usuario->password              = bcrypt($usuario->rut);
         });
 
+        static::created(function ($usuario) {
+            $usuario->nombres           = strtoupper($usuario->nombres);
+            $usuario->apellidos         = strtoupper($usuario->apellidos);
+            $usuario->nombre_completo   = strtoupper($usuario->nombre_completo);
+            $usuario->save();
+        });
+
         static::updating(function ($usuario) {
             $usuario->rut_completo          = $usuario->rut . '-' . $usuario->dv;
-            $usuario->nombre_completo       = $usuario->nombres . ' ' . $usuario->apellidos;
+            $usuario->nombres               = Str::upper($usuario->nombres);
+            $usuario->apellidos             = Str::upper($usuario->apellidos);
+            $usuario->nombre_completo       = Str::upper($usuario->nombres . ' ' . $usuario->apellidos);
         });
     }
 
@@ -109,6 +118,11 @@ class User extends Authenticatable
     public function solicitudes()
     {
         return $this->hasMany(Solicitud::class);
+    }
+
+    public function procesoRendicionGastos()
+    {
+        return $this->hasMany(ProcesoRendicionGasto::class, 'user_id_by');
     }
 
     public function contratos()
