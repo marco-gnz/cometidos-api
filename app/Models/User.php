@@ -36,6 +36,8 @@ class User extends Authenticatable
         'nombre_completo',
         'estado',
         'email',
+        'fecha_nacimiento',
+        'nacionalidad_id',
         'telefono',
         'password',
         'is_firmante',
@@ -77,6 +79,11 @@ class User extends Authenticatable
             $usuario->rut_completo          = $usuario->rut . '-' . $usuario->dv;
             $usuario->nombre_completo       = $usuario->nombres . ' ' . $usuario->apellidos;
         });
+    }
+
+    public function nacionalidad()
+    {
+        return $this->belongsTo(Nacionalidad::class, 'nacionalidad_id');
     }
 
     public function firmasGrupo()

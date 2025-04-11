@@ -50,6 +50,8 @@ class StoreSolicitudRequest extends FormRequest
             'n_dias_100'                => ['required', 'integer'],
             'observacion_gastos'        => ['nullable'],
             'archivos'                  => ['required_if:derecho_pago,1'],
+            'n_contacto'                => ['nullable', 'regex:/^\+?[0-9]{1,4}\s?[0-9]{6,}$/'],
+            'email'                     => 'nullable|email'
         ];
     }
 
@@ -57,9 +59,23 @@ class StoreSolicitudRequest extends FormRequest
     {
         $validator->after(function ($validator) {
             if ($this->derecho_pago) {
-                if ($this->n_dias_40 <= 0 && $this->n_dias_100 <= 0) {
+                if ((int) $this->n_dias_40 <= 0 && (int) $this->n_dias_100 <= 0) {
                     $validator->errors()->add('n_dias_40', 'Al menos uno de los días debe ser mayor que 0 cuando es con derecho a pago.');
                     $validator->errors()->add('n_dias_100', 'Al menos uno de los días debe ser mayor que 0 cuando es con derecho a pago.');
+                }
+            }
+
+            if (is_array($this->medio_transporte) && in_array(1, $this->medio_transporte)) {
+                $contactoVacio  = empty($this->n_contacto);
+                $emailVacio     = empty($this->email);
+
+                if ($contactoVacio && $emailVacio) {
+                    $validator->errors()->add('n_contacto', 'El N° de contacto es obligatorio.');
+                    $validator->errors()->add('email', 'El correo personal es obligatorio.');
+                } elseif ($contactoVacio) {
+                    $validator->errors()->add('n_contacto', 'El N° de contacto es obligatorio.');
+                } elseif ($emailVacio) {
+                    $validator->errors()->add('email', 'El correo personal es obligatorio.');
                 }
             }
         });
@@ -112,7 +128,9 @@ class StoreSolicitudRequest extends FormRequest
 
             'n_dias_100.required'                   => 'El :attribute es obligatorio o dejarlo en 0',
 
-            'archivos.required_if'                  => 'Debe cargar :attribute al ser un cometido con derecho a pago'
+            'archivos.required_if'                  => 'Debe cargar :attribute al ser un cometido con derecho a pago',
+
+            'email.email'                           => 'El :attribute debe ser un correo válido. Ej: Debe tener un @ y un .com',
         ];
     }
 
@@ -141,7 +159,9 @@ class StoreSolicitudRequest extends FormRequest
             'n_dias_40'             => 'n° de días al 40%',
             'n_dias_100'            => 'n° de días al 100%',
             'observacion_gastos'    => 'observación de pasajes',
-            'archivos'              => 'archivos'
+            'archivos'              => 'archivos',
+            'email'                 => 'correo',
+            'n_contacto'            => 'N° de contacto',
         ];
     }
 }

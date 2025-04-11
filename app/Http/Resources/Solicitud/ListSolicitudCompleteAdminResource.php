@@ -93,7 +93,11 @@ class ListSolicitudCompleteAdminResource extends JsonResource
             'load_sirh'                     => $this->load_sirh ? true : false,
             'authorized_to_load_sirh'       => $this->authorizedToLoadSirh(),
             'is_load_sirh'                  => $this->isLoadSirhInfo(),
-            'last_mov_load_sirh'            => $this->lastMovLoadSirh() ? LoadSirhMovResource::make($this->lastMovLoadSirh()) : null
+            'last_mov_load_sirh'            => $this->lastMovLoadSirh() ? LoadSirhMovResource::make($this->lastMovLoadSirh()) : null,
+            'n_contacto'                    => $this->n_contacto,
+            'email'                         => $this->email,
+            'fecha_nacimiento'              => $this->funcionario->fecha_nacimiento ? Carbon::parse($this->funcionario->fecha_nacimiento)->format('d-m-Y') : null,
+            'nacionalidad'                  => $this->nacionalidad ? $this->nacionalidad->nombre : null
         ];
     }
 }

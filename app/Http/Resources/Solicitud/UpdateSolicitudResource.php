@@ -48,7 +48,10 @@ class UpdateSolicitudResource extends JsonResource
             'is_update'                         => $this->authorizedToUpdate() || $this->authorizedToUpdateAdmin(),
             'is_store_informe_cometido'         => $this->authorizedToCreateInformeCometido(),
             'dias_permitidos'                   => $this->dias_permitidos,
-            'observacion'                       => $this->observacion
+            'observacion'                       => $this->observacion,
+            'n_contacto'                        => $this->n_contacto,
+            'email'                             => $this->email,
+            'establecimiento_id'                => $this->establecimiento_id
         ];
     }
 }

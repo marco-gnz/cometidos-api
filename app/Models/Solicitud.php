@@ -141,7 +141,10 @@ class Solicitud extends Model
         'fecha_by_user',
         'user_id_update',
         'fecha_by_user_update',
-        'is_reasignada'
+        'is_reasignada',
+        'n_contacto',
+        'email',
+        'nacionalidad_id'
     ];
 
     public function getItemPresupuestario($solicitud)
@@ -185,6 +188,7 @@ class Solicitud extends Model
             $solicitud->user_id                 = Auth::user()->id;
             $solicitud->user_id_by              = Auth::user()->id;
             $solicitud->fecha_by_user           = now();
+            $solicitud->nacionalidad_id         = $solicitud->funcionario->nacionalidad ? $solicitud->funcionario->nacionalidad->id : null;
         });
 
         static::created(function ($solicitud) {
@@ -417,6 +421,11 @@ class Solicitud extends Model
     public function hora()
     {
         return $this->belongsTo(Hora::class, 'hora_id');
+    }
+
+    public function nacionalidad()
+    {
+        return $this->belongsTo(Nacionalidad::class, 'nacionalidad_id');
     }
 
     public function cuentaBancaria()

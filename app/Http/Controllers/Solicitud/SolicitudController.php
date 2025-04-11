@@ -158,47 +158,71 @@ class SolicitudController extends Controller
     public function isPlazoAvion(Request $request)
     {
         try {
-            $request->validate([
-                'contrato_uuid' => 'required|exists:contratos,uuid',
-                'fecha_inicio'  => 'required|date',
+            $validated = $request->validate([
+                'contrato_uuid'      => 'nullable|exists:contratos,uuid',
+                'establecimiento_id' => 'nullable|exists:establecimientos,id',
+                'fecha_inicio'       => 'required|date',
             ]);
 
-            $contrato           = Contrato::where('uuid', $request->contrato_uuid)->firstOrFail();
-            $diaz_plazo_avion   = (int)Configuration::obtenerValor('solicitud.dias_plazo_avion', $contrato->establecimiento_id);
-            $now                = Carbon::now();
-            $fecha_inicio       = Carbon::parse($request->fecha_inicio);
-            $status = null;
-            $title = null;
-            $message = null;
-            if ($fecha_inicio->format('Y-m-d') >= $now->format('Y-m-d')) {
-                $diff_in_days           = $now->diffInDays($fecha_inicio) + 1;
-                $fecha_termino_f        = $fecha_inicio->copy();
-                $fds                    = $this->getWeekendCount(Carbon::now(), $fecha_termino_f);
-                $feriados               = $this->getFeriadosCount(Carbon::now(), $fecha_termino_f);
-                $total_descuento        = $fds + $feriados;
-                $diff_in_days_total     = $diff_in_days - $total_descuento;
-                $status             = 'success';
-                $title              = "Plazo de Avión está dentro del plazo de {$diaz_plazo_avion} días hábiles.";
-                $message            = null;
-                if ($diff_in_days_total < $diaz_plazo_avion) {
-                    $status     = 'error';
-                    $title      = "Plazo de Avión está fuera del plazo de {$diaz_plazo_avion} días hábiles.";
-                    $message    = 'Solicitud puede ser rechazada y debe indicar el motivo en la observación por el cuál está fuera de plazo';
-                }
+            $establecimiento_id = $this->getEstablecimientoId($validated['contrato_uuid'] ?? null, $validated['establecimiento_id'] ?? null);
+
+            if (!$establecimiento_id) {
+                return response()->json([
+                    'status'  => 'error',
+                    'title'   => 'No se pudo determinar el establecimiento',
+                    'message' => 'Debe especificar un contrato válido o un establecimiento',
+                    'data'    => null
+                ]);
             }
 
-            return response()->json(
-                array(
-                    'status'        => $status,
-                    'title'         => $title,
-                    'message'       => $message,
-                    'data'          => null
-                )
-            );
+            $dias_plazo_avion = (int) Configuration::obtenerValor('solicitud.dias_plazo_avion', $establecimiento_id);
+            $fecha_inicio      = Carbon::parse($validated['fecha_inicio']);
+            $hoy               = Carbon::now();
+
+            if ($fecha_inicio->format('Y-m-d') < $hoy->format('Y-m-d')) {
+                return response()->json([
+                    'status'  => null,
+                    'title'   => null,
+                    'message' => null,
+                    'data'    => null
+                ]);
+            }
+
+            $diff_dias_totales = $this->calcularDiasHabiles($hoy, $fecha_inicio);
+
+            $status  = 'success';
+            $title   = "Plazo para solicitar pasajes de Avión está dentro del plazo de {$dias_plazo_avion} días hábiles.";
+            $message = "Una vez aprobado la solicitud por su jefatura, será informado a Departamento de Abastecimiento.";
+
+            if ($diff_dias_totales < $dias_plazo_avion) {
+                $status  = 'error';
+                $title   = "Plazo para solicitar pasajes de Avión está fuera del plazo de {$dias_plazo_avion} días hábiles.";
+                $message = 'Solicitud puede ser rechazada y debe indicar el motivo en la observación por el cuál está fuera de plazo.';
+            }
+
+            return response()->json(compact('status', 'title', 'message') + ['data' => null]);
         } catch (\Exception $error) {
-            Log::info($error->getMessage());
+            Log::error("Error en isPlazoAvion: " . $error->getMessage());
             return response()->json(['error' => $error->getMessage()], 500);
         }
+    }
+
+    private function getEstablecimientoId(?string $contratoUuid, ?int $establecimientoId): ?int
+    {
+        if ($contratoUuid) {
+            $contrato = Contrato::where('uuid', $contratoUuid)->first();
+            return $contrato->establecimiento_id ?? $establecimientoId;
+        }
+
+        return $establecimientoId;
+    }
+
+    private function calcularDiasHabiles(Carbon $desde, Carbon $hasta): int
+    {
+        $diff       = $desde->diffInDays($hasta) + 1;
+        $fds        = $this->getWeekendCount($desde, $hasta);
+        $feriados   = $this->getFeriadosCount($desde, $hasta);
+        return $diff - ($fds + $feriados);
     }
 
     public function storeSolicitud(StoreSolicitudRequest $request)
@@ -282,7 +306,9 @@ class SolicitudController extends Controller
                 'establecimiento_id'        => $contrato->establecimiento_id,
                 'hora_id'                   => $contrato->hora_id,
                 'grupo_id'                  => $contrato->grupo_id,
-                'observacion'               => $request->observacion
+                'observacion'               => $request->observacion,
+                'n_contacto'                => $request->n_contacto,
+                'email'                     => $request->email
             ];
 
 
@@ -700,9 +726,11 @@ class SolicitudController extends Controller
             } else {
                 $this->authorize('updateadmin', $solicitud);
             }
+
+            /*
             $is_update_files    = $this->validateUpdateSolicitudFiles($solicitud, $request->archivos);
 
-            /* if (!$is_update_files) {
+           if (!$is_update_files) {
                 $message = "Se requiere adjuntar documentos.";
                 return response()->json([
                     'errors' => [
@@ -729,7 +757,9 @@ class SolicitudController extends Controller
                 'n_dias_40',
                 'n_dias_100',
                 'observacion_gastos',
-                'observacion'
+                'observacion',
+                'n_contacto',
+                'email'
             ];
 
             $history_solicitud_old = $solicitud->only($form);

@@ -85,6 +85,8 @@ class DatosSolicitudResource extends JsonResource
             'n_dias_100'                => $this->n_dias_100,
             'informe'                   => $informe,
             'is_load_sirh'              => $this->isLoadSirhInfo(),
+            'n_contacto'                => $this->n_contacto,
+            'email'                     => $this->email
         ];
     }
 }
