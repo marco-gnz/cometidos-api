@@ -192,6 +192,7 @@ class Solicitud extends Model
         });
 
         static::created(function ($solicitud) {
+            $convenio_id = self::searchConvenio($solicitud);
             $dias_permitidos                = (int)Configuration::obtenerValor('informecometido.dias_atraso', $solicitud->establecimiento_id);
             $vistos                         = Configuration::obtenerValor('info.vistos', $solicitud->establecimiento_id);
             $item                           = self::getItemPresupuestario($solicitud);
@@ -202,7 +203,8 @@ class Solicitud extends Model
             $solicitud->total_firmas        = $solicitud->firmantes()->where('status', true)->count();
             $solicitud->dias_permitidos     = $dias_permitidos;
             $solicitud->vistos              = $vistos;
-            $solicitud->convenio_id         = self::searchConvenio($solicitud);
+            $solicitud->convenio_id         = $convenio_id;
+            $solicitud->afecta_convenio     = $convenio_id !== null ? true : false;
             $solicitud->save();
         });
 
