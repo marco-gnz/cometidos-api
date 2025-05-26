@@ -263,7 +263,10 @@
                 <div class="column">
                 </div>
                 <div class="column">
-                    <p><strong>RESOLUCIÓN {{ App\Models\Solicitud::RESOLUCION_NOM[$solicitud->tipo_resolucion] }} N°</strong> {{ $solicitud->codigo }}/{{ Carbon\Carbon::parse($solicitud->created_at)->format('d-m-Y') }}</p>
+                    <p><strong>RESOLUCIÓN {{ App\Models\Solicitud::RESOLUCION_NOM[$solicitud->tipo_resolucion] }}
+                            N°</strong>
+                        {{ $solicitud->codigo }}/{{ Carbon\Carbon::parse($solicitud->created_at)->format('d-m-Y') }}
+                    </p>
                     <p><strong>OSORNO,</strong></p>
                 </div>
             </div>
@@ -284,7 +287,7 @@
             <h3>DATOS DEL COMETIDO</h3>
             <table class="table-datos-contractuales">
                 <tr>
-                    <td rowspan="10">
+                    <td rowspan="9">
                         <h3>
                             <ol type="I" start="1">
                                 <li>Datos Personales
@@ -329,11 +332,7 @@
                     <td>{{ $solicitud->funcionario->email }}</td>
                 </tr>
                 <tr>
-                    <td><strong>Teléfono / Anexo</strong></td>
-                    <td>-- / --</td>
-                </tr>
-                <tr>
-                    <td rowspan="2">
+                    <td rowspan="3">
                         <h3>
                             <ol type="I" start="2">
                                 <li>Periodo
@@ -343,8 +342,11 @@
                     <td><strong>Periodo cometido</strong></td>
                     <td>{{ Carbon\Carbon::parse($solicitud->fecha_inicio)->format('d-m-Y') }} /
                         {{ Carbon\Carbon::parse($solicitud->fecha_termino)->format('d-m-Y') }}
-
-                        {{ Carbon\Carbon::parse($solicitud->hora_llegada)->format('H:i') }} a
+                    </td>
+                </tr>
+                <tr>
+                    <td><strong>Hora salida / llegada</strong></td>
+                    <td>{{ Carbon\Carbon::parse($solicitud->hora_llegada)->format('H:i') }} /
                         {{ Carbon\Carbon::parse($solicitud->hora_salida)->format('H:i') }} hrs.</td>
                 </tr>
                 <tr>
@@ -413,7 +415,7 @@
                     <td>{{ $solicitud->motivos->pluck('nombre')->implode(', ') }}</td>
                 </tr>
                 <tr>
-                    <td rowspan="2">
+                    <td rowspan="{{$solicitud->afecta_convenio ? 5 : 1}}">
                         <h3>
                             <ol type="I" start="6">
                                 <li>Convenio
@@ -423,24 +425,41 @@
                     <td><strong>Afecta</strong></td>
                     <td>{{ $solicitud->afectaConvenio() }}</td>
                 </tr>
-                <tr>
-                    <td><strong>Datos</strong></td>
-                    <td>
-                        @if ($solicitud->afecta_convenio)
-                            {{ $solicitud->convenio->codigo }} / Año {{ $solicitud->convenio->anio }}
-                        @else
-                            --
-                        @endif
-                    </td>
-                </tr>
-
+                @if ($solicitud->afecta_convenio)
+                    <tr>
+                        <td><strong>Resolución</strong></td>
+                        <td>
+                            {{ $solicitud->convenio && $solicitud->convenio->n_resolucion ? 'N°' . $solicitud->convenio->n_resolucion : '--' }}
+                            / Año
+                            {{ $solicitud->convenio && $solicitud->convenio->anio ? $solicitud->convenio->anio : '--' }}
+                        </td>
+                    </tr>
+                    <tr>
+                        <td><strong>Ilustre convenio</strong></td>
+                        <td>
+                            {{$solicitud->convenio && $solicitud->convenio->ilustre ? $solicitud->convenio->ilustre->nombre  : ''}}
+                        </td>
+                    </tr>
+                    <tr>
+                        <td><strong>Tipo de contrato</strong></td>
+                        <td>
+                            {{$solicitud->convenio && $solicitud->convenio->tipo_contrato ? $solicitud->convenio->tipo_contrato  : ''}}
+                        </td>
+                    </tr>
+                    <tr>
+                        <td><strong>N° de viáticos mensuales permitidos</strong></td>
+                        <td>
+                            {{$solicitud->convenio && $solicitud->convenio->n_viatico_mensual ? $solicitud->convenio->n_viatico_mensual  : ''}}
+                        </td>
+                    </tr>
+                @endif
             </table>
         </div>
         <div class="seccion">
             <div class="row">
                 <div class="column-1">
                     <h4>Actividad realizada</h4>
-                    <p>{{$solicitud->actividad_realizada ? $solicitud->actividad_realizada : ''}}</p>
+                    <p>{{ $solicitud->actividad_realizada ? $solicitud->actividad_realizada : '' }}</p>
                 </div>
             </div>
         </div>
@@ -464,7 +483,7 @@
                                     </td>
                                     <td>{{ $solicitud->ultimoCalculo->n_dias_100 != null ? $solicitud->ultimoCalculo->n_dias_100 : 'N/A' }}
                                     </td>
-                                    <td>{{$solicitud->ultimoCalculo->n_dias_40  + $solicitud->ultimoCalculo->n_dias_100  }}
+                                    <td>{{ $solicitud->ultimoCalculo->n_dias_40 + $solicitud->ultimoCalculo->n_dias_100 }}
                                     </td>
                                 </tr>
                                 <tr>
@@ -495,7 +514,7 @@
                             </tfoot>
                         </table>
                     @else
-                    <p>Sin valorización de cometido.</p>
+                        <p>Sin valorización de cometido.</p>
                     @endif
                     @if ($solicitud->cuentaBancaria && $solicitud->ultimoCalculo && $solicitud->derecho_pago === 1)
                         <table class="table-1">
