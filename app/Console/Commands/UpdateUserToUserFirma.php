@@ -13,7 +13,7 @@ class UpdateUserToUserFirma extends Command
      *
      * @var string
      */
-    protected $signature = 'command:update-user-to-user-firma';
+    protected $signature = 'update:update-user-to-user-firma';
 
     /**
      * The console command description.
