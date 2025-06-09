@@ -40,8 +40,8 @@ class UpdateUserToUserFirma extends Command
     public function handle()
     {
         try {
-            $id_rail_asenjo         = 448;
-            $id_alvarado_naguil     = 3992;
+            $id_user_a_reemplazar        = 1349;
+            $id_user_reemplazo           = 4146;
 
             $this->info('Iniciando actualización de grupos de firma...');
 
@@ -52,57 +52,57 @@ class UpdateUserToUserFirma extends Command
             $firmas_pendiente_solicitud_actualizadas = 0;
             $firmas_no_pendiente_solicitud_actualizadas = 0;
 
-            $grupos_1_count = Grupo::whereHas('firmantes', fn($q) => $q->where('user_id', $id_rail_asenjo)->where('role_id', 6))
+            $grupos_1_count = Grupo::whereHas('firmantes', fn($q) => $q->where('user_id', $id_user_a_reemplazar)->where('role_id', 5))
                 ->count();
-            $this->info("Grupos con Rail Asenjo como Rev. Finanzas: $grupos_1_count");
+            $this->info("Grupos con Usuario Origen: $grupos_1_count");
 
-            $grupos_2 = Grupo::whereHas('firmantes', fn($q) => $q->where('user_id', $id_rail_asenjo)->where('role_id', 6))
+            $grupos_2 = Grupo::whereHas('firmantes', fn($q) => $q->where('user_id', $id_user_a_reemplazar)->where('role_id', 5))
                 ->get();
 
             foreach ($grupos_2 as $grupo) {
-                $rev_finanzas = $grupo->firmantes()->where('user_id', $id_rail_asenjo)->where('role_id', 6)->first();
-                if ($rev_finanzas) {
-                    $rev_finanzas->update(['user_id' => $id_alvarado_naguil]);
+                $origen = $grupo->firmantes()->where('user_id', $id_user_a_reemplazar)->where('role_id', 5)->first();
+                if ($origen) {
+                    $origen->update(['user_id' => $id_user_reemplazo]);
                     $actualizados_grupos_2++;
                 }
             }
 
-            $solicitudes = Solicitud::firmantesPendiente([$id_rail_asenjo])
+            $solicitudes = Solicitud::firmantesPendiente([$id_user_a_reemplazar])
                 ->get();
 
             foreach ($solicitudes as $solicitud) {
-                $firma_rev_finanzas = $solicitud->firmantes('role_id', 6)
-                    ->where('user_id', $id_rail_asenjo)
+                $firma_origen = $solicitud->firmantes('role_id', 5)
+                    ->where('user_id', $id_user_a_reemplazar)
                     ->first();
 
-                if ($firma_rev_finanzas) {
-                    $firma_rev_finanzas->update(['user_id' => $id_alvarado_naguil]);
+                if ($firma_origen) {
+                    $firma_origen->update(['user_id' => $id_user_reemplazo]);
                     $firmas_pendiente_solicitud_actualizadas++;
                 }
             }
 
-            $solicitudes = Solicitud::whereHas('firmantes', function ($q) use ($id_rail_asenjo) {
-                $q->where('role_id', 6)
-                    ->where('user_id', $id_rail_asenjo)
+            $solicitudes = Solicitud::whereHas('firmantes', function ($q) use ($id_user_a_reemplazar) {
+                $q->where('role_id', 5)
+                    ->where('user_id', $id_user_a_reemplazar)
                     ->where('is_executed', false);
             })
                 ->where('status', Solicitud::STATUS_EN_PROCESO)
                 ->get();
 
             foreach ($solicitudes as $solicitud) {
-                $firma_rev_finanzas = $solicitud->firmantes('role_id', 6)
-                    ->where('user_id', $id_rail_asenjo)
+                $firma_origen = $solicitud->firmantes('role_id', 5)
+                    ->where('user_id', $id_user_a_reemplazar)
                     ->first();
 
-                if ($firma_rev_finanzas) {
-                    $firma_rev_finanzas->update(['user_id' => $id_alvarado_naguil]);
+                if ($firma_origen) {
+                    $firma_origen->update(['user_id' => $id_user_reemplazo]);
                     $firmas_no_pendiente_solicitud_actualizadas++;
                 }
             }
 
-            $this->info("✅ Grupos modificados en que se reemplaza a Rail Asenjo por Alvarado Naguil: $actualizados_grupos_2");
-            $this->info("✅ Firmas de solicitudes actualizadas pendientes por Rail Asenjo y se reemplaza por Alvarado Naguil: $firmas_pendiente_solicitud_actualizadas");
-            $this->info("✅ Firmas de solicitudes actualizadas NO pendientes por Rail Asenjo y se reemplaza por Alvarado Naguil:: $firmas_no_pendiente_solicitud_actualizadas");
+            $this->info("✅ Grupos modificados en que se reemplaza a Usuario Origen por Usuario Reemplazo: $actualizados_grupos_2");
+            $this->info("✅ Firmas de solicitudes actualizadas pendientes por Usuario Origen y se reemplaza por Usuario Reemplazo: $firmas_pendiente_solicitud_actualizadas");
+            $this->info("✅ Firmas de solicitudes actualizadas NO pendientes por Usuario Origen y se reemplaza por Usuario Reemplazo:: $firmas_no_pendiente_solicitud_actualizadas");
         } catch (\Exception $e) {
             Log::error('Error en comando update:update-user-to-user-firma: ' . $e->getMessage());
             $this->error('❌ Error: ' . $e->getMessage());
