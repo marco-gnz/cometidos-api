@@ -35,7 +35,9 @@ class SoliucitudCalculo extends Model
     protected static function booted()
     {
         static::creating(function ($calculo) {
-            $calculo->monto_total             = $calculo->monto_40 + $calculo->monto_100;
+            $total_monto = $calculo->monto_40 + $calculo->monto_100;
+            $calculo->monto_total             = $total_monto;
+            $calculo->monto_total_pagar       = $total_monto;
             $calculo->uuid                    = Str::uuid();
             $calculo->fecha_by_user           = now();
             $calculo->user_id_by              = Auth::user()->id;
