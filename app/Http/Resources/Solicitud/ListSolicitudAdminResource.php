@@ -39,7 +39,9 @@ class ListSolicitudAdminResource extends JsonResource
             'informe_cometido'          => $this->informeCometido() ? ListInformeCometidoResource::make($this->informeCometido()) : null,
             'firma_pendiente'           => $this->isFirmaPendiente() ? $this->isFirmaPendiente()->funcionario->abreNombres() : null,
             'jefatura_directa'          => $this->jefaturaDirecta() ? $this->jefaturaDirecta()->funcionario->abreNombres()  : null,
-            'created_at'                => Carbon::parse($this->created_at)->format('d-m-y H:i')
+            'created_at'                => Carbon::parse($this->created_at)->format('d-m-y H:i'),
+            'monto_total'               => $this->derecho_pago ? ($this->getLastCalculo() ? $this->getLastCalculo()->valorizacionTotalPagar()->monto_total_pagar : 'S/V') : 'N/A',
+            'monto_total_is_bold'       => $this->derecho_pago ? ($this->getLastCalculo() ? true : false) : false
         ];
     }
 }

@@ -129,6 +129,16 @@ class SolicitudAdminController extends Controller
                 $solicitudes = $query->select('solicituds.*')
                     ->join('users', 'users.id', '=', 'solicituds.user_id')
                     ->orderBy('users.apellidos', $direction);
+            } else if ($sort === 'valorizacion.asc' || $sort === 'valorizacion.desc') {
+                $subquery = DB::table('soliucitud_calculos')
+                    ->select('monto_total_pagar')
+                    ->whereColumn('solicitud_id', 'solicituds.id')
+                    ->latest()
+                    ->limit(1);
+
+                $solicitudes = $query->select('solicituds.*')
+                    ->addSelect(['ultimo_monto_total' => $subquery])
+                    ->orderBy('ultimo_monto_total', $direction);
             } else {
                 $solicitudes    = $query->orderBy($column, $direction);
             }

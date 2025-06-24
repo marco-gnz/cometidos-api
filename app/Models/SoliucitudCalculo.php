@@ -24,6 +24,7 @@ class SoliucitudCalculo extends Model
         'monto_40',
         'monto_100',
         'monto_total',
+        'monto_total_pagar',
         'solicitud_id',
         'ley_id',
         'grado_id',
@@ -137,6 +138,15 @@ class SoliucitudCalculo extends Model
             'total_monto_ajustes'           => "$" . number_format($total_ajustes, 0, ',', '.'),
             'total_valorizacion'            => "$" . number_format($total_valorizacion, 0, ',', '.'),
             'total_valorizacion_value'      => $total_valorizacion
+        ];
+        return $result;
+    }
+
+    public function valorizacionTotalPagar()
+    {
+        $result = (object) [
+            'monto_total_pagar'            => "$" . number_format($this->monto_total_pagar, 0, ',', '.'),
+            'monto_total_pagar_value'      => $this->monto_total_pagar
         ];
         return $result;
     }

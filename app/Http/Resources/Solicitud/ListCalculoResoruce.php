@@ -35,7 +35,7 @@ class ListCalculoResoruce extends JsonResource
             'monto_total_format_calculo'        => $this->monto_total ? "$" . number_format($this->monto_total, 0, ",", ".") : null,
             'ley_escala'                        => $this->ley ? $this->ley->nombre : null,
             'grado_escala'                      => $this->grado ? $this->grado->nombre : null,
-            'created_at'                        => $this->fecha_by_user ? Carbon::parse($this->fecha_by_user)->format('d-m-Y H:i') : null,
+            'created_at'                        => $this->fecha_by_user ? Carbon::parse($this->fecha_by_user)->format('d-m-Y H:i:s') : null,
             'user_by'                           => $this->userBy ? $this->userBy->nombre_completo : null,
             'ajustes'                           => $this->ajustes ? ListAjustesCalculoResource::collection($this->ajustes) : null,
             'result'                            => $result

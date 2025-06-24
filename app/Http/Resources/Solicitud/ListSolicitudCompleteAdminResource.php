@@ -18,7 +18,8 @@ class ListSolicitudCompleteAdminResource extends JsonResource
      */
     public function toArray($request)
     {
-        $total  = $this->actividades()->sum('actividad_gasto_solicitud.mount');
+        $total      = $this->actividades()->sum('actividad_gasto_solicitud.mount');
+        $calculo    = $this->getLastCalculo();
         return [
             'uuid'                      => $this->uuid,
             'codigo'                    => $this->codigo,
@@ -97,7 +98,8 @@ class ListSolicitudCompleteAdminResource extends JsonResource
             'n_contacto'                    => $this->n_contacto,
             'email'                         => $this->email,
             'fecha_nacimiento'              => $this->funcionario->fecha_nacimiento ? Carbon::parse($this->funcionario->fecha_nacimiento)->format('d-m-Y') : null,
-            'nacionalidad'                  => $this->nacionalidad ? $this->nacionalidad->nombre : null
+            'nacionalidad'                  => $this->nacionalidad ? $this->nacionalidad->nombre : null,
+            'calculo'                       => $calculo ? ListCalculoResoruce::make($calculo) : null
         ];
     }
 }

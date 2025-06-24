@@ -46,6 +46,16 @@ class CalculoAjuste extends Model
             $ajuste->ip_address             = Request::ip();
             $ajuste->fecha_by_user          = now();
         });
+
+        static::created(function ($ajuste) {
+            $total_valorizacion_value = $ajuste->calculo->valorizacionTotalAjusteMonto()->total_valorizacion_value ?? 0;
+            $ajuste->calculo->update(['monto_total_pagar' => $total_valorizacion_value]);
+        });
+
+        static::deleted(function ($ajuste) {
+            $total_valorizacion_value = $ajuste->calculo->valorizacionTotalAjusteMonto()->total_valorizacion_value ?? 0;
+            $ajuste->calculo->update(['monto_total_pagar' => $total_valorizacion_value]);
+        });
     }
 
     public function estados()
