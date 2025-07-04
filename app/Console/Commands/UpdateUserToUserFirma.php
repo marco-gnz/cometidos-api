@@ -40,8 +40,8 @@ class UpdateUserToUserFirma extends Command
     public function handle()
     {
         try {
-            $id_user_a_reemplazar        = 1349;
-            $id_user_reemplazo           = 4146;
+            $id_user_a_reemplazar        = 3966;
+            $id_user_reemplazo           = 41;
 
             $this->info('Iniciando actualización de grupos de firma...');
 
