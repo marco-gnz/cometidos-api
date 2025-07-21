@@ -24,6 +24,20 @@ class ListSolicitudResource extends JsonResource
             'is_informe_atrasado'       => $this->isInformeAtrasado()
         ];
 
+        $lugaresCollection  = $this->lugares;
+        $paisesCollection   = $this->paises;
+
+        $lugares        = null;
+        $other_lugares  = false;
+
+        if ($lugaresCollection->isNotEmpty()) {
+            $lugares        = $lugaresCollection->first()->nombre;
+            $other_lugares  = $lugaresCollection->count() > 1;
+        } elseif ($paisesCollection->isNotEmpty()) {
+            $lugares        = $paisesCollection->first()->nombre;
+            $other_lugares  = $paisesCollection->count() > 1;
+        }
+
         return [
             'uuid'                      => $this->uuid,
             'codigo'                    => $this->codigo,
@@ -49,8 +63,8 @@ class ListSolicitudResource extends JsonResource
             'valor_total'               => $this->valorTotal(),
             'not_actividad'             => $this->isNotActividad(),
             'authorized_to_anular'      => $this->authorizedToAnular(),
-            'lugares'                   => $this->lugares ? $this->lugares->first()->nombre : null,
-            'other_lugares'             => $this->lugares()->count() > 1 ? true : false
+            'lugares'                   => $lugares ? $lugares : null,
+            'other_lugares'             => $other_lugares
         ];
     }
 }
