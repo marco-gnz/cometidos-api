@@ -313,7 +313,7 @@ class ProcesoRendicionGasto extends Model
 
         $query->where(function ($q) use ($params, $camposDirectos) {
             foreach ($camposDirectos as $campo) {
-                $q->orWhere($campo, 'like', "%{$params}%");
+                $q->orWhere("proceso_rendicion_gastos.$campo", 'like', "%{$params}%");
             }
         });
 

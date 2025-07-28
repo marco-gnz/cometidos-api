@@ -196,8 +196,8 @@ class ProcesoRendicionController extends Controller
 
             $query->where(function ($query) use ($status_proceso_rendicion) {
                 $query->whereHas('solicitud', function ($q) use ($status_proceso_rendicion) {
-                    $q->where('status', Solicitud::STATUS_PROCESADO);
-                })->whereNotIn('status', $status_proceso_rendicion);
+                    $q->where('solicituds.status', Solicitud::STATUS_PROCESADO);
+                })->whereNotIn('proceso_rendicion_gastos.status', $status_proceso_rendicion);
             });
         } catch (\Exception $error) {
             Log::info($error->getMessage());
