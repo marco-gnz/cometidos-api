@@ -40,8 +40,8 @@ class UpdateUserToUserFirma extends Command
     public function handle()
     {
         try {
-            $id_user_a_reemplazar        = 3966;
-            $id_user_reemplazo           = 41;
+            $id_user_a_reemplazar        = 3707;
+            $id_user_reemplazo           = 2928;
 
             $this->info('Iniciando actualización de grupos de firma...');
 
@@ -52,15 +52,15 @@ class UpdateUserToUserFirma extends Command
             $firmas_pendiente_solicitud_actualizadas = 0;
             $firmas_no_pendiente_solicitud_actualizadas = 0;
 
-            $grupos_1_count = Grupo::whereHas('firmantes', fn($q) => $q->where('user_id', $id_user_a_reemplazar)->where('role_id', 5))
+            $grupos_1_count = Grupo::whereHas('firmantes', fn($q) => $q->where('user_id', $id_user_a_reemplazar)->where('role_id', 7))
                 ->count();
             $this->info("Grupos con Usuario Origen: $grupos_1_count");
 
-            $grupos_2 = Grupo::whereHas('firmantes', fn($q) => $q->where('user_id', $id_user_a_reemplazar)->where('role_id', 5))
+            $grupos_2 = Grupo::whereHas('firmantes', fn($q) => $q->where('user_id', $id_user_a_reemplazar)->where('role_id', 7))
                 ->get();
 
             foreach ($grupos_2 as $grupo) {
-                $origen = $grupo->firmantes()->where('user_id', $id_user_a_reemplazar)->where('role_id', 5)->first();
+                $origen = $grupo->firmantes()->where('user_id', $id_user_a_reemplazar)->where('role_id', 7)->first();
                 if ($origen) {
                     $origen->update(['user_id' => $id_user_reemplazo]);
                     $actualizados_grupos_2++;
@@ -71,7 +71,7 @@ class UpdateUserToUserFirma extends Command
                 ->get();
 
             foreach ($solicitudes as $solicitud) {
-                $firma_origen = $solicitud->firmantes('role_id', 5)
+                $firma_origen = $solicitud->firmantes('role_id', 7)
                     ->where('user_id', $id_user_a_reemplazar)
                     ->first();
 
@@ -82,7 +82,7 @@ class UpdateUserToUserFirma extends Command
             }
 
             $solicitudes = Solicitud::whereHas('firmantes', function ($q) use ($id_user_a_reemplazar) {
-                $q->where('role_id', 5)
+                $q->where('role_id', 7)
                     ->where('user_id', $id_user_a_reemplazar)
                     ->where('is_executed', false);
             })
@@ -90,7 +90,7 @@ class UpdateUserToUserFirma extends Command
                 ->get();
 
             foreach ($solicitudes as $solicitud) {
-                $firma_origen = $solicitud->firmantes('role_id', 5)
+                $firma_origen = $solicitud->firmantes('role_id', 7)
                     ->where('user_id', $id_user_a_reemplazar)
                     ->first();
 
