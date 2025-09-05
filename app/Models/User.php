@@ -337,7 +337,7 @@ class User extends Authenticatable
     public function abreNombresList()
     {
         $nombres    = mb_substr($this->nombres, 0, 3);
-        $apellidos  = mb_substr($this->apellidos, 0, 17);
+        $apellidos  = $this->apellidos;
         return "$apellidos $nombres.";
     }
 

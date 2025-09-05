@@ -475,6 +475,12 @@ class Solicitud extends Model
         return $this->hasOne(SoliucitudCalculo::class)->latest()->first();
     }
 
+    public function lastCalculo()
+    {
+        return $this->hasOne(SoliucitudCalculo::class)
+            ->latestOfMany('id');
+    }
+
     public function isPosibleGrupos()
     {
         if (self::authorizedToSincronizarGrupo()) {
@@ -549,6 +555,21 @@ class Solicitud extends Model
         }
         return $total;
     }
+
+    public function ultimoInformeCometido()
+    {
+        $status = [
+            EstadoInformeCometido::STATUS_INGRESADA,
+            EstadoInformeCometido::STATUS_MODIFICADO,
+            EstadoInformeCometido::STATUS_APROBADO,
+        ];
+
+        return $this->hasOne(InformeCometido::class)
+            ->whereIn('last_status', $status)
+            ->latest('fecha_by_user');
+    }
+
+
 
     public function informeCometido()
     {
@@ -726,7 +747,54 @@ class Solicitud extends Model
         return $this->firmantes()->where('role_id', 3)->where('status', true)->first();
     }
 
+    public function jefaturaDirectaRelation()
+    {
+        return $this->hasOne(SolicitudFirmante::class)
+            ->where('role_id', 3)
+            ->where('status', true)
+            ->latest('posicion_firma');
+    }
+
     public function isFirmaPendiente()
+    {
+        if ($this->status !== self::STATUS_EN_PROCESO) {
+            return null;
+        }
+
+        // Si ya cargaste firmantes (eager loaded) -- filtrar en memoria (no queries adicionales)
+        if ($this->relationLoaded('firmantes')) {
+            $firmantes = $this->firmantes
+                ->filter(fn($f) => $f->status && !$f->is_executed)
+                ->sortBy('posicion_firma'); // asc
+
+            if ($this->is_reasignada) {
+                return $firmantes->first(fn($f) => $f->is_reasignado && $f->posicion_firma == $this->posicion_firma_actual);
+            }
+
+            return $firmantes->first(fn($f) => $f->posicion_firma > $this->posicion_firma_actual);
+        }
+
+        // Fallback: para el caso puntual (cuando no cargaste firmantes) ejecuta la query
+        if (is_null($this->posicion_firma_actual)) {
+            return null;
+        }
+
+        $query = $this->firmantes()
+            ->where('status', true)
+            ->where('is_executed', false);
+
+        if ($this->is_reasignada) {
+            $query->where('is_reasignado', true)
+                ->where('posicion_firma', $this->posicion_firma_actual);
+        } else {
+            $query->where('posicion_firma', '>', $this->posicion_firma_actual);
+        }
+
+        return $query->orderBy('posicion_firma', 'ASC')->first();
+    }
+
+
+    /* public function isFirmaPendiente()
     {
         if ($this->status !== self::STATUS_EN_PROCESO) {
             return null;
@@ -743,8 +811,7 @@ class Solicitud extends Model
             $query->where('posicion_firma', '>', $this->posicion_firma_actual);
         }
         return $query->orderBy('posicion_firma', 'ASC')->first();
-    }
-
+    } */
 
     public function totalFirmasAprobadas()
     {
@@ -755,6 +822,24 @@ class Solicitud extends Model
     {
         $count_firmantes = $this->firmantes()->where('role_id', '!=', 1)->where('status', true)->count();
         return $count_firmantes;
+    }
+
+    public function pageFirmaDesc()
+    {
+        $type = 'info';
+        $count_firmantes = self::totalFirmas();
+        $firmas_aprobadas = self::totalFirmasAprobadas();
+
+        if ($firmas_aprobadas > 0 && $firmas_aprobadas < $count_firmantes) {
+            $type = 'primary';
+        } else if ($firmas_aprobadas === $count_firmantes) {
+            $type = 'success';
+        }
+
+        return (object) [
+            'desc'  => "{$firmas_aprobadas} de {$count_firmantes}",
+            'type'  => $type
+        ];
     }
 
     public function pageFirma()

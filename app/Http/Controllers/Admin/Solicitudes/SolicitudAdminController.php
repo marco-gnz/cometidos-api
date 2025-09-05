@@ -57,6 +57,22 @@ class SolicitudAdminController extends Controller
         $this->middleware(['auth:sanctum']);
     }
 
+    private function withSolicitudes()
+    {
+        return [
+            'funcionario:id,nombres,apellidos',
+            'departamento:id,nombre',
+            'establecimiento:id,sigla',
+            'grupo:id',
+            'ultimoInformeCometido:id,solicitud_id,codigo,last_status,fecha_inicio,fecha_termino,hora_llegada,hora_salida,fecha_by_user',
+            'jefaturaDirectaRelation.funcionario:id,nombres,apellidos',
+            'lastCalculo',
+            'lugares:id,nombre',
+            'paises:id,nombre',
+            'motivos:id,nombre'
+        ];
+    }
+
     public function listSolicitudes(Request $request)
     {
         try {
@@ -66,7 +82,8 @@ class SolicitudAdminController extends Controller
 
             $resultSolicitud    = $params['result'];
             $auth               = auth()->user();
-            $query              = Solicitud::query();
+            $with               = $this->withSolicitudes();
+            $query              = Solicitud::query()->with($with);
             switch ($resultSolicitud) {
                 case 'noverify':
                     $this->filterNoVerify($query, $auth);
@@ -89,67 +106,15 @@ class SolicitudAdminController extends Controller
                     break;
             }
 
-            $query->searchInput($request->input, $request->in)
-                ->firmantesPendiente($request->firmantes_id)
-                ->periodoSolicitud($request->periodo_cometido)
-                ->periodoIngreso($request->periodo_ingreso)
-                ->periodoInformeCometido($request->periodo_informe_cometido)
-                ->derechoViatico($request->is_derecho_viatico)
-                ->valorizacion($request->is_valorizacion)
-                ->rendicion($request->is_rendicion)
-                ->informesCometido($request->is_informe_cometido)
-                ->archivos($request->is_files)
-                ->motivo($request->motivos_id)
-                ->lugar($request->lugares_id)
-                ->pais($request->paises_id)
-                ->medioTransporte($request->medios_transporte)
-                ->tipoComision($request->tipo_comision_id)
-                ->jornada($request->jornadas_id)
-                ->estado($request->estados_id)
-                ->estadoInformeCometido($request->estados_informe_id)
-                ->estadoIngresoInformeCometido($request->estados_ingreso_informe_id)
-                ->isReasignada($request->is_reasignada)
-                ->isGrupo($request->is_grupo)
-                ->isLoadSirh($request->is_sirh)
-                ->establecimiento($request->establecimientos_id)
-                ->departamento($request->deptos_id)
-                ->subdepartamento($request->subdeptos_id)
-                ->ley($request->ley_id)
-                ->estamento($request->estamento_id)
-                ->calidad($request->calidad_id)
-                ->convenio($request->is_convenio)
-                ->jefaturaDirecta($request->j_directa);
+            $this->filterScopes($query, $request);
+            $solicitudes = $this->orderResults($query, $request);
 
-            $sort           = $request->sort; //column.asc || column.desc
-            $parts          = explode('.', $sort);
-            $column         = $parts[0];
-            $direction      = $parts[1];
-
-            if ($sort === 'apellidos.asc' || $sort === 'apellidos.desc') {
-                $solicitudes = $query->select('solicituds.*')
-                    ->join('users', 'users.id', '=', 'solicituds.user_id')
-                    ->orderBy('users.apellidos', $direction);
-            } else if ($sort === 'valorizacion.asc' || $sort === 'valorizacion.desc') {
-                $subquery = DB::table('soliucitud_calculos')
-                    ->select('monto_total_pagar')
-                    ->whereColumn('solicitud_id', 'solicituds.id')
-                    ->latest()
-                    ->limit(1);
-
-                $solicitudes = $query->select('solicituds.*')
-                    ->addSelect(['ultimo_monto_total' => $subquery])
-                    ->orderBy('ultimo_monto_total', $direction);
-            } else {
-                $solicitudes    = $query->orderBy($column, $direction);
-            }
-
-            $solicitudes = $solicitudes->paginate(50);
             $total_format = number_format($solicitudes->total(), 0, ",", ".");
             return response()->json([
                 'status' => 'success',
                 'pagination' => [
                     'total'         => $solicitudes->total(),
-                    'total_desc'    => $solicitudes->total() > 1 ? "{$total_format} resultados" : "{$total_format} resultado",
+                    'total_desc'    => $total_format,
                     'current_page'  => $solicitudes->currentPage(),
                     'per_page'      => $solicitudes->perPage(),
                     'last_page'     => $solicitudes->lastPage(),
@@ -159,11 +124,76 @@ class SolicitudAdminController extends Controller
                 'data' => ListSolicitudAdminResource::collection($solicitudes),
             ]);
         } catch (\Exception $error) {
+            Log::info($error->getMessage());
             return response()->json([
                 'status' => 'error',
                 'message' => $error->getMessage(),
             ], 500);
         }
+    }
+
+    private function filterScopes($query, $request)
+    {
+        $query->searchInput($request->input, $request->in)
+            ->firmantesPendiente($request->firmantes_id)
+            ->periodoSolicitud($request->periodo_cometido)
+            ->periodoIngreso($request->periodo_ingreso)
+            ->periodoInformeCometido($request->periodo_informe_cometido)
+            ->derechoViatico($request->is_derecho_viatico)
+            ->valorizacion($request->is_valorizacion)
+            ->rendicion($request->is_rendicion)
+            ->informesCometido($request->is_informe_cometido)
+            ->archivos($request->is_files)
+            ->motivo($request->motivos_id)
+            ->lugar($request->lugares_id)
+            ->pais($request->paises_id)
+            ->medioTransporte($request->medios_transporte)
+            ->tipoComision($request->tipo_comision_id)
+            ->jornada($request->jornadas_id)
+            ->estado($request->estados_id)
+            ->estadoInformeCometido($request->estados_informe_id)
+            ->estadoIngresoInformeCometido($request->estados_ingreso_informe_id)
+            ->isReasignada($request->is_reasignada)
+            ->isGrupo($request->is_grupo)
+            ->isLoadSirh($request->is_sirh)
+            ->establecimiento($request->establecimientos_id)
+            ->departamento($request->deptos_id)
+            ->subdepartamento($request->subdeptos_id)
+            ->ley($request->ley_id)
+            ->estamento($request->estamento_id)
+            ->calidad($request->calidad_id)
+            ->convenio($request->is_convenio)
+            ->jefaturaDirecta($request->j_directa);
+    }
+
+    private function orderResults($query, $request)
+    {
+        $sort           = $request->sort; //column.asc || column.desc
+        $parts          = explode('.', $sort);
+        $column         = $parts[0];
+        $direction      = $parts[1];
+
+        if ($column === 'apellidos') {
+            $solicitudes = $query->select('solicituds.*')
+                ->join('users', 'users.id', '=', 'solicituds.user_id')
+                ->orderBy('users.apellidos', $direction);
+        } else if ($column === 'valorizacion') {
+            $subquery = DB::table('soliucitud_calculos')
+                ->select('monto_total_pagar')
+                ->whereColumn('solicitud_id', 'solicituds.id')
+                ->latest()
+                ->limit(1);
+
+            $solicitudes = $query->select('solicituds.*')
+                ->addSelect(['ultimo_monto_total' => $subquery])
+                ->orderBy('ultimo_monto_total', $direction);
+        } else {
+            $solicitudes    = $query->orderBy($column, $direction);
+        }
+
+        $solicitudes = $solicitudes->paginate(30);
+
+        return $solicitudes;
     }
 
     private function filterRole($query, $auth)
@@ -1287,12 +1317,11 @@ class SolicitudAdminController extends Controller
 
                     $status_informe_ok = [EstadoInformeCometido::STATUS_INGRESADA, EstadoInformeCometido::STATUS_MODIFICADO];
 
-                    if (($informe_cometido) && (in_array($informe_cometido->last_status, $status_informe_ok))) {
+                    if (($status === EstadoSolicitud::STATUS_APROBADO) && ($informe_cometido) && (in_array($informe_cometido->last_status, $status_informe_ok))) {
                         $this->aprobarInformeCometidoAutomatico($solicitud);
                     }
 
                     break;
-
                 case 4:
                     $this->authorize('anularAdmin', $solicitud);
                     $estados         = $this->anularSolicitud($solicitud, $firma_disponible, $request->observacion);
@@ -1323,6 +1352,8 @@ class SolicitudAdminController extends Controller
             $title      = "Solicitud {$solicitud->codigo} verificada con éxito.";
             $message    = EstadoSolicitud::STATUS_NOM[$solicitud->last_status];
             $this->updatePosicionSolicitud($solicitud);
+            $with       = $this->withSolicitudes();
+            $solicitudList = $solicitud->load($with);
             DB::commit();
             return response()->json(
                 array(
@@ -1331,7 +1362,7 @@ class SolicitudAdminController extends Controller
                     'message'       => $message,
                     'data'          => ListSolicitudCompleteAdminResource::make($solicitud),
                     'nav'           => $navStatus,
-                    'solicitudList' => ListSolicitudAdminResource::make($solicitud)
+                    'solicitudList' => ListSolicitudAdminResource::make($solicitudList)
                 )
             );
         } catch (\Exception $error) {
