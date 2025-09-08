@@ -73,9 +73,7 @@ class ListSolicitudAdminResource extends JsonResource
             'estado_nom'                => Solicitud::STATUS_NOM[$this->status],
             'estado_type'               => $this->typeStatus(),
             'page_firma_desc'           => $this->pageFirmaDesc(),
-            'is_grupo'                  => $this->whenLoaded('grupo', function () {
-                return $this->isGrupo();
-            }),
+            'is_grupo'                  => $this->isGrupo(),
             'informe_cometido' => $this->whenLoaded('ultimoInformeCometido', function () {
                 return InformeCometidoResource::make($this->ultimoInformeCometido);
             }),
