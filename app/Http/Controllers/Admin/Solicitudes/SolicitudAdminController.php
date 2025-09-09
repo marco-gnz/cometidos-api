@@ -57,6 +57,22 @@ class SolicitudAdminController extends Controller
         $this->middleware(['auth:sanctum']);
     }
 
+    private function withSolicitudes()
+    {
+        return [
+            'funcionario:id,nombres,apellidos',
+            'departamento:id,nombre',
+            'establecimiento:id,sigla',
+            'grupo:id',
+            'ultimoInformeCometido:id,solicitud_id,codigo,last_status,fecha_inicio,fecha_termino,hora_llegada,hora_salida,fecha_by_user',
+            'jefaturaDirectaRelation.funcionario:id,nombres,apellidos',
+            'lastCalculo',
+            'lugares:id,nombre',
+            'paises:id,nombre',
+            'motivos:id,nombre'
+        ];
+    }
+
     public function listSolicitudes(Request $request)
     {
         try {
@@ -66,7 +82,8 @@ class SolicitudAdminController extends Controller
 
             $resultSolicitud    = $params['result'];
             $auth               = auth()->user();
-            $query              = Solicitud::query();
+            $with               = $this->withSolicitudes();
+            $query              = Solicitud::query()->with($with);
             switch ($resultSolicitud) {
                 case 'noverify':
                     $this->filterNoVerify($query, $auth);
@@ -89,67 +106,15 @@ class SolicitudAdminController extends Controller
                     break;
             }
 
-            $query->searchInput($request->input, $request->in)
-                ->firmantesPendiente($request->firmantes_id)
-                ->periodoSolicitud($request->periodo_cometido)
-                ->periodoIngreso($request->periodo_ingreso)
-                ->periodoInformeCometido($request->periodo_informe_cometido)
-                ->derechoViatico($request->is_derecho_viatico)
-                ->valorizacion($request->is_valorizacion)
-                ->rendicion($request->is_rendicion)
-                ->informesCometido($request->is_informe_cometido)
-                ->archivos($request->is_files)
-                ->motivo($request->motivos_id)
-                ->lugar($request->lugares_id)
-                ->pais($request->paises_id)
-                ->medioTransporte($request->medios_transporte)
-                ->tipoComision($request->tipo_comision_id)
-                ->jornada($request->jornadas_id)
-                ->estado($request->estados_id)
-                ->estadoInformeCometido($request->estados_informe_id)
-                ->estadoIngresoInformeCometido($request->estados_ingreso_informe_id)
-                ->isReasignada($request->is_reasignada)
-                ->isGrupo($request->is_grupo)
-                ->isLoadSirh($request->is_sirh)
-                ->establecimiento($request->establecimientos_id)
-                ->departamento($request->deptos_id)
-                ->subdepartamento($request->subdeptos_id)
-                ->ley($request->ley_id)
-                ->estamento($request->estamento_id)
-                ->calidad($request->calidad_id)
-                ->convenio($request->is_convenio)
-                ->jefaturaDirecta($request->j_directa);
+            $this->filterScopes($query, $request);
+            $solicitudes = $this->orderResults($query, $request);
 
-            $sort           = $request->sort; //column.asc || column.desc
-            $parts          = explode('.', $sort);
-            $column         = $parts[0];
-            $direction      = $parts[1];
-
-            if ($sort === 'apellidos.asc' || $sort === 'apellidos.desc') {
-                $solicitudes = $query->select('solicituds.*')
-                    ->join('users', 'users.id', '=', 'solicituds.user_id')
-                    ->orderBy('users.apellidos', $direction);
-            } else if ($sort === 'valorizacion.asc' || $sort === 'valorizacion.desc') {
-                $subquery = DB::table('soliucitud_calculos')
-                    ->select('monto_total_pagar')
-                    ->whereColumn('solicitud_id', 'solicituds.id')
-                    ->latest()
-                    ->limit(1);
-
-                $solicitudes = $query->select('solicituds.*')
-                    ->addSelect(['ultimo_monto_total' => $subquery])
-                    ->orderBy('ultimo_monto_total', $direction);
-            } else {
-                $solicitudes    = $query->orderBy($column, $direction);
-            }
-
-            $solicitudes = $solicitudes->paginate(50);
             $total_format = number_format($solicitudes->total(), 0, ",", ".");
             return response()->json([
                 'status' => 'success',
                 'pagination' => [
                     'total'         => $solicitudes->total(),
-                    'total_desc'    => $solicitudes->total() > 1 ? "{$total_format} resultados" : "{$total_format} resultado",
+                    'total_desc'    => $total_format,
                     'current_page'  => $solicitudes->currentPage(),
                     'per_page'      => $solicitudes->perPage(),
                     'last_page'     => $solicitudes->lastPage(),
@@ -159,11 +124,83 @@ class SolicitudAdminController extends Controller
                 'data' => ListSolicitudAdminResource::collection($solicitudes),
             ]);
         } catch (\Exception $error) {
+            Log::info($error->getMessage());
             return response()->json([
                 'status' => 'error',
                 'message' => $error->getMessage(),
             ], 500);
         }
+    }
+
+    private function filterScopes($query, $request)
+    {
+        $query->searchInput($request->input, $request->in)
+            ->firmantesPendiente($request->firmantes_id)
+            ->periodoSolicitud($request->periodo_cometido)
+            ->periodoIngreso($request->periodo_ingreso)
+            ->periodoInformeCometido($request->periodo_informe_cometido)
+            ->derechoViatico($request->is_derecho_viatico)
+            ->valorizacion($request->is_valorizacion)
+            ->rendicion($request->is_rendicion)
+            ->informesCometido($request->is_informe_cometido)
+            ->archivos($request->is_files)
+            ->motivo($request->motivos_id)
+            ->lugar($request->lugares_id)
+            ->pais($request->paises_id)
+            ->medioTransporte($request->medios_transporte)
+            ->tipoComision($request->tipo_comision_id)
+            ->jornada($request->jornadas_id)
+            ->estado($request->estados_id)
+            ->estadoInformeCometido($request->estados_informe_id)
+            ->estadoIngresoInformeCometido($request->estados_ingreso_informe_id)
+            ->isReasignada($request->is_reasignada)
+            ->isGrupo($request->is_grupo)
+            ->isLoadSirh($request->is_sirh)
+            ->establecimiento($request->establecimientos_id)
+            ->departamento($request->deptos_id)
+            ->subdepartamento($request->subdeptos_id)
+            ->ley($request->ley_id)
+            ->estamento($request->estamento_id)
+            ->calidad($request->calidad_id)
+            ->convenio($request->is_convenio)
+            ->jefaturaDirecta($request->j_directa);
+    }
+
+    private function orderResults($query, $request)
+    {
+        // sort viene en formato column.asc || column.desc
+        $sort = $request->sort ?? 'created_at.desc';
+
+        [$column, $direction] = explode('.', $sort);
+
+        // Nos aseguramos que la dirección es válida
+        $direction = strtolower($direction) === 'asc' ? 'asc' : 'desc';
+
+        // Clonamos el query para no machacar el original
+        $builder = clone $query;
+
+        if ($column === 'apellidos') {
+            // ordenar por apellidos del usuario
+            $builder = $builder->select('solicituds.*')
+                ->join('users', 'users.id', '=', 'solicituds.user_id')
+                ->orderBy('users.apellidos', $direction);
+        } elseif ($column === 'valorizacion') {
+            // subquery para monto_total_pagar más reciente
+            $subquery = DB::table('soliucitud_calculos')
+                ->select('monto_total_pagar')
+                ->whereColumn('solicitud_id', 'solicituds.id')
+                ->latest()
+                ->limit(1);
+
+            $builder = $builder->select('solicituds.*')
+                ->addSelect(['ultimo_monto_total' => $subquery])
+                ->orderBy('ultimo_monto_total', $direction);
+        } else {
+            // orden normal
+            $builder = $builder->orderBy($column, $direction);
+        }
+
+        return $builder->paginate(25);
     }
 
     private function filterRole($query, $auth)
@@ -207,47 +244,77 @@ class SolicitudAdminController extends Controller
 
     private function filterNoVerify($query, $auth)
     {
-        $query->where(function ($q) use ($auth) {
-            $q->whereHas('firmantes', function ($q) use ($auth) {
-                $q->where(function ($q) use ($auth) {
-                    $q->whereRaw('solicituds.posicion_firma_ok = solicitud_firmantes.posicion_firma')
+        $userId = $auth->id;
+
+        // 1️⃣ Traemos solo las solicitudes que cumplan con las condiciones extras
+        $reasignadasIds = DB::table('reasignacions')
+            ->join('reasignacion_solicitud', 'reasignacions.id', '=', 'reasignacion_solicitud.reasignacion_id')
+            ->join('solicituds', 'solicituds.id', '=', 'reasignacion_solicitud.solicitud_id')
+            ->join('solicitud_firmantes', 'solicitud_firmantes.solicitud_id', '=', 'solicituds.id')
+            ->where(function ($q) use ($userId) {
+                $q->whereRaw('solicituds.posicion_firma_ok = solicitud_firmantes.posicion_firma')
+                    ->whereRaw('reasignacions.user_ausente_id = solicitud_firmantes.user_id')
+                    ->where('solicitud_firmantes.is_executed', false)
+                    ->where('reasignacions.user_subrogante_id', $userId)
+                    ->where('solicitud_firmantes.status', true)
+                    ->where('solicitud_firmantes.role_id', '!=', 1)
+                    ->where('solicituds.status', Solicitud::STATUS_EN_PROCESO)
+                    ->where(function ($q2) {
+                        $q2->where(function ($q3) {
+                            $q3->where('solicituds.is_reasignada', 0);
+                        })
+                            ->orWhere(function ($q3) {
+                                $q3->where('solicituds.is_reasignada', 1)
+                                    ->where('is_reasignado', true);
+                            });
+                    });
+            })
+            ->distinct()
+            ->pluck('solicituds.id');
+
+        // --- 2. Firma directa (con y sin reasignación) ---
+        $query->where(function ($q) use ($userId) {
+            $q->whereHas('firmantes', function ($q) use ($userId) {
+                $q->where(function ($q2) use ($userId) {
+                    $q2->whereRaw('solicituds.posicion_firma_ok = solicitud_firmantes.posicion_firma')
                         ->where('solicituds.is_reasignada', 0)
                         ->where('status', true)
                         ->where('is_executed', false)
                         ->where('role_id', '!=', 1)
-                        ->where('user_id', $auth->id)
-                        ->where('solicituds.status', '=', Solicitud::STATUS_EN_PROCESO);
+                        ->where('user_id', $userId)
+                        ->where('solicituds.status', Solicitud::STATUS_EN_PROCESO);
                 })
-                    ->orWhere(function ($q) use ($auth) {
-                        $q->whereRaw('solicituds.posicion_firma_ok = solicitud_firmantes.posicion_firma')
+                    ->orWhere(function ($q2) use ($userId) {
+                        $q2->whereRaw('solicituds.posicion_firma_ok = solicitud_firmantes.posicion_firma')
                             ->where('solicituds.is_reasignada', 1)
                             ->where('is_reasignado', true)
                             ->where('status', true)
                             ->where('is_executed', false)
                             ->where('role_id', '!=', 1)
-                            ->where('user_id', $auth->id)
-                            ->where('solicituds.status', '=', Solicitud::STATUS_EN_PROCESO);
+                            ->where('user_id', $userId)
+                            ->where('solicituds.status', Solicitud::STATUS_EN_PROCESO);
                     });
             });
-        })->orWhere(function ($q) use ($auth) {
-            $q->whereHas('firmantes', function ($q) use ($auth) {
-                $q->whereHas('funcionario.ausentismos', function ($q) use ($auth) {
-                    $q->where(function ($query) use ($auth) {
-                        $query
-                            ->whereRaw("DATE(solicituds.fecha_last_firma) >= ausentismos.fecha_inicio")
+        });
+
+        // --- 3. Ausentismos y subrogantes (igual a tu bloque actual) ---
+        $query->orWhere(function ($q) use ($userId) {
+            $q->whereHas('firmantes', function ($q) use ($userId) {
+                $q->whereHas('funcionario.ausentismos', function ($q) use ($userId) {
+                    $q->where(function ($query) use ($userId) {
+                        $query->whereRaw("DATE(solicituds.fecha_last_firma) >= ausentismos.fecha_inicio")
                             ->whereRaw("DATE(solicituds.fecha_last_firma) <= ausentismos.fecha_termino")
                             ->whereRaw('solicituds.posicion_firma_ok = solicitud_firmantes.posicion_firma')
                             ->where('solicituds.is_reasignada', 0)
                             ->where('status', true)
                             ->where('is_executed', false)
                             ->where('role_id', '!=', 1)
-                            ->where('solicituds.status', '=', Solicitud::STATUS_EN_PROCESO)
-                            ->whereHas('subrogantes', function ($q) use ($auth) {
-                                $q->where('users.id', $auth->id);
+                            ->where('solicituds.status', Solicitud::STATUS_EN_PROCESO)
+                            ->whereHas('subrogantes', function ($q) use ($userId) {
+                                $q->where('users.id', $userId);
                             });
-                    })->orWhere(function ($query) use ($auth) {
-                        $query
-                            ->whereRaw("DATE(solicituds.fecha_last_firma) >= ausentismos.fecha_inicio")
+                    })->orWhere(function ($query) use ($userId) {
+                        $query->whereRaw("DATE(solicituds.fecha_last_firma) >= ausentismos.fecha_inicio")
                             ->whereRaw("DATE(solicituds.fecha_last_firma) <= ausentismos.fecha_termino")
                             ->whereRaw('solicituds.posicion_firma_ok = solicitud_firmantes.posicion_firma')
                             ->where('solicituds.is_reasignada', 1)
@@ -255,89 +322,77 @@ class SolicitudAdminController extends Controller
                             ->where('status', true)
                             ->where('is_executed', false)
                             ->where('role_id', '!=', 1)
-                            ->where('solicituds.status', '=', Solicitud::STATUS_EN_PROCESO)
-                            ->whereHas('subrogantes', function ($q) use ($auth) {
-                                $q->where('users.id', $auth->id);
+                            ->where('solicituds.status', Solicitud::STATUS_EN_PROCESO)
+                            ->whereHas('subrogantes', function ($q) use ($userId) {
+                                $q->where('users.id', $userId);
                             });
                     });
                 });
             });
-        })->orWhere(function ($q) use ($auth) {
-            $q->whereHas('firmantes', function ($q) use ($auth) {
-                $q->where('is_executed', false)
-                    ->whereHas('funcionario.reasignacionAusencias', function ($q) use ($auth) {
-                        $q->where('user_subrogante_id', $auth->id)
-                            ->where(function ($query) {
-                                $query->whereRaw('solicituds.posicion_firma_ok = solicitud_firmantes.posicion_firma')
-                                    ->where('solicituds.is_reasignada', 0)
-                                    ->where('status', true)
-                                    ->where('is_executed', false)
-                                    ->where('role_id', '!=', 1)
-                                    ->where('solicituds.status', '=', Solicitud::STATUS_EN_PROCESO);
-                            })->orWhere(function ($query) {
-                                $query->whereRaw('solicituds.posicion_firma_ok = solicitud_firmantes.posicion_firma')
-                                    ->where('solicituds.is_reasignada', 1)
-                                    ->where('is_reasignado', true)
-                                    ->where('status', true)
-                                    ->where('is_executed', false)
-                                    ->where('role_id', '!=', 1)
-                                    ->where('solicituds.status', '=', Solicitud::STATUS_EN_PROCESO);
-                            });
-                    });
-            })->whereHas('reasignaciones', function ($q) use ($auth) {
-                $q->where('user_subrogante_id', $auth->id);
-            });
         });
 
-        /* $query->where('status', Solicitud::STATUS_EN_PROCESO); */
+        // --- 4. Reasignaciones: usar whereIn sobre IDs precalculados ---
+        if ($reasignadasIds->isNotEmpty()) {
+            $query->orWhereIn('solicituds.id', $reasignadasIds);
+        }
     }
 
     private function filterVerify($query, $auth)
     {
-        $query->whereHas('firmantes', function ($q) use ($auth) {
-            $q->where('status', true)->where('is_executed', true)
-                ->where('role_id', '!=', 1)
-                ->where('user_id', $auth->id);
-        })->orWhereHas('firmantes', function ($q) use ($auth) {
-            $q->where('is_executed', true)
-                ->whereHas('funcionario.ausentismos', function ($q) use ($auth) {
-                    $q->whereHas('subrogantes', function ($q) use ($auth) {
-                        $q->where('users.id', $auth->id);
-                    })->whereRaw("DATE(solicituds.fecha_by_user) >= ausentismos.fecha_inicio")
-                        ->whereRaw("DATE(solicituds.fecha_by_user) <= ausentismos.fecha_termino");
+        $userId = $auth->id;
+
+        $query->where(function ($q) use ($userId) {
+            // firmantes
+            $q->whereExists(function ($sub) use ($userId) {
+                    $sub->select(DB::raw(1))
+                        ->from('estado_solicituds')
+                        ->whereRaw('estado_solicituds.solicitud_id = solicituds.id')
+                        ->where('estado_solicituds.user_id', $userId)
+                        ->where('estado_solicituds.s_role_id', '!=', 1);
                 });
-        })->orWhere(function ($q) use ($auth) {
-            $q->whereHas('firmantes', function ($q) use ($auth) {
-                $q->where('is_executed', true)
-                    ->whereHas('funcionario.reasignacionAusencias', function ($q) use ($auth) {
-                        $q->where('user_subrogante_id', $auth->id);
-                    });
-            })->whereHas('reasignaciones', function ($q) use ($auth) {
-                $q->where('user_subrogante_id', $auth->id);
-            });
-        })->orWhereHas('estados', function ($q) use ($auth) {
-            $q->where('user_id', $auth->id)
-                ->where('s_role_id', '!=', 1);
         });
     }
 
+
     private function filterAll($query, $auth)
     {
-        $query->whereHas('firmantes', function ($q) use ($auth) {
-            $q->where('status', true)
+        $userId = $auth->id;
+
+        // Firma directa
+        $query->whereExists(function ($q) use ($userId) {
+            $q->select(DB::raw(1))
+                ->from('solicitud_firmantes')
+                ->whereRaw('solicitud_firmantes.solicitud_id = solicituds.id')
+                ->where('status', true)
                 ->where('role_id', '!=', 1)
-                ->where('user_id', $auth->id);
-        })->orWhereHas('firmantes.funcionario.ausentismos', function ($q) use ($auth) {
-            $q->whereHas('subrogantes', function ($q) use ($auth) {
-                $q->where('users.id', $auth->id);
-            })->whereRaw("DATE(solicituds.fecha_by_user) >= ausentismos.fecha_inicio")
-                ->whereRaw("DATE(solicituds.fecha_by_user) <= ausentismos.fecha_termino");
-        })->orWhereHas('reasignaciones', function ($q) use ($auth) {
-            $q->where('user_subrogante_id', $auth->id);
-        })->orWhereHas('estados', function ($q) use ($auth) {
-            $q->where('user_id', $auth->id)
-                ->where('s_role_id', '!=', 1);
-        });
+                ->where('user_id', $userId);
+        })
+            // Ausentismos y subrogantes
+            ->orWhereExists(function ($q) use ($userId) {
+                $q->select(DB::raw(1))
+                    ->from('ausentismos')
+                    ->join('ausentismo_user', 'ausentismos.id', '=', 'ausentismo_user.ausentismo_id')
+                    ->whereRaw('ausentismo_user.user_id = ?', [$userId])
+                    ->whereRaw('DATE(solicituds.fecha_by_user) BETWEEN ausentismos.fecha_inicio AND ausentismos.fecha_termino')
+                    ->whereRaw('ausentismos.user_ausente_id = solicituds.user_id');
+            })
+
+            // Estados
+            ->orWhereExists(function ($q) use ($userId) {
+                $q->select(DB::raw(1))
+                    ->from('estado_solicituds')
+                    ->whereRaw('estado_solicituds.solicitud_id = solicituds.id')
+                    ->where('user_id', $userId)
+                    ->where('s_role_id', '!=', 1);
+            });
+
+        // Reasignaciones
+        $solicitudesIds = DB::table('reasignacions')
+            ->join('reasignacion_solicitud', 'reasignacions.id', '=', 'reasignacion_solicitud.reasignacion_id')
+            ->where('reasignacions.user_subrogante_id', $auth->id)
+            ->pluck('reasignacion_solicitud.solicitud_id');
+
+        $query->orWhereIn('solicituds.id', $solicitudesIds);
     }
 
     private function filterInformesNoVerify($query, $auth)
@@ -1287,12 +1342,11 @@ class SolicitudAdminController extends Controller
 
                     $status_informe_ok = [EstadoInformeCometido::STATUS_INGRESADA, EstadoInformeCometido::STATUS_MODIFICADO];
 
-                    if (($informe_cometido) && (in_array($informe_cometido->last_status, $status_informe_ok))) {
+                    if (($status === EstadoSolicitud::STATUS_APROBADO) && ($informe_cometido) && (in_array($informe_cometido->last_status, $status_informe_ok))) {
                         $this->aprobarInformeCometidoAutomatico($solicitud);
                     }
 
                     break;
-
                 case 4:
                     $this->authorize('anularAdmin', $solicitud);
                     $estados         = $this->anularSolicitud($solicitud, $firma_disponible, $request->observacion);
@@ -1323,6 +1377,8 @@ class SolicitudAdminController extends Controller
             $title      = "Solicitud {$solicitud->codigo} verificada con éxito.";
             $message    = EstadoSolicitud::STATUS_NOM[$solicitud->last_status];
             $this->updatePosicionSolicitud($solicitud);
+            $with       = $this->withSolicitudes();
+            $solicitudList = $solicitud->load($with);
             DB::commit();
             return response()->json(
                 array(
@@ -1331,7 +1387,7 @@ class SolicitudAdminController extends Controller
                     'message'       => $message,
                     'data'          => ListSolicitudCompleteAdminResource::make($solicitud),
                     'nav'           => $navStatus,
-                    'solicitudList' => ListSolicitudAdminResource::make($solicitud)
+                    'solicitudList' => ListSolicitudAdminResource::make($solicitudList)
                 )
             );
         } catch (\Exception $error) {

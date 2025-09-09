@@ -135,7 +135,7 @@ Route::group(
         Route::post('/admin/solicitudes/update-convenio', [SolicitudAdminController::class, 'updateConvenio']);
         Route::put('/admin/solicitudes/status/firmante/{uuid}', [SolicitudAdminController::class, 'updateStatusFirmante']);
         Route::post('/admin/solicitudes/sync-grupo', [SolicitudAdminController::class, 'syncGrupoSolicitud']);
-        Route::put('/admin/solicitudes/load-sirh/{uuid}', [SolicitudAdminController::class, 'checkLoadSirh']);
+        Route::post('/admin/solicitudes/load-sirh/{uuid}', [SolicitudAdminController::class, 'checkLoadSirh']);
 
         Route::get('/admin/rendicion/list', [ProcesoRendicionController::class, 'getProcesoRendiciones']);
         Route::post('/admin/rendicion/status', [ProcesoRendicionController::class, 'statusProcesoRenicion']);
