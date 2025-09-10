@@ -22,8 +22,14 @@ class GrupoResource extends JsonResource
             'establecimiento'   => $this->establecimiento ? $this->establecimiento->sigla : null,
             'departamento'      => $this->departamento ? $this->departamento->nombre : null,
             'subdepartamento'   => $this->subdepartamento ? $this->subdepartamento->nombre : null,
-            'total_firmantes'   => count($this->firmantes),
-            'firmantes'         => $this->firmantes ? ListFirmantesGrupoResource::collection($this->firmantes) : null,
+            'firmantes'         => $this->whenLoaded('firmantes', function(){
+                return ListFirmantesGrupoResource::collection($this->firmantes);
+            }),
+            'contratos'         => $this->whenLoaded('contratos', function () {
+                return ListContratosGrupoResource::collection($this->contratos);
+            }),
+            'firmantes_count'   => $this->firmantes_count,
+            'contratos_count'   => $this->contratos_count,
             'user_by'           => $this->userBy ? $this->userBy->abreNombres() : null,
             'created_at'        => $this->created_at ? Carbon::parse($this->created_at)->format('d-m-Y H:i:s') : null,
             'authorized_to_delete'    => $this->authorizedToDelete(),

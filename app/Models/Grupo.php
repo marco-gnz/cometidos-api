@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Str;
 use Carbon\Carbon;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Log;
 
@@ -99,6 +100,15 @@ class Grupo extends Model
         return null;
     }
 
+    public function jejePersonal()
+    {
+        $j_p = $this->firmantes()->where('role_id', 4)->where('status', true)->first();
+        if ($j_p) {
+            return $j_p->funcionario->abreNombres();
+        }
+        return null;
+    }
+
     public function contratos()
     {
         return $this->hasMany(Contrato::class)->orderBy('id', 'ASC');
@@ -181,29 +191,31 @@ class Grupo extends Model
             });
     }
 
+    public function scopeSearchLey($query, $params)
+    {
+        if ($params)
+            return $query->whereHas('contratos.ley', function ($q) use ($params) {
+                $q->whereIn('id', $params);
+            });
+    }
+
     public function scopeSearchInput($query, $params)
     {
         if ($params)
-            return $query->where('id', 'like', '%' . $params . '%')
-                ->orWhere('codigo', 'like', '%' . $params . '%')
-                ->orWhere(function ($query) use ($params) {
-                    $query->whereHas('departamento', function ($query) use ($params) {
-                        $query->where('nombre', 'like', '%' . $params . '%');
-                    });
-                })
-                ->orWhere(function ($query) use ($params) {
-                    $query->whereHas('subdepartamento', function ($query) use ($params) {
-                        $query->where('nombre', 'like', '%' . $params . '%');
-                    });
-                })
+            return $query->Where('codigo', 'like', '%' . $params . '%')
                 ->orWhere(function ($query) use ($params) {
                     $query->whereHas('firmantes.funcionario', function ($query) use ($params) {
-                        $query->where('rut_completo', 'like', '%' . $params . '%')
-                            ->orWhere('rut', 'like', '%' . $params . '%')
-                            ->orWhere('nombres', 'like', '%' . $params . '%')
-                            ->orWhere('apellidos', 'like', '%' . $params . '%')
-                            ->orWhere('nombre_completo', 'like', '%' . $params . '%')
-                            ->orWhere('email', 'like', '%' . $params . '%');
+                        $palabras = explode(' ', $params);
+                        foreach ($palabras as $palabra) {
+                            $query->where(DB::raw("CONCAT(rut, ' ', nombres, ' ', apellidos)"), 'like', '%' . $palabra . '%');
+                        }
+                    });
+                })->orWhere(function ($query) use ($params) {
+                    $query->whereHas('contratos.funcionario', function ($query) use ($params) {
+                        $palabras = explode(' ', $params);
+                        foreach ($palabras as $palabra) {
+                            $query->where(DB::raw("CONCAT(rut, ' ', nombres, ' ', apellidos)"), 'like', '%' . $palabra . '%');
+                        }
                     });
                 });
     }

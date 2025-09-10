@@ -16,22 +16,21 @@ class ListGrupoResource extends JsonResource
      */
     public function toArray($request)
     {
-        $n_users = $this->contratos()->get()->unique('user_id')->count();
-
         return [
             'uuid'              => $this->uuid,
             'id'                => $this->id,
-            'codigo'       => $this->codigo,
+            'codigo'            => $this->codigo,
             'establecimiento'   => $this->establecimiento ? $this->establecimiento->sigla : null,
             'departamento'      => $this->departamento ? $this->departamento->nombre : null,
             'subdepartamento'   => $this->subdepartamento ? $this->subdepartamento->nombre : null,
             'total_firmantes'   => count($this->firmantes),
             'user_by'           => $this->userBy ? $this->userBy->abreNombres() : null,
             'created_at'        => $this->created_at ? Carbon::parse($this->created_at)->format('d-m-Y H:i:s') : null,
-            'n_users'           => $n_users,
+            'n_users'           => $this->contratos_count,
             'authorized_to_delete'    => $this->authorizedToDelete(),
             'authorized_to_update'    => $this->authorizedToUpdate(),
-            'jefatura_directa'          => $this->jefaturaDirecta()
+            'jefatura_directa'          => $this->jefaturaDirecta(),
+            'jefe_personal'             => $this->jejePersonal()
         ];
     }
 }

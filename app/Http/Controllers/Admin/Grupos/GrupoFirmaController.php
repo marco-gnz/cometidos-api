@@ -28,7 +28,9 @@ class GrupoFirmaController extends Controller
                 ->searchDepto($request->deptos_id)
                 ->searchSubdepto($request->subdeptos_id)
                 ->searchPerfil($request->perfiles_id)
+                ->searchLey($request->leyes_id)
                 ->orderByRaw('CAST(codigo AS UNSIGNED) ASC')
+                ->withCount('contratos')
                 ->paginate(50);
 
             return response()->json(
@@ -53,20 +55,39 @@ class GrupoFirmaController extends Controller
         }
     }
 
-    public function findGrupoFirma($uuid)
+    private function withFirmantes()
+    {
+        return ['firmantes:id,uuid,posicion_firma,status,user_id,role_id,grupo_id'];
+    }
+
+    private function withContratos()
+    {
+        return ['contratos:id,ley_id,user_id,establecimiento_id,departamento_id,grupo_id'];
+    }
+
+    public function findGrupoFirma($uuid, Request $request)
     {
         try {
-            $grupo = Grupo::where('uuid', $uuid)->firstOrFail();
+            $grupo = Grupo::where('uuid', $uuid)->withCount('contratos', 'firmantes')->firstOrFail();
             $this->authorize('view', $grupo);
 
-            return response()->json(
-                array(
-                    'status'        => 'success',
-                    'title'         => null,
-                    'message'       => null,
-                    'data'          => GrupoResource::make($grupo)
-                )
-            );
+            $tipo = $request->tipo;
+            switch ($tipo) {
+                case 'firmantes':
+                    $withFirmantes = $this->withFirmantes();
+                    $grupo->load($withFirmantes);
+                    break;
+                case 'users':
+                    $withContratos = $this->withContratos();
+                    $grupo->load($withContratos);
+                    break;
+            }
+            return response()->json([
+                'status'  => 'success',
+                'title'   => null,
+                'message' => null,
+                'data'    => GrupoResource::make($grupo)
+            ]);
         } catch (\Exception $error) {
             return response()->json(['error' => $error->getMessage()], 500);
         }
@@ -186,6 +207,8 @@ class GrupoFirmaController extends Controller
                 ]);
                 if ($update) {
                     $grupo = $firma->grupo->fresh();
+                    $withFirmantes = $this->withFirmantes();
+                    $grupo->load($withFirmantes);
                     return response()->json(
                         array(
                             'status'        => 'success',
@@ -218,7 +241,8 @@ class GrupoFirmaController extends Controller
             $grupo->addFirmantes($firmantes);
 
             $grupo = $grupo->fresh();
-
+            $withFirmantes = $this->withFirmantes();
+            $grupo->load($withFirmantes);
             return response()->json([
                 'status'    => 'success',
                 'title'     => 'Firmante agregado con éxito',
@@ -259,6 +283,8 @@ class GrupoFirmaController extends Controller
             });
 
             $grupo = $grupo->fresh();
+            $withFirmantes = $this->withFirmantes();
+            $grupo->load($withFirmantes);
             return response()->json([
                 'status'    => 'success',
                 'title'     => 'Firmante eliminado con éxito',
