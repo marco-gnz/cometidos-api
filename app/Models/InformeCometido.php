@@ -146,10 +146,15 @@ class InformeCometido extends Model
 
     private static function generarCodigo($informe)
     {
-        $correlativo            = self::whereYear('created_at', $informe->created_at->year)->count();
-        $anio                   = $informe->created_at->year;
-        $codigo                 = "{$correlativo}/{$anio}";
-        return $codigo;
+        $anio = $informe->created_at->year;
+
+        $maxCorrelativo = self::whereYear('created_at', $anio)
+            ->whereNotNull('codigo')
+            ->max(DB::raw("CAST(SUBSTRING_INDEX(codigo, '/', 1) AS UNSIGNED)"));
+
+        $correlativo = $maxCorrelativo ? $maxCorrelativo + 1 : 1;
+
+        return "{$correlativo}/{$anio}";
     }
 
     public function solicitud()
