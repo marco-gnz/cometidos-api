@@ -62,7 +62,7 @@ class InformeCometido extends Model
         });
 
         static::created(function ($informe) {
-            $dias_permitidos            = self::getDiasPermitidos($informe);
+            $dias_permitidos = (int) $informe->solicitud->dias_permitidos;
             $informe->codigo            = self::generarCodigo($informe);
             $informe->dias_permitidos   = $dias_permitidos;
             $informe->status_ingreso    = self::diffPlazoTardioInforme($informe);
@@ -105,7 +105,7 @@ class InformeCometido extends Model
     {
         $fecha_termino_cometido             = "{$informe->solicitud->fecha_termino} {$informe->solicitud->hora_salida}";
         $fecha_termino_cometido             = Carbon::parse($fecha_termino_cometido);
-        $dias_permitidos                    = self::getDiasPermitidos($informe);
+        $dias_permitidos = (int) $informe->solicitud->dias_permitidos;
         $array_fechas_feriados              = self::feriados($fecha_termino_cometido);
 
         $fechaLimite            = self::calcularFechaLimite($fecha_termino_cometido, $dias_permitidos, $array_fechas_feriados);
@@ -139,10 +139,11 @@ class InformeCometido extends Model
         return $fechaLimite;
     }
 
-    protected function getDiasPermitidos($informe)
+    protected static function getDiasPermitidos($informe): int
     {
-        return $informe->solicitud->dias_permitidos;
+        return (int) $informe->solicitud->dias_permitidos;
     }
+
 
     private static function generarCodigo($informe)
     {

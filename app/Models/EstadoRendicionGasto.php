@@ -54,20 +54,17 @@ class EstadoRendicionGasto extends Model
         });
 
         static::created(function ($estado) {
-            $isUpdatedMount             = self::isUpdateMount($estado);
-            $estado->is_updated_mount   = $isUpdatedMount;
-            $estado->save();
+            $estado->updateQuietly([
+                'is_updated_mount' => self::isUpdateMount($estado),
+            ]);
         });
     }
 
-    public function isUpdateMount($estado)
+    public static function isUpdateMount($estado): bool
     {
-        if ($estado->rendicionGasto->mount === $estado->rendicionGasto->mount_real) {
-            return false;
-        } else {
-            return true;
-        }
+        return $estado->rendicionGasto->mount !== $estado->rendicionGasto->mount_real;
     }
+
 
     public function rendicionGasto()
     {
