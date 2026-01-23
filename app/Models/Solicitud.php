@@ -147,24 +147,18 @@ class Solicitud extends Model
         'nacionalidad_id'
     ];
 
-    public function getItemPresupuestario($solicitud)
+    public static function getItemPresupuestario(Solicitud $solicitud): ?ItemPresupuestarioUser
     {
-        $numero_item = null;
+        $q = ItemPresupuestarioUser::query()
+            ->where('calidad_id', $solicitud->calidad_id);
 
         if ($solicitud->calidad_id !== 2) {
-            $item = ItemPresupuestarioUser::where('calidad_id', $solicitud->calidad_id)
-                ->where('ley_id', $solicitud->ley_id)
-                ->first();
-        } else {
-            $item = ItemPresupuestarioUser::where('calidad_id', $solicitud->calidad_id)
-                ->first();
+            $q->where('ley_id', $solicitud->ley_id);
         }
 
-        if ($item) {
-            $numero_item = $item->itemNumero;
-        }
-        return $numero_item;
+        return $q->first();
     }
+
 
     protected static function booted()
     {
@@ -195,10 +189,10 @@ class Solicitud extends Model
             $convenio_id = self::searchConvenio($solicitud);
             $dias_permitidos                = (int)Configuration::obtenerValor('informecometido.dias_atraso', $solicitud->establecimiento_id);
             $vistos                         = Configuration::obtenerValor('info.vistos', $solicitud->establecimiento_id);
-            $item                           = self::getItemPresupuestario($solicitud);
+            $item = self::getItemPresupuestario($solicitud);
             $solicitud->correlativo         = self::generarCorrelativo($solicitud);
             $solicitud->codigo              = self::generarCodigo($solicitud);
-            $solicitud->item_presupuestario_id = $item ? $item->id : NULL;
+            $solicitud->item_presupuestario_id = $item ? $item->id : null;
             $solicitud->tipo_resolucion     = self::RESOLUCION_EXENTA;
             $solicitud->total_firmas        = $solicitud->firmantes()->where('status', true)->count();
             $solicitud->dias_permitidos     = $dias_permitidos;
