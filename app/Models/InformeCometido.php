@@ -63,10 +63,12 @@ class InformeCometido extends Model
 
         static::created(function ($informe) {
             $dias_permitidos = (int) $informe->solicitud->dias_permitidos;
-            $informe->codigo            = self::generarCodigo($informe);
-            $informe->dias_permitidos   = $dias_permitidos;
-            $informe->status_ingreso    = self::diffPlazoTardioInforme($informe);
-            $informe->save();
+
+            $informe->updateQuietly([
+                'codigo'          => self::generarCodigo($informe),
+                'dias_permitidos' => $dias_permitidos,
+                'status_ingreso'  => self::diffPlazoTardioInforme($informe),
+            ]);
         });
     }
 
@@ -101,22 +103,28 @@ class InformeCometido extends Model
         }
     }
 
-    public function diffPlazoTardioInforme($informe)
+    public static function diffPlazoTardioInforme($informe): int
     {
-        $fecha_termino_cometido             = "{$informe->solicitud->fecha_termino} {$informe->solicitud->hora_salida}";
-        $fecha_termino_cometido             = Carbon::parse($fecha_termino_cometido);
-        $dias_permitidos = (int) $informe->solicitud->dias_permitidos;
-        $array_fechas_feriados              = self::feriados($fecha_termino_cometido);
+        $fecha_termino_cometido = Carbon::parse(
+            "{$informe->solicitud->fecha_termino} {$informe->solicitud->hora_salida}"
+        );
 
-        $fechaLimite            = self::calcularFechaLimite($fecha_termino_cometido, $dias_permitidos, $array_fechas_feriados);
-        $fecha_store_informe    = Carbon::parse($informe->fecha_by_user);
+        $dias_permitidos       = (int) $informe->solicitud->dias_permitidos;
+        $array_fechas_feriados = self::feriados($fecha_termino_cometido);
 
-        if ($fecha_store_informe->lessThanOrEqualTo($fechaLimite)) {
-            return self::STATUS_INGRESO_EN_PLAZO;
-        } else {
-            return self::STATUS_INGRESO_TARDIO;
-        }
+        $fechaLimite = self::calcularFechaLimite(
+            $fecha_termino_cometido,
+            $dias_permitidos,
+            $array_fechas_feriados
+        );
+
+        $fecha_store_informe = Carbon::parse($informe->fecha_by_user);
+
+        return $fecha_store_informe->lessThanOrEqualTo($fechaLimite)
+            ? self::STATUS_INGRESO_EN_PLAZO
+            : self::STATUS_INGRESO_TARDIO;
     }
+
 
     private static function calcularFechaLimite(Carbon $fechaInicio, $diasHabiles, array $feriados)
     {
