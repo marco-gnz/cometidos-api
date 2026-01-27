@@ -4,7 +4,7 @@
 
 Estimado/a {{ $solicitud->funcionario->nombres}} {{ $solicitud->funcionario->apellidos}},
 
-La solicitud de cometido con el número de resolución <strong>{{ $solicitud->codigo }}</strong>, ha sido {{ App\Models\EstadoSolicitud::STATUS_NOM[$last_status->status] }}. A continuación, encontrará un resumen de la solicitud:
+La solicitud de cometido con el número de resolución <strong>{{ $solicitud->codigo }}</strong>, ha sido actualizada a {{ App\Models\EstadoSolicitud::STATUS_NOM[$last_status->status] }}. A continuación, encontrará un resumen de la solicitud:
 
 @component('vendor.mail.html.panel')
 @slot('content')

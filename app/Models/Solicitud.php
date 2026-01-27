@@ -475,6 +475,16 @@ class Solicitud extends Model
             ->latestOfMany('id');
     }
 
+    public function lastStatusReasignado()
+    {
+        $last_status = $this->estados()->orderBy('created_at', 'DESC')->first();
+        $status = [EstadoSolicitud::STATUS_RECHAZADO, EstadoSolicitud::STATUS_PENDIENTE ,EstadoSolicitud::STATUS_ANULADO];
+        if (($last_status) && (in_array($last_status->status, $status))) {
+            return $last_status;
+        }
+        return null;
+    }
+
     public function isPosibleGrupos()
     {
         if (self::authorizedToSincronizarGrupo()) {

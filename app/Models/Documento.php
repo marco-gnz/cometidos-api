@@ -34,6 +34,11 @@ class Documento extends Model
         self::MODEL_RENDICION         => 'Rendición de gasto'
     ];
 
+    public const MODEL_DEPTO = [
+        self::MODEL_SOLICITUD         => 'Depto. Gestión de las Personas/RRHH',
+        self::MODEL_RENDICION         => 'Depto. Finanzas'
+    ];
+
     protected static function booted()
     {
         static::creating(function ($documento) {

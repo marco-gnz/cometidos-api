@@ -29,7 +29,7 @@ El proceso de rendición de gastos con el número de folio <strong>{{ $last_stat
         @endif
         <tr>
             <th>Movimiento:</th>
-            <td>{{ $last_status->perfil ? $last_status->perfil->name : '' }} - {{ $last_status->userBy->nombre_completo }}</td>
+            <td>{{ $last_status->perfil ? $last_status->perfil->name : '' }}  {{ $last_status->userBy ? $last_status->userBy->nombre_completo : '' }}</td>
         </tr>
         <tr>
             <th>Fecha Movimiento:</th>

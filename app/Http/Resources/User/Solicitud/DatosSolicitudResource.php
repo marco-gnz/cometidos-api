@@ -2,6 +2,7 @@
 
 namespace App\Http\Resources\User\Solicitud;
 
+use App\Http\Resources\Solicitud\ListSolicitudStatusResource;
 use App\Http\Resources\Solicitud\StatusSolicitudResource;
 use App\Http\Resources\User\InformeCometido\ListInformeCometidoResource;
 use App\Models\EstadoSolicitud;
@@ -86,7 +87,8 @@ class DatosSolicitudResource extends JsonResource
             'informe'                   => $informe,
             'is_load_sirh'              => $this->isLoadSirhInfo(),
             'n_contacto'                => $this->n_contacto,
-            'email'                     => $this->email
+            'email'                     => $this->email,
+            'last_status_reasignado'    => $this->lastStatusReasignado() ? ListSolicitudStatusResource::make($this->lastStatusReasignado()) : null
         ];
     }
 }

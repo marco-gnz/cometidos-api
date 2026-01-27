@@ -262,7 +262,7 @@ class EstadoSolicitud extends Model
     {
         switch ($this->status) {
             case 1:
-                $type = 'primary';
+                $type = 'warning';
                 break;
 
             case 2:

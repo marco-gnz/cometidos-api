@@ -74,7 +74,7 @@ class EstadoProcesoRendicionGasto extends Model
             $ip_address                      = Request::ip();
             $estado->ip_address              = $ip_address;
             $estado->uuid                    = Str::uuid();
-            $estado->user_id_by              = Auth::user()->id;
+            $estado->user_id_by              = Auth::user() ? Auth::user()->id : null;
             $estado->fecha_by_user           = now();
         });
 

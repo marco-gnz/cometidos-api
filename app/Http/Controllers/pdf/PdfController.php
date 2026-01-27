@@ -91,7 +91,7 @@ class PdfController extends Controller
             $filePath   = Storage::disk('public')->path($documento->url);
 
             if (!Storage::disk('public')->exists($documento->url)) {
-                return response()->view('errors.404');
+                return response()->view('errors.notfile', compact('documento'));
             }
 
             $content = Storage::disk('public')->get($documento->url);
