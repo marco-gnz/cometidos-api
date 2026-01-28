@@ -13,6 +13,7 @@ use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Http;
+use App\Services\FeriadosService;
 
 class AprobarInformeCometido extends Command
 {
@@ -106,32 +107,12 @@ class AprobarInformeCometido extends Command
 
     private function feriados($fecha)
     {
-        $fecha      = Carbon::parse($fecha);
-        $anio       = $fecha->format('Y');
-        $cacheKey   = "feriados_{$anio}";
-        $feriados   = Cache::get($cacheKey);
-        if ($feriados !== null) {
-            return $feriados;
-        }
-
         try {
-            $url        = "https://apis.digital.gob.cl/fl/feriados/{$anio}";
-            $response   = Http::get($url);
-            if ($response->successful()) {
-                $apiResponse = $response->body();
-                $feriados = json_decode($apiResponse, true, 512, JSON_UNESCAPED_UNICODE);
-
-                if (is_array($feriados)) {
-                    $fechas = collect($feriados)->pluck('fecha')->toArray();
-                    Cache::put($cacheKey, $fechas, now()->addDays(31));
-                    return $fechas;
-                }
-            }
-            return [];
-        } catch (\Exception $exception) {
-            Log::error("Error al procesar la solicitud de feriados: {$exception->getMessage()}");
-            $feriados = Cache::get($cacheKey);
-            return $feriados !== null ? $feriados : [];
+            $feriadosService = app(FeriadosService::class);
+            $feriados = $feriadosService->obtenerFeriados($fecha);
+            return $feriados;
+        } catch (\Exceptio $e) {
+            Log::info("Error Service Feriados: {$exception->getMessage()}");
         }
     }
 

@@ -30,4 +30,7 @@ return [
         'region' => env('AWS_DEFAULT_REGION', 'us-east-1'),
     ],
 
+    'sba_api' => [
+        'url' => env('SBA_API_URL'),
+    ]
 ];
