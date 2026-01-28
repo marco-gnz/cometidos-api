@@ -973,14 +973,14 @@ class Solicitud extends Model
         return $data;
     }
 
-    private function feriados($fecha)
+    private static function feriados($fecha)
     {
         try {
             $feriadosService = app(FeriadosService::class);
-            $feriados = $feriadosService->obtenerFeriados($fecha);
-            return $feriados;
-        } catch (\Exceptio $e) {
-            Log::info("Error Service Feriados: {$exception->getMessage()}");
+            return $feriadosService->obtenerFeriados($fecha);
+        } catch (\Exception $e) {
+            Log::error("Error Service Feriados: {$e->getMessage()}");
+            return [];
         }
     }
 
