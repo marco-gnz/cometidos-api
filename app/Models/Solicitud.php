@@ -155,6 +155,8 @@ class Solicitud extends Model
 
         if ($solicitud->calidad_id !== 2) {
             $q->where('ley_id', $solicitud->ley_id);
+        } else {
+            $q->whereNull('ley_id');
         }
 
         return $q->first();
@@ -193,7 +195,7 @@ class Solicitud extends Model
             $item = self::getItemPresupuestario($solicitud);
             $solicitud->correlativo         = self::generarCorrelativo($solicitud);
             $solicitud->codigo              = self::generarCodigo($solicitud);
-            $solicitud->item_presupuestario_id = $item ? $item->id : null;
+            $solicitud->item_presupuestario_id = $item ? $item->item_presupuestario_id : null;
             $solicitud->tipo_resolucion     = self::RESOLUCION_EXENTA;
             $solicitud->total_firmas        = $solicitud->firmantes()->where('status', true)->count();
             $solicitud->dias_permitidos     = $dias_permitidos;
@@ -479,7 +481,7 @@ class Solicitud extends Model
     public function lastStatusReasignado()
     {
         $last_status = $this->estados()->orderBy('created_at', 'DESC')->first();
-        $status = [EstadoSolicitud::STATUS_RECHAZADO, EstadoSolicitud::STATUS_PENDIENTE ,EstadoSolicitud::STATUS_ANULADO];
+        $status = [EstadoSolicitud::STATUS_RECHAZADO, EstadoSolicitud::STATUS_PENDIENTE, EstadoSolicitud::STATUS_ANULADO];
         if (($last_status) && (in_array($last_status->status, $status))) {
             return $last_status;
         }
