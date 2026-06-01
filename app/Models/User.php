@@ -175,6 +175,11 @@ class User extends Authenticatable
         return $this->belongsToMany(Transporte::class);
     }
 
+    public function ilustres()
+    {
+        return $this->belongsToMany(Ilustre::class);
+    }
+
     public function tipoComisiones()
     {
         return $this->belongsToMany(TipoComision::class);

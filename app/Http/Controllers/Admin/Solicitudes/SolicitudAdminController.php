@@ -210,6 +210,7 @@ class SolicitudAdminController extends Controller
         $deptos_id              = $auth->departamentos->pluck('id')->toArray();
         $transportes_id         = $auth->transportes->pluck('id')->toArray();
         $tip_comision_id        = $auth->tipoComisiones->pluck('id')->toArray();
+        $ilustres_id            = $auth->ilustres->pluck('id')->toArray();
 
         if ($establecimientos_id) {
             $query->whereHas('establecimiento', function ($q) use ($establecimientos_id) {
@@ -238,6 +239,12 @@ class SolicitudAdminController extends Controller
         if ($deptos_id) {
             $query->whereHas('departamento', function ($q) use ($deptos_id) {
                 $q->whereIn('id', $deptos_id);
+            });
+        }
+
+        if ($ilustres_id) {
+            $query->whereHas('convenio.ilustre', function ($q) use ($ilustres_id) {
+                $q->whereIn('id', $ilustres_id);
             });
         }
     }

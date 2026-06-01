@@ -112,6 +112,7 @@ class PerfilController extends Controller
                 $user->transportes()->sync($request->medios_transporte_id ?? []);
                 $user->tipoComisiones()->sync($request->tipos_de_comision_id ?? []);
                 $user->departamentos()->sync($request->deptos_id ?? []);
+                $user->ilustres()->sync($request->ilustres_id ?? []);
                 $user->syncPermissions($request->permissions_id ?? []);
 
                 $user = $user->fresh();
@@ -143,6 +144,7 @@ class PerfilController extends Controller
             $user->departamentos()->sync($request->deptos_id ?? []);
             $user->tipoComisiones()->sync($request->tipos_de_comision_id ?? []);
             $user->transportes()->sync($request->medios_transporte_id ?? []);
+            $user->ilustres()->sync($request->ilustres_id ?? []);
             $user->syncPermissions($request->permissions_id ?? []);
 
             $user = $user->fresh();

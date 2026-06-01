@@ -30,7 +30,8 @@ class UpdatePerfilRequest extends FormRequest
             'medios_transporte_id'  => ['nullable', 'array'],
             'tipos_de_comision_id'  => ['nullable', 'array'],
             'deptos_id'             => ['nullable', 'array'],
-            'permissions_id'        => ['nullable', 'array']
+            'permissions_id'        => ['nullable', 'array'],
+            'ilustres_id'           => ['nullable', 'array']
         ];
     }
 
