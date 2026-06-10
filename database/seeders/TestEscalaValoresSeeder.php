@@ -17,8 +17,10 @@ class TestEscalaValoresSeeder extends Seeder
     {
         /* $this->escala2022();
         $this->escala2023();
-        $this->escala2024(); */
+        $this->escala2024();
         $this->escala2025_2026();
+        */
+        $this->escala2026();
     }
 
     public function escala2022()
@@ -232,6 +234,59 @@ class TestEscalaValoresSeeder extends Seeder
         $escala->fecha_termino      = '2026-05-31';
         $escala->valor_dia_40       = 26332;
         $escala->valor_dia_100      = 65829;
+        $escala->ley_id             = 4;
+        $escala->save();
+    }
+
+    public function escala2026()
+    {
+        $grados_1 = Grado::whereBetween('nombre', [1, 4])->get();
+        foreach ($grados_1 as $grado) {
+            $escala = new Escala();
+            $escala->fecha_inicio       = '2026-06-01';
+            $escala->fecha_termino      = '2026-11-30';
+            $escala->valor_dia_40       = 35766;
+            $escala->valor_dia_100      = 89416;
+            $escala->ley_id             = 2;
+            $escala->grado_id           = $grado->id;
+            $escala->save();
+        }
+        $grados_2 = Grado::whereBetween('nombre', [5, 10])->get();
+        foreach ($grados_2 as $grado) {
+            $escala = new Escala();
+            $escala->fecha_inicio       = '2026-06-01';
+            $escala->fecha_termino      = '2026-11-30';
+            $escala->valor_dia_40       = 32900;
+            $escala->valor_dia_100      = 82249;
+            $escala->ley_id             = 2;
+            $escala->grado_id           = $grado->id;
+            $escala->save();
+        }
+        $grados_3 = Grado::whereBetween('nombre', [11, 31])->get();
+        foreach ($grados_3 as $grado) {
+            $escala = new Escala();
+            $escala->fecha_inicio       = '2026-06-01';
+            $escala->fecha_termino      = '2026-11-30';
+            $escala->valor_dia_40       = 26700;
+            $escala->valor_dia_100      = 66751;
+            $escala->ley_id             = 2;
+            $escala->grado_id           = $grado->id;
+            $escala->save();
+        }
+
+        $escala = new Escala();
+        $escala->fecha_inicio       = '2026-06-01';
+        $escala->fecha_termino      = '2026-11-30';
+        $escala->valor_dia_40       = 26700;
+        $escala->valor_dia_100      = 66751;
+        $escala->ley_id             = 1;
+        $escala->save();
+
+        $escala = new Escala();
+        $escala->fecha_inicio       = '2026-06-01';
+        $escala->fecha_termino      = '2026-11-30';
+        $escala->valor_dia_40       = 26700;
+        $escala->valor_dia_100      = 66751;
         $escala->ley_id             = 4;
         $escala->save();
     }

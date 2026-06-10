@@ -322,8 +322,7 @@ class SolicitudPolicy
         if ($solicitud->status === Solicitud::STATUS_ANULADO) {
             return false;
         }
-        $firma  = $this->isFirmaDisponibleActionPolicy($solicitud, 'solicitud.convenio.crear');
-        if ($firma->is_firma) {
+        if ($user->hasRole('ADMINISTRADOR')) {
             return true;
         }
         return false;
