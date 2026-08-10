@@ -14,6 +14,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 use App\Services\FeriadosService;
+use App\Services\GecomService;
 
 class Solicitud extends Model
 {
@@ -1591,5 +1592,15 @@ class Solicitud extends Model
                             ->whereIn('user_id', $params);
                     });
                 });
+    }
+
+    public function sbaViatico()
+    {
+        try {
+            $gecomService = app(GecomService::class);
+            return $gecomService->obtenerViatico($this);
+        } catch (\Exceptio $e) {
+            Log::info("Error Service Gecom: {$e->getMessage()}");
+        }
     }
 }

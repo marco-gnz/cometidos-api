@@ -99,7 +99,7 @@ class AnularSolicitud extends Command
             $feriados = $feriadosService->obtenerFeriados($fecha);
             return $feriados;
         } catch (\Exceptio $e) {
-            Log::info("Error Service Feriados: {$exception->getMessage()}");
+            Log::info("Error Service Feriados: {$e->getMessage()}");
         }
     }
 

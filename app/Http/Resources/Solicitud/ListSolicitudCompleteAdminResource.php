@@ -99,7 +99,8 @@ class ListSolicitudCompleteAdminResource extends JsonResource
             'email'                         => $this->email,
             'fecha_nacimiento'              => $this->funcionario->fecha_nacimiento ? Carbon::parse($this->funcionario->fecha_nacimiento)->format('d-m-Y') : null,
             'nacionalidad'                  => $this->nacionalidad ? $this->nacionalidad->nombre : null,
-            'calculo'                       => $calculo ? ListCalculoResoruce::make($calculo) : null
+            'calculo'                       => $calculo ? ListCalculoResoruce::make($calculo) : null,
+            'sba_viatico'                   => $this->sbaViatico()
         ];
     }
 }
