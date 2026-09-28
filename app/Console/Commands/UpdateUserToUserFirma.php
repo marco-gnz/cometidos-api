@@ -19,6 +19,7 @@ class UpdateUserToUserFirma extends Command
     protected $signature = 'update:update-user-to-user-firma
                             {user_origen : ID del usuario que será reemplazado}
                             {user_reemplazo : ID del nuevo usuario}
+                            {establecimiento_solicitud : ID del establecimiento de solicitud}
                             {--role=5 : ID del rol del firmante}
                             {--execute : Ejecutar realmente los cambios}';
 
@@ -47,6 +48,7 @@ class UpdateUserToUserFirma extends Command
 
     private $userOrigen;
     private $userReemplazo;
+    private $establecimientoSolicitud;
     private $roleId;
     private $execute = false;
 
@@ -144,6 +146,7 @@ class UpdateUserToUserFirma extends Command
         $this->userReemplazo = (int) $this->argument('user_reemplazo');
         $this->roleId = (int) $this->option('role');
         $this->execute = (bool) $this->option('execute');
+        $this->establecimientoSolicitud = (int) $this->argument('establecimiento_solicitud');
     }
 
     private function validarParametros()
@@ -174,6 +177,12 @@ class UpdateUserToUserFirma extends Command
             return false;
         }
 
+        if ($this->establecimientoSolicitud <= 0) {
+            $this->error('El establecimiento no es válido.');
+
+            return false;
+        }
+
         return true;
     }
 
@@ -196,6 +205,7 @@ class UpdateUserToUserFirma extends Command
                 ['Usuario reemplazo', $this->userReemplazo],
                 ['Role ID', $this->roleId],
                 ['Ejecutar cambios', $this->execute ? 'SÍ' : 'NO'],
+                ['Establecimiento de solicitud', $this->establecimientoSolicitud],
             ]
         );
     }
@@ -207,7 +217,8 @@ class UpdateUserToUserFirma extends Command
     {
         $firmantes = collect();
 
-        $grupos = Grupo::whereHas('firmantes', function ($query) {
+        $grupos = Grupo::where('establecimiento_id', $this->establecimientoSolicitud)
+        ->whereHas('firmantes', function ($query) {
             $query->where('user_id', $this->userOrigen)
                 ->where('role_id', $this->roleId);
         })->get();
@@ -234,15 +245,16 @@ class UpdateUserToUserFirma extends Command
     {
         $firmantes = collect();
 
-        $solicitudes = Solicitud::where('status', Solicitud::STATUS_EN_PROCESO)
-        ->whereHas('firmantes', function ($query) {
-            $query->whereRaw('solicituds.posicion_firma_ok = solicitud_firmantes.posicion_firma')
-                ->where('solicituds.is_reasignada', 0)
-                ->where('status', true)
-                ->where('is_executed', false)
-                ->where('role_id', $this->roleId)
-                ->where('user_id', $this->userOrigen);
-        })
+        $solicitudes = Solicitud::where('establecimiento_id', $this->establecimientoSolicitud)
+            ->where('status', Solicitud::STATUS_EN_PROCESO)
+            ->whereHas('firmantes', function ($query) {
+                $query->whereRaw('solicituds.posicion_firma_ok = solicitud_firmantes.posicion_firma')
+                    ->where('solicituds.is_reasignada', 0)
+                    ->where('status', true)
+                    ->where('is_executed', false)
+                    ->where('role_id', $this->roleId)
+                    ->where('user_id', $this->userOrigen);
+            })
             ->get();
 
         foreach ($solicitudes as $solicitud) {
@@ -267,11 +279,12 @@ class UpdateUserToUserFirma extends Command
     {
         $firmantes = collect();
 
-        $solicitudes = Solicitud::whereHas('firmantes', function ($query) {
-            $query->where('role_id', $this->roleId)
-                ->where('user_id', $this->userOrigen)
-                ->where('is_executed', false);
-        })
+        $solicitudes = Solicitud::where('establecimiento_id', $this->establecimientoSolicitud)
+            ->whereHas('firmantes', function ($query) {
+                $query->where('role_id', $this->roleId)
+                    ->where('user_id', $this->userOrigen)
+                    ->where('is_executed', false);
+            })
             ->where('status', Solicitud::STATUS_EN_PROCESO)
             ->get();
 
