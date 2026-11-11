@@ -330,8 +330,7 @@ class SolicitudPolicy
 
     public function loadsirh(User $user, Solicitud $solicitud)
     {
-        $informe = $solicitud->informeCometido();
-        if (($solicitud->status === Solicitud::STATUS_PROCESADO && $user->hasPermissionTo('solicitud.datos.load-sirh') && $user->id !== $solicitud->user_id) && ($informe && $informe->last_status === EstadoInformeCometido::STATUS_APROBADO)) {
+        if ($user->hasPermissionTo('solicitud.datos.load-sirh') && $user->id !== $solicitud->user_id) {
             return true;
         }
 

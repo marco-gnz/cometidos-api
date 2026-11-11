@@ -125,6 +125,7 @@ Route::group(
         Route::post('/admin/users/contrato/change-grupo', [UserController::class, 'updateGrupoContrato']);
 
         Route::get('/admin/solicitudes', [SolicitudAdminController::class, 'listSolicitudes']);
+        Route::get('/admin/solicitudes/movimiento-sirh/{uuid}', [\App\Http\Controllers\Admin\Solicitudes\MovimientoSirhController::class, 'show']);
         Route::get('/admin/solicitudes/{uuid}/{nav}', [SolicitudAdminController::class, 'findSolicitud']);
         Route::put('/admin/solicitudes/{uuid}/fijada', [SolicitudAdminController::class, 'solicitudFijada']);
         Route::put('/admin/solicitudes/reasignar-firma', [SolicitudAdminController::class, 'reasignarFirmaSolicitud']);

@@ -19,6 +19,7 @@ class Kernel extends ConsoleKernel
 
     protected function schedule(Schedule $schedule)
     {
+        $schedule->command('sirh:procesar-cola')->everyMinute()->withoutOverlapping();
         $schedule->command('update:informe-aprobar-status')->dailyAt('23:59');
     }
 

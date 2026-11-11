@@ -10,6 +10,27 @@ use Carbon\Carbon;
 
 class ListSolicitudCompleteAdminResource extends JsonResource
 {
+    private $incluirConsultaSirh = false;
+
+    public function conConsultaSirh()
+    {
+        $this->incluirConsultaSirh = true;
+        return $this;
+    }
+
+    protected function datosSirh($request)
+    {
+        $puedeConsultar = $request->user() && $request->user()->can('solicitud.datos.load-sirh', $this->resource);
+
+        return [
+            'tipo_comision_sirh' => $this->tipoComision ? $this->tipoComision->consultaSirhInfo() : null,
+            'puede_consultar_movimiento_sirh' => (bool) $puedeConsultar,
+            'movimiento_sirh' => $this->when($this->incluirConsultaSirh, function () {
+                return $this->resource->consultarMovimientoSirh();
+            }),
+        ];
+    }
+
     /**
      * Transform the resource into an array.
      *
@@ -18,6 +39,7 @@ class ListSolicitudCompleteAdminResource extends JsonResource
      */
     public function toArray($request)
     {
+        $datosSirh = $this->datosSirh($request);
         $total      = $this->actividades()->sum('actividad_gasto_solicitud.mount');
         $calculo    = $this->getLastCalculo();
         return [
@@ -100,7 +122,8 @@ class ListSolicitudCompleteAdminResource extends JsonResource
             'fecha_nacimiento'              => $this->funcionario->fecha_nacimiento ? Carbon::parse($this->funcionario->fecha_nacimiento)->format('d-m-Y') : null,
             'nacionalidad'                  => $this->nacionalidad ? $this->nacionalidad->nombre : null,
             'calculo'                       => $calculo ? ListCalculoResoruce::make($calculo) : null,
-            'sba_viatico'                   => $this->sbaViatico()
+            'sba_viatico'                   => $this->sbaViatico(),
+            $this->merge($datosSirh),
         ];
     }
 }

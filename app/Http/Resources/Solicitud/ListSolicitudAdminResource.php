@@ -56,6 +56,9 @@ class ListSolicitudAdminResource extends JsonResource
         return [
             'uuid'                      => $this->uuid,
             'codigo'                    => $this->codigo,
+            'load_sirh'                 => (bool) $this->load_sirh,
+            'is_load_sirh'              => $this->isLoadSirhInfo(),
+            'movimiento_sirh'           => $this->whenLoaded('estadoSirh'),
             'fecha_inicio'              => $this->fecha_inicio ? Carbon::parse($this->fecha_inicio)->format('d-m-y') : null,
             'fecha_termino'             => $this->fecha_termino ? Carbon::parse($this->fecha_termino)->format('d-m-y') : null,
             'hora_llegada'              => $this->hora_llegada ? Carbon::parse($this->hora_llegada)->format('H:i') : null,

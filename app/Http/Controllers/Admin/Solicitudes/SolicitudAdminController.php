@@ -60,7 +60,8 @@ class SolicitudAdminController extends Controller
     private function withSolicitudes()
     {
         return [
-            'funcionario:id,nombres,apellidos',
+            'funcionario:id,nombres,apellidos,rut_completo',
+            'tipoComision',
             'departamento:id,nombre',
             'establecimiento:id,sigla',
             'grupo:id',
@@ -108,6 +109,8 @@ class SolicitudAdminController extends Controller
 
             $this->filterScopes($query, $request);
             $solicitudes = $this->orderResults($query, $request);
+            app(\App\Services\Sirh\ConsultaPersistidaService::class)
+                ->actualizarListado($solicitudes->getCollection());
 
             $total_format = number_format($solicitudes->total(), 0, ",", ".");
             return response()->json([
@@ -548,13 +551,13 @@ class SolicitudAdminController extends Controller
     public function findSolicitud($uuid, $nav)
     {
         try {
-            $solicitud = Solicitud::where('uuid', $uuid)->withCount('documentos')->firstOrFail();
+            $solicitud = Solicitud::with(['funcionario', 'tipoComision'])->where('uuid', $uuid)->withCount('documentos')->firstOrFail();
             $navStatus = $this->navStatusSolicitud($solicitud);
             $responseData = [
                 'status'    => 'success',
                 'title'     => null,
                 'message'   => null,
-                'data'      => ListSolicitudCompleteAdminResource::make($solicitud),
+                'data'      => ListSolicitudCompleteAdminResource::make($solicitud)->conConsultaSirh(),
                 'nav'   => $navStatus,
             ];
 

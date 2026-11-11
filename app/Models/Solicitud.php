@@ -328,6 +328,11 @@ class Solicitud extends Model
         return $this->belongsTo(Cargo::class, 'cargo_id');
     }
 
+    public function consultarMovimientoSirh($forzar = false, $soloEstado = false)
+    {
+        return app(\App\Services\Sirh\ConsultaPersistidaService::class)->obtener($this, !$soloEstado, false, $forzar);
+    }
+
     public function tipoComision()
     {
         return $this->belongsTo(TipoComision::class, 'tipo_comision_id');

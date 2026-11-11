@@ -310,18 +310,22 @@ class DatosMaestrosSeeder extends Seeder
         TipoComision::truncate();
         $tipocomision = new TipoComision();
         $tipocomision->nombre   = 'ESTUDIOS';
+        $tipocomision->cod_web_service = '2';
         $tipocomision->save();
 
         $tipocomision = new TipoComision();
         $tipocomision->nombre   = 'CAPACITACIÓN';
+        $tipocomision->cod_web_service = '3';
         $tipocomision->save();
 
         $tipocomision = new TipoComision();
         $tipocomision->nombre   = 'SERVICIO';
+        $tipocomision->cod_web_service = '1';
         $tipocomision->save();
 
         $tipocomision = new TipoComision();
         $tipocomision->nombre   = 'CAPACITACIÓN FINANCIAMIENTO CENTRALIZADO';
+        $tipocomision->cod_web_service = '3';
         $tipocomision->save();
 
         $tipocomision = new TipoComision();

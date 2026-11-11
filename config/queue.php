@@ -29,6 +29,14 @@ return [
     */
 
     'connections' => [
+        'sirh_database' => [
+            'driver' => 'database',
+            'table' => 'jobs',
+            'queue' => 'sirh',
+            'retry_after' => 120,
+            'after_commit' => true,
+        ],
+
 
         'sync' => [
             'driver' => 'sync',
