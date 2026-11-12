@@ -233,6 +233,7 @@ class RendicionController extends Controller
     public function storeRendicion(Request $request)
     {
         try {
+            app(\App\Services\Archivos\ValidarArchivo::class)->lote($request->file('archivos', []));
 
             $transformedData = $this->transformData($request->all());
 
@@ -327,6 +328,10 @@ class RendicionController extends Controller
                     );
                 }
             }
+        } catch (\Illuminate\Validation\ValidationException $error) {
+            return response()->json(['message' => $error->getMessage(), 'errors' => $error->errors()], 422);
+        } catch (\App\Services\Archivos\ArchivoAlmacenamientoException $error) {
+            return response()->json(['message' => $error->getMessage(), 'errors' => ['file' => [$error->getMessage()]]], 500);
         } catch (\Exception $error) {
             return response()->json($error->getMessage());
         }
@@ -501,6 +506,7 @@ class RendicionController extends Controller
     public function updateRendicion(Request $request)
     {
         try {
+            app(\App\Services\Archivos\ValidarArchivo::class)->lote($request->file('archivos', []));
             $proceso_rendicion_gasto = ProcesoRendicionGasto::where('uuid', $request->uuid)->firstOrFail();
             $this->authorize('update', $proceso_rendicion_gasto);
             // Obtener todos los datos de la solicitud
@@ -697,6 +703,10 @@ class RendicionController extends Controller
                     )
                 );
             }
+        } catch (\Illuminate\Validation\ValidationException $error) {
+            return response()->json(['message' => $error->getMessage(), 'errors' => $error->errors()], 422);
+        } catch (\App\Services\Archivos\ArchivoAlmacenamientoException $error) {
+            return response()->json(['message' => $error->getMessage(), 'errors' => ['file' => [$error->getMessage()]]], 500);
         } catch (\Exception $error) {
             return response()->json($error->getMessage());
         }

@@ -84,7 +84,7 @@ class ProcesoRendicionGastoDetalleResource extends JsonResource
             'documentos_r'                                  => $this->exportarDocumentos(),
             'documentos_s'                                  => $this->solicitud->exportarDocumentos(),
             'cuenta_bancaria'                               => $this->cuentaBancaria ? CuentaBancariaResource::make($this->cuentaBancaria) : null,
-            'msg_firma'                                     => $this->solicitud->status === Solicitud::STATUS_EN_PROCESO ? 'Esta rendición de gastos se firmará una vez que el cometido complete el proceso de firma y sea procesado.' : null
+            'msg_firma'                                     => $this->solicitud->status === Solicitud::STATUS_EN_PROCESO ? 'Esta rendición de gastos iniciará su proceso de firma una vez que el cometido asociado haya completado su circuito de firma y se encuentre procesado.' : null
         ];
     }
 }

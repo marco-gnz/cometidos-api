@@ -73,6 +73,98 @@ class ArchivoServiceTest extends TestCase
         }
     }
 
+    public function test_rechaza_archivos_vacios_imagenes_y_documentos_danados()
+    {
+        foreach ([['vacio.txt', ''], ['foto.png', 'esto no es una imagen'], ['doc.pdf', '%PDF-1.4 truncado'], ['carta.docx', 'zip roto'], ['carta.doc', 'no es un documento']] as [$nombre, $contenido]) {
+            try {
+                (new ArchivoService())->guardar(UploadedFile::fake()->createWithContent($nombre, $contenido), 'test', Documento::class, []);
+                $this->fail('Debió rechazar ' . $nombre);
+            } catch (\Illuminate\Validation\ValidationException $e) {
+                $this->assertNotEmpty($e->errors()['file']);
+            }
+        }
+        $this->assertSame(0, Documento::count());
+        $this->assertSame([], Storage::disk('public')->allFiles());
+    }
+
+    public function test_imagen_y_docx_validos_superan_revision()
+    {
+        $validator = new \App\Services\Archivos\ValidarArchivo();
+        $validator->validar(UploadedFile::fake()->image('foto.png', 10, 10));
+        $path = tempnam(sys_get_temp_dir(), 'docx-test-');
+        try {
+            $zip = new \ZipArchive(); $zip->open($path, \ZipArchive::OVERWRITE);
+            $zip->addFromString('[Content_Types].xml', '<?xml version="1.0"?><Types/>');
+            $zip->addFromString('word/document.xml', '<?xml version="1.0"?><document/>'); $zip->close();
+            $validator->validar(new UploadedFile($path, 'carta.docx', null, null, true));
+            $this->assertSame(0, Documento::count());
+        } finally { unlink($path); }
+    }
+
+    public function test_rechaza_carga_interrumpida()
+    {
+        $file = new UploadedFile(__FILE__, 'archivo.txt', 'text/plain', UPLOAD_ERR_PARTIAL, true);
+        $this->expectException(\Illuminate\Validation\ValidationException::class);
+        (new \App\Services\Archivos\ValidarArchivo())->validar($file);
+    }
+
+    public function test_archivo_que_desaparece_tras_insertar_no_deja_registro()
+    {
+        Documento::created(function ($doc) {
+            if ($doc->nombre === 'desaparece') Storage::disk('public')->delete($doc->url);
+        });
+        try {
+            (new ArchivoService())->guardar(UploadedFile::fake()->createWithContent('a.txt', 'contenido'), 'test', Documento::class, ['nombre' => 'desaparece']);
+            $this->fail('Debió detectar el archivo faltante.');
+        } catch (\App\Services\Archivos\ArchivoAlmacenamientoException $e) {
+            $this->assertSame(0, Documento::count());
+            $this->assertSame([], Storage::disk('public')->allFiles());
+        }
+    }
+
+    public function test_escritura_alterada_con_mismo_tamano_es_rechazada()
+    {
+        $disk = $this->createMock(\Illuminate\Filesystem\FilesystemAdapter::class);
+        $disk->method('putFileAs')->willReturn('test/a.txt');
+        $disk->method('exists')->willReturn(true);
+        $disk->method('size')->willReturn(4);
+        $stream = fopen('php://temp', 'r+'); fwrite($stream, 'otro'); rewind($stream);
+        $disk->method('readStream')->willReturn($stream);
+        $disk->expects($this->once())->method('delete')->with('test/a.txt');
+        Storage::shouldReceive('disk')->with('public')->andReturn($disk);
+        try {
+            (new ArchivoService())->guardar(UploadedFile::fake()->createWithContent('a.txt', 'dato'), 'test', Documento::class, []);
+            $this->fail('Debió detectar el contenido alterado.');
+        } catch (\App\Services\Archivos\ArchivoAlmacenamientoException $e) {
+            $this->assertSame(0, Documento::count());
+        }
+    }
+
+    public function test_cliente_recibe_error_422_para_archivo_danado()
+    {
+        $request = \App\Http\Requests\Solicitud\ValidateFileSolicitudRequest::create('/documento/upload-file', 'POST', [], [], ['file' => UploadedFile::fake()->createWithContent('foto.png', 'imagen dañada')]);
+        $response = (new \App\Http\Controllers\File\FileController())->uploadFile($request);
+        $this->assertSame(422, $response->getStatusCode());
+        $this->assertNotEmpty($response->getData(true)['errors']['file']);
+        $request = \Illuminate\Http\Request::create('/rendicion', 'POST', [], [], ['archivos' => [UploadedFile::fake()->createWithContent('foto.png', 'imagen dañada')]]);
+        $response = (new \App\Http\Controllers\Rendicion\RendicionController())->storeRendicion($request);
+        $this->assertSame(422, $response->getStatusCode());
+        $this->assertNotEmpty($response->getData(true)['errors']['archivos.0']);
+    }
+
+    public function test_ruta_prevalidacion_revisa_contenido_y_devuelve_mensaje_en_espanol()
+    {
+        foreach ([['falso.pdf', 'texto plano'], ['truncado.pdf', "%PDF-1.4\n1 0 obj <<>> endobj"], ['vacio.pdf', '']] as [$nombre, $contenido]) {
+            $response = $this->postJson('/api/documento/validate-file', ['file' => UploadedFile::fake()->createWithContent($nombre, $contenido)]);
+            $response->assertStatus(422)->assertJsonValidationErrors('file');
+            $this->assertSame($response->json('errors.file.0'), $response->json('message'));
+            $this->assertNotSame('The given data was invalid.', $response->json('message'));
+        }
+        $this->postJson('/api/documento/validate-file', ['file' => UploadedFile::fake()->image('buena.png', 10, 10)])->assertOk();
+        $this->assertSame(0, Documento::count());
+        $this->assertSame([], Storage::disk('public')->allFiles());
+    }
+
     public function test_institucionales_mismo_nombre_tienen_rutas_distintas()
     {
         $service = new ArchivoService(); $urls = [];

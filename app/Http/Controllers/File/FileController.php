@@ -34,7 +34,10 @@ class FileController extends Controller
     public function validateFileSolicitud(ValidateFileSolicitudRequest $request)
     {
         try {
+            app(\App\Services\Archivos\ValidarArchivo::class)->validar($request->file('file'));
             return true;
+        } catch (\Illuminate\Validation\ValidationException $error) {
+            return response()->json(['message' => $error->errors()['file'][0], 'errors' => $error->errors()], 422);
         } catch (\Exception $error) {
             return response()->json(['error' => 'Error al cargar archivo.'], 500);
         }
@@ -43,6 +46,7 @@ class FileController extends Controller
     public function uploadFile(ValidateFileSolicitudRequest $request)
     {
         try {
+            app(\App\Services\Archivos\ValidarArchivo::class)->validar($request->file('file'));
             $solicitud = Solicitud::where('uuid', $request->uuid)->firstOrFail();
 
             if ($request->hasFile('file')) {
@@ -72,6 +76,10 @@ class FileController extends Controller
                     );
                 }
             }
+        } catch (\Illuminate\Validation\ValidationException $error) {
+            return response()->json(['message' => $error->getMessage(), 'errors' => $error->errors()], 422);
+        } catch (\App\Services\Archivos\ArchivoAlmacenamientoException $error) {
+            return response()->json(['message' => $error->getMessage(), 'errors' => ['file' => [$error->getMessage()]]], 500);
         } catch (\Exception $error) {
             return response()->json($error->getMessage());
         }

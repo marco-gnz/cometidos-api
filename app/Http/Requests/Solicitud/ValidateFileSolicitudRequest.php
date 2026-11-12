@@ -25,16 +25,39 @@ class ValidateFileSolicitudRequest extends FormRequest
     {
         return [
             'uuid'  => 'nullable',
-            'file' => 'nullable|mimes:pdf,jpg,png,jpeg,doc,docx,eml|max:5000',
+            'file' => 'required|file|mimes:pdf,jpg,png,jpeg,doc,docx,eml|max:5000',
         ];
     }
 
     public function messages()
     {
         return [
-            'file.mimes' => 'El :attribute debe ser un archivo de tipo .pdf,.jpg,.png,.jpeg,.doc,.docx,.eml',
+            'file.required' => 'Seleccione un archivo para cargar.',
+            'file.file' => 'El archivo no es válido. Vuelva a guardarlo e intente nuevamente.',
+            'file.uploaded' => 'El archivo no se recibió correctamente. Intente cargarlo nuevamente.',
+            'file.mimes' => 'El contenido del archivo no corresponde a un formato permitido o está dañado. Use PDF, JPG, PNG, DOC, DOCX o EML; vuelva a guardarlo o exportarlo e intente nuevamente.',
             'file.max'   => 'Por el momento, el :attribute debe ser menor a :max kilobytes (5 megabytes)',
         ];
+    }
+
+    public function withValidator($validator)
+    {
+        $validator->after(function ($validator) {
+            if ($validator->errors()->has('file')) return;
+            try {
+                app(\App\Services\Archivos\ValidarArchivo::class)->validar($this->file('file'));
+            } catch (\Illuminate\Validation\ValidationException $error) {
+                foreach ($error->errors()['file'] as $mensaje) $validator->errors()->add('file', $mensaje);
+            }
+        });
+    }
+
+    protected function failedValidation(\Illuminate\Contracts\Validation\Validator $validator)
+    {
+        throw new \Illuminate\Http\Exceptions\HttpResponseException(response()->json([
+            'message' => $validator->errors()->first(),
+            'errors' => $validator->errors(),
+        ], 422));
     }
 
     public function attributes()

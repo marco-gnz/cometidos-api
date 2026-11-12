@@ -38,6 +38,7 @@ class DocumentoInstitucionalController extends Controller
     public function storeDocumento(StoreInstitucionalDocumentoRequest $request)
     {
         try {
+            app(\App\Services\Archivos\ValidarArchivo::class)->validar($request->file('file'));
             $this->authorize('create', InstitucionalDocumento::class);
             if ($request->hasFile('file')) {
                 $file               = $request->file;
@@ -65,6 +66,10 @@ class DocumentoInstitucionalController extends Controller
                     );
                 }
             }
+        } catch (\Illuminate\Validation\ValidationException $error) {
+            return response()->json(['message' => $error->getMessage(), 'errors' => $error->errors()], 422);
+        } catch (\App\Services\Archivos\ArchivoAlmacenamientoException $error) {
+            return response()->json(['message' => $error->getMessage(), 'errors' => ['file' => [$error->getMessage()]]], 500);
         } catch (\Exception $error) {
             return response()->json(['error' => $error->getMessage()], 500);
         }

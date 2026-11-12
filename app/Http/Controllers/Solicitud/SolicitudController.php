@@ -211,6 +211,7 @@ class SolicitudController extends Controller
     {
         $archivos = new ArchivoService();
         try {
+            app(\App\Services\Archivos\ValidarArchivo::class)->lote($request->file('archivos', []));
             DB::beginTransaction();
             $validate_date              = $this->validateSolicitudDate($request);
             $validate_days_40_100       = $this->validateSolicitudDate40100($request);
@@ -401,6 +402,14 @@ class SolicitudController extends Controller
                     )
                 );
             }
+        } catch (\Illuminate\Validation\ValidationException $error) {
+            DB::rollback();
+            $archivos->limpiarHuerfanos();
+            return response()->json(['message' => $error->getMessage(), 'errors' => $error->errors()], 422);
+        } catch (\App\Services\Archivos\ArchivoAlmacenamientoException $error) {
+            DB::rollback();
+            $archivos->limpiarHuerfanos();
+            return response()->json(['message' => $error->getMessage(), 'errors' => ['file' => [$error->getMessage()]]], 500);
         } catch (\Exception $error) {
             DB::rollback();
             $archivos->limpiarHuerfanos();
@@ -695,6 +704,7 @@ class SolicitudController extends Controller
     {
         $archivos = new ArchivoService();
         try {
+            app(\App\Services\Archivos\ValidarArchivo::class)->lote($request->file('archivos', []));
             DB::beginTransaction();
             $solicitud          = Solicitud::where('uuid', $request->solicitud_uuid)->firstOrFail();
             $firma_disponible   = $this->isFirmaDisponibleActionPolicy($solicitud, 'solicitud.datos.editar-solicitud');
@@ -954,6 +964,14 @@ class SolicitudController extends Controller
                     )
                 );
             }
+        } catch (\Illuminate\Validation\ValidationException $error) {
+            DB::rollback();
+            $archivos->limpiarHuerfanos();
+            return response()->json(['message' => $error->getMessage(), 'errors' => $error->errors()], 422);
+        } catch (\App\Services\Archivos\ArchivoAlmacenamientoException $error) {
+            DB::rollback();
+            $archivos->limpiarHuerfanos();
+            return response()->json(['message' => $error->getMessage(), 'errors' => ['file' => [$error->getMessage()]]], 500);
         } catch (\Exception $error) {
             DB::rollback();
             $archivos->limpiarHuerfanos();
