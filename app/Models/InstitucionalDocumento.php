@@ -6,7 +6,6 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Str;
-use Illuminate\Support\Facades\Storage;
 
 class InstitucionalDocumento extends Model
 {
@@ -35,10 +34,8 @@ class InstitucionalDocumento extends Model
             $documento->user_id_by              = Auth::user()->id;
         });
 
-        static::deleting(function ($documento) {
-            $url = $documento->url;
-            $documento = str_replace('storage/', '', $documento->url);
-            Storage::disk('public')->delete($documento);
+        static::deleted(function ($documento) {
+            \App\Services\Archivos\ArchivoService::eliminarSinReferencias($documento->url);
         });
     }
 }

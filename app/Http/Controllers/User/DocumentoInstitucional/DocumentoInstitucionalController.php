@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\User\DocumentoInstitucional;
 
 use App\Http\Controllers\Controller;
+use App\Services\Archivos\ArchivoService;
 use App\Http\Requests\StoreInstitucionalDocumentoRequest;
 use App\Http\Resources\Documento\DocumentoInstitucionalResource;
 use App\Models\InstitucionalDocumento;
@@ -40,10 +41,8 @@ class DocumentoInstitucionalController extends Controller
             $this->authorize('create', InstitucionalDocumento::class);
             if ($request->hasFile('file')) {
                 $file               = $request->file;
-                $fileName           = 'institucional-documentos/' . $file->getClientOriginalName();
-                $path               = Storage::disk('public')->putFileAs('archivos', $file, $fileName);
+
                 $data = [
-                    'url'           => $path,
                     'nombre'        => $request->nombre,
                     'observacion'   => $request->observacion ? $request->observacion : null,
                     'nombre_file'   => $file->getClientOriginalName(),
@@ -53,7 +52,7 @@ class DocumentoInstitucionalController extends Controller
                     'is_valid'      => $file->isValid()
                 ];
 
-                $documento = InstitucionalDocumento::create($data);
+                $documento = app(ArchivoService::class)->guardar($file, 'institucional-documentos', InstitucionalDocumento::class, $data);
 
                 if($documento){
                     return response()->json(
@@ -76,9 +75,9 @@ class DocumentoInstitucionalController extends Controller
         try {
             $file = InstitucionalDocumento::where('uuid', $uuid)->firstOrFail();
 
-            $path = Storage::disk('public')->path($file->url);
+            $path = Storage::disk('public')->path(ArchivoService::ruta($file->url));
 
-            return response()->download($path, $file->nombre_file . '.' . $file->extension);
+            return response()->download($path, ArchivoService::nombreDescarga($file->nombre_file, $file->extension));
         } catch (\Exception $error) {
             return $error->getMessage();
         }

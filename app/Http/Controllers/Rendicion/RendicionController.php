@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Rendicion;
 use App\Events\ProcesoRendicionGastoCreated;
 use App\Events\ProcesoRendicionGastoStatus;
 use App\Http\Controllers\Controller;
+use App\Services\Archivos\ArchivoService;
 use App\Http\Requests\ProcesoRendicion\StoreProcesoRendicionRequest;
 use App\Http\Requests\Rendicion\AnularRendicionRequest;
 use App\Http\Requests\Rendicion\AprobarRendicionRequest;
@@ -287,14 +288,7 @@ class RendicionController extends Controller
 
                     if ($validatedData['archivos']) {
                         foreach ($validatedData['archivos'] as $file) {
-                            $fecha_solicitud    = Carbon::parse($solicitud->fecha_inicio);
-                            $year               = $fecha_solicitud->format('Y');
-                            $month              = $fecha_solicitud->format('m');
-                            $fileName           = 'rendicion_de_gastos/' . $solicitud->funcionario->rut . '/' . $year . '/' . $month . '/' . $file->getClientOriginalName();
-                            $path               = Storage::disk('public')->putFileAs('archivos', $file, $fileName);
-
-                            $store = Documento::create([
-                                'url'           => $path,
+                            $store = app(ArchivoService::class)->guardar($file, app(ArchivoService::class)->carpetaSolicitud($solicitud, $proceso_rendicion_gasto), Documento::class, [
                                 'nombre'        => $file->getClientOriginalName(),
                                 'size'          => $file->getSize(),
                                 'format'        => $file->getMimeType(),
@@ -656,14 +650,7 @@ class RendicionController extends Controller
                 if (isset($data['archivos'])) {
                     $files = $data['archivos'];
                     foreach ($files as $file) {
-                        $fecha_solicitud    = Carbon::parse($proceso_rendicion_gasto->solicitud->fecha_inicio);
-                        $year               = $fecha_solicitud->format('Y');
-                        $month              = $fecha_solicitud->format('m');
-                        $fileName           = 'rendicion_de_gastos/' . $proceso_rendicion_gasto->solicitud->funcionario->rut . '/' . $year . '/' . $month . '/' . $file->getClientOriginalName();
-                        $path               = Storage::disk('public')->putFileAs('archivos', $file, $fileName);
-
-                        $store = Documento::create([
-                            'url'                           => $path,
+                        $store = app(ArchivoService::class)->guardar($file, app(ArchivoService::class)->carpetaSolicitud($proceso_rendicion_gasto->solicitud, $proceso_rendicion_gasto), Documento::class, [
                             'nombre'                        => $file->getClientOriginalName(),
                             'size'                          => $file->getSize(),
                             'format'                        => $file->getMimeType(),

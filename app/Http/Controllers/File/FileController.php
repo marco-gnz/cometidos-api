@@ -3,11 +3,11 @@
 namespace App\Http\Controllers\File;
 
 use App\Http\Controllers\Controller;
+use App\Services\Archivos\ArchivoService;
 use App\Http\Requests\Solicitud\ValidateFileSolicitudRequest;
 use App\Http\Resources\Solicitud\ListSolicitudDocumentosResource;
 use App\Models\Documento;
 use App\Models\Solicitud;
-use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 
@@ -23,9 +23,9 @@ class FileController extends Controller
         try {
             $file = Documento::where('uuid', $uuid)->firstOrFail();
 
-            $path = Storage::disk('public')->path($file->url);
+            $path = Storage::disk('public')->path(ArchivoService::ruta($file->url));
 
-            return response()->download($path, $file->nombre . '.' . $file->extension);
+            return response()->download($path, ArchivoService::nombreDescarga($file->nombre, $file->extension));
         } catch (\Exception $error) {
             return $error->getMessage();
         }
@@ -47,13 +47,8 @@ class FileController extends Controller
 
             if ($request->hasFile('file')) {
                 $file               = $request->file;
-                $fecha_solicitud    = Carbon::parse($solicitud->fecha_inicio);
-                $year               = $fecha_solicitud->format('Y');
-                $month              = $fecha_solicitud->format('m');
-                $fileName           = 'actividades/' . $solicitud->funcionario->rut . '/' . $year . '/' . $month . '/' . $file->getClientOriginalName();
-                $path               = Storage::disk('public')->putFileAs('archivos', $file, $fileName);
+
                 $data = [
-                    'url'           => $path,
                     'nombre'        => $file->getClientOriginalName(),
                     'size'          => $file->getSize(),
                     'format'        => $file->getMimeType(),
@@ -64,7 +59,7 @@ class FileController extends Controller
                     'model'         => Documento::MODEL_SOLICITUD
                 ];
 
-                $documento = Documento::create($data);
+                $documento = app(ArchivoService::class)->guardar($file, app(ArchivoService::class)->carpetaSolicitud($solicitud), Documento::class, $data);
 
                 if ($documento) {
                     return response()->json(

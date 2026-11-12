@@ -94,7 +94,7 @@ class ReporteController extends Controller
     {
         try {
             $email_auth     = Auth::user();
-            $folder         = now()->toDateString() . '-' . str_replace(':', '-', now()->toTimeString());
+            $folder         = now()->format('Y-m-d-H-i-s') . '-' . \Illuminate\Support\Str::uuid();
             $solicitudes    = $this->registerAction($request);
 
             $filter_all = (object) [

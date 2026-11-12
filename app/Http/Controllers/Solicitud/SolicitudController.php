@@ -7,6 +7,7 @@ use App\Events\InformeCometidoStatus;
 use App\Events\SolicitudCreated;
 use App\Events\SolicitudUpdated;
 use App\Http\Controllers\Controller;
+use App\Services\Archivos\ArchivoService;
 use App\Http\Requests\Informe\StatusInformeRequest;
 use App\Http\Requests\Informe\StoreInformeRequest;
 use App\Http\Requests\Informe\UpdateInformeRequest;
@@ -208,6 +209,7 @@ class SolicitudController extends Controller
 
     public function storeSolicitud(StoreSolicitudRequest $request)
     {
+        $archivos = new ArchivoService();
         try {
             DB::beginTransaction();
             $validate_date              = $this->validateSolicitudDate($request);
@@ -354,14 +356,7 @@ class SolicitudController extends Controller
 
                 if ($request->archivos) {
                     foreach ($request->archivos as $file) {
-                        $fecha_solicitud    = Carbon::parse($solicitud->fecha_inicio);
-                        $year               = $fecha_solicitud->format('Y');
-                        $month              = $fecha_solicitud->format('m');
-                        $fileName           = 'actividades/' . $solicitud->funcionario->rut . '/' . $year . '/' . $month . '/' . $file->getClientOriginalName();
-                        $path               = Storage::disk('public')->putFileAs('archivos', $file, $fileName);
-
-                        $store = Documento::create([
-                            'url'           => $path,
+                        $store = $archivos->guardar($file, $archivos->carpetaSolicitud($solicitud), Documento::class, [
                             'nombre'        => $file->getClientOriginalName(),
                             'size'          => $file->getSize(),
                             'format'        => $file->getMimeType(),
@@ -408,6 +403,7 @@ class SolicitudController extends Controller
             }
         } catch (\Exception $error) {
             DB::rollback();
+            $archivos->limpiarHuerfanos();
             Log::info($error->getMessage());
             return response()->json($error->getMessage(), 500);
         }
@@ -697,6 +693,7 @@ class SolicitudController extends Controller
 
     public function updateSolicitud(UpdateSolicitudRequest $request)
     {
+        $archivos = new ArchivoService();
         try {
             DB::beginTransaction();
             $solicitud          = Solicitud::where('uuid', $request->solicitud_uuid)->firstOrFail();
@@ -823,14 +820,7 @@ class SolicitudController extends Controller
 
                 if ($request->archivos) {
                     foreach ($request->archivos as $file) {
-                        $fecha_solicitud    = Carbon::parse($solicitud->fecha_inicio);
-                        $year               = $fecha_solicitud->format('Y');
-                        $month              = $fecha_solicitud->format('m');
-                        $fileName           = 'actividades/' . $solicitud->funcionario->rut . '/' . $year . '/' . $month . '/' . $file->getClientOriginalName();
-                        $path               = Storage::disk('public')->putFileAs('archivos', $file, $fileName);
-
-                        $store = Documento::create([
-                            'url'           => $path,
+                        $store = $archivos->guardar($file, $archivos->carpetaSolicitud($solicitud), Documento::class, [
                             'nombre'        => "{$file->getClientOriginalName()}",
                             'size'          => $file->getSize(),
                             'format'        => $file->getMimeType(),
@@ -966,6 +956,7 @@ class SolicitudController extends Controller
             }
         } catch (\Exception $error) {
             DB::rollback();
+            $archivos->limpiarHuerfanos();
             Log::info($error->getMessage());
             return response()->json(['error' => $error->getMessage()], 500);
         }

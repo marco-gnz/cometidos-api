@@ -5,7 +5,6 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Str;
-use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Gate;
 
 class Documento extends Model
@@ -46,10 +45,8 @@ class Documento extends Model
             $documento->user_id                 =  $documento->user_id;
         });
 
-        static::deleting(function ($documento) {
-            $url = $documento->url;
-            $documento = str_replace('storage/', '', $documento->url);
-            Storage::disk('public')->delete($documento);
+        static::deleted(function ($documento) {
+            \App\Services\Archivos\ArchivoService::eliminarSinReferencias($documento->url);
         });
     }
 
